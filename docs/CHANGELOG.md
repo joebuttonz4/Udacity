@@ -10,3 +10,5 @@
 - Fixed Civic DNA Q13 wording to match the May 12 patch.
 - Fixed Civic DNA reversal logic so Q8-Q14 are all reversed at compute time.
 - Confirmed `npm run build` passes after the Civic DNA fix.
+- Manually tested onboarding flow from welcome through calculating screen.
+- Confirmed signup, ZIP, districts, DNA teaser, quiz, and calculating routes work locally.
