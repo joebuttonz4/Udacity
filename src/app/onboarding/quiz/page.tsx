@@ -69,7 +69,7 @@ const QUESTIONS = [
   {
     number: 13,
     dimension: 'Housing',
-    text: 'Our city should step back from the housing market and let private developers decide what gets built.',
+    text: 'Our city should stay out of housing and let builders decide what gets built and at what price.',
   },
   {
     number: 14,

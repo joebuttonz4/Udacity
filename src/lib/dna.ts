@@ -13,8 +13,8 @@ export const DIMENSIONS = [
 export type Dimension = typeof DIMENSIONS[number]
 
 // Which questions need their answer reversed at compute time
-// Q14 is NOT reversed — both Q7 and Q14 point pro-transparency
-export const REVERSED_QUESTIONS = [8, 9, 10, 11, 12, 13]
+// All second-pass questions (Q8-Q14) are reversed
+export const REVERSED_QUESTIONS = [8, 9, 10, 11, 12, 13, 14]
 
 // Question → dimension mapping
 export const QUESTION_DIMENSION: Record<number, Dimension> = {
