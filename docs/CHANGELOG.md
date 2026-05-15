@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-05-15 (lint cleanup)
+
+- Fixed all 12 ESLint errors. No behavior changes.
+- Changed `<a href="/">` to `<Link>` in layout.tsx and NavBar.tsx (added `import Link from 'next/link'`).
+- Replaced `catch (err: any)` with `catch (err: unknown)` + `instanceof Error` narrowing in districts/page.tsx and quiz/page.tsx.
+- Escaped bare apostrophes with `&apos;` in districts/page.tsx (lines 135, 139, 256), dna-teaser/page.tsx (line 172), and zip/page.tsx (line 90).
+- Added `CandidateRow` type in candidates.ts to replace `row: any`; used double cast (`as unknown as CandidateRow[]`) to match Supabase's join inference.
+- Tests run: `npm run lint` (0 errors), `npm run build` (clean, 12 static pages).
+- Known limits: Supabase does not emit typed schema, so the double cast is the correct pattern until `supabase gen types` is wired up.
+- Deferred: none.
+
 ## 2026-05-15
 
 - Applied Supabase beta security patch for profiles, reviews, and match_scores.

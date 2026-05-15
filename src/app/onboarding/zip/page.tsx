@@ -87,7 +87,7 @@ export default function ZipPage() {
           className="text-2xl font-bold text-white text-center"
           style={{ fontFamily: 'var(--font-syne)' }}
         >
-          What's your ZIP code?
+          What&apos;s your ZIP code?
         </h2>
         <p className="text-[#6B7280] text-sm text-center mt-2">
           We use this to find the races you can actually vote on. Nothing else.

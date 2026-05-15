@@ -122,8 +122,8 @@ export default function QuizPage() {
         setCurrent((prev) => prev + 1)
         setSelected(null)
       }
-    } catch (err: any) {
-      setError(err.message ?? 'Something went wrong. Please try again.')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
       setSelected(null)
     } finally {
       setSaving(false)

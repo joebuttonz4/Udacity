@@ -1,5 +1,15 @@
 import { supabase } from './supabase'
 
+type CandidateRow = {
+  id: string
+  name: string
+  office: string
+  is_incumbent: boolean
+  district_id: string
+  districts: { name: string; type: string } | null
+  elections: { name: string; election_date: string } | null
+}
+
 export type CandidateWithContext = {
   id: string
   name: string
@@ -32,7 +42,7 @@ export async function getCandidatesForDistricts(
 
   if (error) throw error
 
-  return (data ?? []).map((row: any) => ({
+  return ((data ?? []) as unknown as CandidateRow[]).map((row) => ({
     id: row.id,
     name: row.name,
     office: row.office,

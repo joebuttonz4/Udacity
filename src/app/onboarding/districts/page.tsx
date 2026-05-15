@@ -76,8 +76,8 @@ export default function DistrictsPage() {
 
         const data = await getCandidatesForDistricts(districtIds)
         setCandidates(data)
-      } catch (err: any) {
-        setError(err.message ?? 'Something went wrong loading your ballot.')
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : 'Something went wrong loading your ballot.')
       } finally {
         setLoading(false)
       }
@@ -93,8 +93,8 @@ export default function DistrictsPage() {
 
       await autoFollowCandidates(session.user.id, candidates.map((c) => c.id))
       router.push('/onboarding/dna-teaser')
-    } catch (err: any) {
-      setError(err.message ?? 'Something went wrong. Please try again.')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
       setConfirming(false)
     }
   }
@@ -132,11 +132,11 @@ export default function DistrictsPage() {
           className="text-2xl font-bold text-white leading-tight mb-2"
           style={{ fontFamily: 'var(--font-syne)' }}
         >
-          Here's who you'll be voting on
+          Here&apos;s who you&apos;ll be voting on
         </h1>
         <p className="text-[#6B7280] text-sm" style={{ fontFamily: 'var(--font-instrument-sans)' }}>
           We found {candidates.length} candidates across {sortedGroups.length} races in your area.
-          You're automatically following all of them.
+          You&apos;re automatically following all of them.
         </p>
       </div>
 
@@ -253,7 +253,7 @@ export default function DistrictsPage() {
             className="text-center text-[#6B7280] text-xs mt-3"
             style={{ fontFamily: 'var(--font-instrument-sans)' }}
           >
-            You'll automatically follow updates on all of these candidates
+            You&apos;ll automatically follow updates on all of these candidates
           </p>
         </div>
       )}

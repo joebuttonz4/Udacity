@@ -169,7 +169,7 @@ export default function DnaTeaserPage() {
           className="w-full text-[#6B7280] text-sm py-2"
           style={{ fontFamily: 'var(--font-instrument-sans)' }}
         >
-          I'll do this later
+          I&apos;ll do this later
         </button>
       </div>
     </div>
