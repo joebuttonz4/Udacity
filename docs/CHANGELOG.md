@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-05-15
+
+- Applied Supabase beta security patch for profiles, reviews, and match_scores.
+- Removed broad anon/authenticated table grants from profiles, reviews, and match_scores.
+- Limited profile browser updates to onboarding-related fields only.
+- Removed browser insert access to profiles; profile creation remains handled by the signup trigger.
+- Removed browser insert/update policies for match_scores.
+- Removed browser update policy for reviews.
+- Kept active reviews publicly readable and limited review inserts to basic user-submitted fields.
+- Verified policies and grants in Supabase SQL Editor.
+- Tested onboarding after patch: signup, ZIP update, districts, DNA teaser, quiz, and calculating screen worked.
+- Confirmed redirect to /ballot currently shows 404 because /ballot has not been built yet.
+
+
 ## 2026-05-14
 
 - Initialized Git and created first project checkpoint.
