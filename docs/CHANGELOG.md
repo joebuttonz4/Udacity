@@ -8,6 +8,7 @@
   - `src/app/candidates/[id]/page.tsx` - New client component. Auth-gated (redirects to /onboarding if no session). Loads candidate, funding, and voting records in parallel. Shows: name/office/district header, incumbent badge, bio, website button, funding breakdown, voting record list with for/against/abstain pills and dimension tags, read-only disclaimer.
   - `src/app/ballot/page.tsx` - Added `import Link from 'next/link'`; replaced candidate `<article>` cards with `<Link href="/candidates/[id]">` so tapping a card navigates to the profile.
 - Tests run: `npm run lint` (0 errors), `npm run build` (clean, 13 routes including new `/candidates/[id]` dynamic route).
+- Manual browser test after commit `382e838`: `/ballot` loaded, tapping a candidate card opened `/candidates/[id]`, candidate profile rendered, and no obvious browser/UI issues were seen.
 - No database writes. No Supabase policy changes. No public-launch features.
 - Known limits: `photo_url` field is fetched but not displayed (no images in dummy data); dimension/position scores not shown (requires `candidate_positions` rows which dummy data may not have).
 - Deferred: match score display, civic DNA alignment bar, measure profile screen.
