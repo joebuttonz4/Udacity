@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import {
   getCandidatesForDistricts,
@@ -194,9 +195,10 @@ export default function BallotPage() {
 
                 <div className="flex flex-col gap-2">
                   {raceCandidates.map((candidate) => (
-                    <article
+                    <Link
                       key={candidate.id}
-                      className="bg-[#0D1117] rounded-xl px-4 py-3"
+                      href={`/candidates/${candidate.id}`}
+                      className="bg-[#0D1117] rounded-xl px-4 py-3 block active:scale-[0.98] transition-transform"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-center gap-3">
@@ -233,7 +235,7 @@ export default function BallotPage() {
                           </span>
                         )}
                       </div>
-                    </article>
+                    </Link>
                   ))}
                 </div>
               </section>
