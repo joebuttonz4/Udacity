@@ -1,6 +1,6 @@
 # CivicMarket Current State
 
-Last updated: May 14, 2026
+Last updated: May 15, 2026
 
 ## Authoritative order
 
@@ -72,19 +72,21 @@ Confirmed complete:
 - onboarding/quiz route exists
 - onboarding/calculating route exists
 - src/lib/dna.ts exists
+- /ballot route — complete, manually tested May 15 2026
+- /candidates/[id] route — read-only candidate profile, complete, manually tested May 15 2026
 
 ## Immediate priorities
 
-1. Audit current onboarding implementation
-2. Replace bloated Claude memory workflow
-3. Validate Civic DNA reversal logic
-4. Add typecheck/build discipline
-5. Patch Supabase security risks
-6. Finish onboarding validation
-7. Build Ballot screen
-8. Build Candidate Profile
-9. Build Measure Profile
-10. Build safe Vote screen
+1. Build Home screen (first post-onboarding screen)
+2. Build Measure Profile
+3. Build safe Vote screen (official links only)
+4. Build Profile screen
+5. Build Report Inaccuracy
+6. Build Data Sources
+7. Minimal admin voting-record entry
+8. Minimal admin review removal
+9. Patch remaining Supabase security risks
+10. Replace dummy data with real PSL data before beta invitations
 
 ## Civic DNA source of truth
 
