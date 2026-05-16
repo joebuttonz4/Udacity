@@ -1,10 +1,10 @@
 # Active Sprint
 
-## Sprint: Build Profile screen
+## Sprint: Build Report Inaccuracy
 
 ## Goal
 
-Build the read-only Profile screen so authenticated users can view their Civic DNA results and account details.
+Build the Report Inaccuracy flow so beta users can flag incorrect candidate, voting record, or funding data for admin review.
 
 ## Previously completed
 
@@ -21,21 +21,23 @@ Build the read-only Profile screen so authenticated users can view their Civic D
 - /measures/[id] — read-only Measure Profile, built May 15 2026, commit c84c331
 - /ballot → /measures/[id] integration — measure cards link to Measure Profile, built May 15 2026, commit 183b070
 - /vote — read-only Vote screen, official links only, built May 15 2026, commit bebed21
+- /profile — read-only Profile screen, Civic DNA results + account details, built May 16 2026, commit bfe11ac
 
 ## Acceptance criteria
 
-- [ ] Profile screen exists at `/profile`
+- [ ] Report Inaccuracy route exists (path TBD — e.g. `/report`)
 - [ ] Auth-gated (redirects to `/onboarding` if no session)
-- [ ] Displays user's Civic DNA dimension scores
-- [ ] Read-only, no Supabase writes beyond what auth already handles
-- [ ] No new Supabase policy changes or schema changes
+- [ ] User can select what they are reporting (candidate info, voting record, funding data)
+- [ ] User can submit a short description of the inaccuracy
+- [ ] Submission writes one row to a reports or inaccuracy_reports table (or equivalent)
+- [ ] No admin review UI in this sprint — submission only
+- [ ] No Supabase policy changes or schema changes beyond what is needed for the submissions table
 - [ ] Mobile-first layout, Tailwind only, no inline styles
 - [ ] npm run lint passes (0 errors)
 - [ ] npm run build passes
 
 ## Do not do in this sprint
 
-- Do not build Report Inaccuracy yet
 - Do not build Data Sources yet
 - Do not build admin tools yet
 - Do not build Edge Functions yet

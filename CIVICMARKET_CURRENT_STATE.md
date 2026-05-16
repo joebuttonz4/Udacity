@@ -1,6 +1,6 @@
 # CivicMarket Current State
 
-Last updated: May 15, 2026
+Last updated: May 16, 2026
 
 ## Authoritative order
 
@@ -78,14 +78,14 @@ Confirmed complete:
 - /measures/[id] route — read-only Measure Profile, complete, commit c84c331, May 15 2026
 - /ballot → /measures/[id] integration — measure cards link to Measure Profile, complete, commit 183b070, May 15 2026
 - /vote route — read-only Vote screen, official links only, isSafeUrl guard, read-only Supabase selects, no Edge Functions, lint passed, build passed, complete, commit bebed21, May 15 2026
+- /profile route — read-only Profile screen, auth-gated, reads profiles and civic_dna (latest row), shows 7 dimension scores or quiz nudge, no writes, lint passed, build passed, complete, commit bfe11ac, May 16 2026
 
 ## Immediate priorities
 
-1. Build Profile screen
-2. Build Report Inaccuracy
-3. Build Data Sources
-4. Minimal admin voting-record entry
-5. Minimal admin review removal
+1. Build Report Inaccuracy
+2. Build Data Sources
+3. Minimal admin voting-record entry
+4. Minimal admin review removal
 6. Patch remaining Supabase security risks
 7. Replace dummy data with real PSL data before beta invitations
 

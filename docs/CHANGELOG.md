@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-05-16 (profile screen)
+
+- Built read-only Profile screen at `/profile` (commit `bfe11ac`).
+- Files changed:
+  - `src/app/profile/page.tsx` — new client component. Auth-gated (redirects to `/onboarding` if no session). Reads `profiles` (display_name, zip_code, dna_quiz_status) and `civic_dna` (all 7 locked dimension scores) in parallel via `Promise.all`. `civic_dna` query uses `.order('created_at', { ascending: false }).limit(1).maybeSingle()` to return the most recent row safely in case of duplicates. Shows Account section (email, display name, ZIP) and Civic DNA section. If `dna_quiz_status` is not `'completed'` or no `civic_dna` row exists, shows a nudge linking to `/onboarding/dna-teaser`. If quiz complete, renders all 7 dimension scores with teal/red/gray coloring. No Supabase writes. Tailwind only, zero `style=` attributes.
+- Tests run: `npm run lint` (0 errors), `npm run build` (clean, 14 routes).
+- No Supabase policy changes. No schema changes. No seed data changes. No existing files changed.
+- Deferred: report inaccuracy, data sources, match score display on profile.
+
 ## 2026-05-15 (vote screen)
 
 - Built read-only Vote screen at `/vote` (commit `bebed21`).
