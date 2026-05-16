@@ -1,10 +1,10 @@
 # Active Sprint
 
-## Sprint: Build Home screen
+## Sprint: Ballot → Measure Profile integration
 
 ## Goal
 
-Build the post-onboarding Home screen — the first screen users see after completing the Civic DNA quiz.
+Wire `/ballot` so that measure cards link to `/measures/[id]`, giving users a full read-only Measure Profile from the ballot screen.
 
 ## Previously completed
 
@@ -18,20 +18,21 @@ Build the post-onboarding Home screen — the first screen users see after compl
 - /ballot — ballot screen, manually tested May 15 2026
 - /candidates/[id] — read-only candidate profile, manually tested May 15 2026
 - / (Home) — read-only Home screen, built May 15 2026, commit 48b81f3
+- /measures/[id] — read-only Measure Profile, built May 15 2026, commit c84c331
 
-## Home screen acceptance criteria — COMPLETE
+## Acceptance criteria
 
-- [x] Loads after onboarding completes (redirect from /ballot or direct nav)
-- [x] Shows user's district(s) and upcoming races
-- [x] Shows civic feed rows (static dummy data)
-- [x] Links to /ballot and /candidates/[id]
-- [x] Mobile-first layout, Tailwind only, no inline styles
-- [x] npm run build passes
+- [ ] Measure cards on `/ballot` are wrapped in `<Link href="/measures/[id]">` (same pattern as candidate cards)
+- [ ] `/measures/[id]` loads correctly when navigated to from `/ballot`
+- [ ] No new Supabase writes, policy changes, or schema changes
+- [ ] Mobile-first layout, Tailwind only, no inline styles
+- [ ] npm run lint passes (0 errors)
+- [ ] npm run build passes
 
 ## Do not do in this sprint
 
-- Do not build Measure Profile yet
 - Do not build Vote screen yet
+- Do not build Profile screen yet
 - Do not build Report Inaccuracy yet
 - Do not build Data Sources yet
 - Do not build admin tools yet

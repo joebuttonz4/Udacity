@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-05-15 (measure profile)
+
+- Built read-only Measure Profile screen at `/measures/[id]` (commit `c84c331`).
+- Files changed:
+  - `src/lib/measures.ts` — added `Measure`, `MeasureVote` types and `getMeasure`, `getMeasureVotes` helper functions (read-only Supabase selects, no writes).
+  - `src/app/measures/[id]/page.tsx` — new client component. Auth-gated (redirects to `/onboarding` if no session). Loads measure detail and associated voting records. Shows: measure title/office/district header, summary, full text link (official source URL only), voting record list with for/against/abstain pills and candidate names, read-only disclaimer. Tailwind arbitrary classes for fonts, no inline style attributes.
+- Tests run: `npm run lint` (0 errors), `npm run build` (clean).
+- No database writes. No Supabase policy changes. No new tables created.
+- Known limits: `/ballot` does not yet link to `/measures/[id]` — that integration is the next sprint item.
+- Deferred: ballot → measure profile links, vote screen, profile screen.
+
 ## 2026-05-15 (home screen)
 
 - Built Home screen at `/` (commit `48b81f3`).

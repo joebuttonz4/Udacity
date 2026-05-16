@@ -75,10 +75,11 @@ Confirmed complete:
 - /ballot route — complete, manually tested May 15 2026
 - /candidates/[id] route — read-only candidate profile, complete, manually tested May 15 2026
 - / (Home) route — read-only Home screen, complete, commit 48b81f3, docs commit e2d3afb, May 15 2026
+- /measures/[id] route — read-only Measure Profile, complete, commit c84c331, May 15 2026
 
 ## Immediate priorities
 
-1. Build Measure Profile
+1. Integrate /ballot → /measures/[id] (wire measure cards on ballot to link to Measure Profile)
 2. Build safe Vote screen (official links only)
 3. Build Profile screen
 4. Build Report Inaccuracy
