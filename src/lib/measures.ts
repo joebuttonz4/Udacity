@@ -81,3 +81,35 @@ export async function getMeasureDimensions(id: string): Promise<MeasureDimension
   if (error) throw error
   return data as MeasureDimensions | null
 }
+
+export async function getMeasuresForDistricts(districtIds: string[]): Promise<MeasureProfile[]> {
+  const { data, error } = await supabase
+    .from('ballot_measures')
+    .select(`
+      id,
+      title,
+      type,
+      plain_english_summary,
+      full_text_url,
+      district_id,
+      districts ( name, type ),
+      elections ( name, election_date )
+    `)
+    .in('district_id', districtIds)
+    .is('archived_at', null)
+    .order('title')
+
+  if (error) throw error
+
+  return ((data ?? []) as unknown as MeasureRow[]).map((row) => ({
+    id: row.id,
+    title: row.title,
+    type: row.type,
+    plain_english_summary: row.plain_english_summary,
+    full_text_url: row.full_text_url,
+    district_name: row.districts?.name ?? '',
+    district_scope: row.districts?.type ?? '',
+    election_name: row.elections?.name ?? '',
+    election_date: row.elections?.election_date ?? '',
+  }))
+}

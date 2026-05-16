@@ -9,6 +9,7 @@ import {
   getUserDistrictIds,
   type CandidateWithContext,
 } from '@/lib/candidates'
+import { getMeasuresForDistricts, type MeasureProfile } from '@/lib/measures'
 
 const SCOPE_STYLES: Record<string, { tag: string; label: string }> = {
   city_council: {
@@ -54,6 +55,7 @@ function groupByDistrict(
 export default function BallotPage() {
   const router = useRouter()
   const [candidates, setCandidates] = useState<CandidateWithContext[]>([])
+  const [measures, setMeasures] = useState<MeasureProfile[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -77,8 +79,12 @@ export default function BallotPage() {
           return
         }
 
-        const ballotCandidates = await getCandidatesForDistricts(districtIds)
+        const [ballotCandidates, ballotMeasures] = await Promise.all([
+          getCandidatesForDistricts(districtIds),
+          getMeasuresForDistricts(districtIds),
+        ])
         setCandidates(ballotCandidates)
+        setMeasures(ballotMeasures)
       } catch (err: unknown) {
         const message =
           err instanceof Error ? err.message : 'Something went wrong loading your ballot.'
@@ -241,6 +247,32 @@ export default function BallotPage() {
               </section>
             )
           })}
+
+          {measures.length > 0 && (
+            <section className="bg-[#1F2937] rounded-2xl p-4 border border-[#374151]">
+              <h2 className="text-[#9CA3AF] text-xs font-semibold uppercase tracking-wider mb-3 [font-family:var(--font-syne)]">
+                Measures
+              </h2>
+              <div className="flex flex-col gap-2">
+                {measures.map((measure) => (
+                  <Link
+                    key={measure.id}
+                    href={`/measures/${measure.id}`}
+                    className="bg-[#0D1117] rounded-xl px-4 py-3 block active:scale-[0.98] transition-transform"
+                  >
+                    <p className="text-white text-sm font-semibold leading-tight [font-family:var(--font-syne)]">
+                      {measure.title}
+                    </p>
+                    {measure.district_name && (
+                      <p className="text-[#6B7280] text-xs mt-1 [font-family:var(--font-instrument-sans)]">
+                        {measure.district_name}
+                      </p>
+                    )}
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
         </div>
       )}
     </div>
