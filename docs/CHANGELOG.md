@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-05-15 (ballot → measure profile integration)
+
+- Wired `/ballot` to load and link to `/measures/[id]` (commit `183b070`).
+- Files changed:
+  - `src/lib/measures.ts` — added `getMeasuresForDistricts(districtIds: string[])`. Queries `ballot_measures` with `districts` and `elections` join, filters `archived_at IS NULL`, ordered by title. Reuses existing `MeasureRow` internal type and `MeasureProfile` export. Read-only select only.
+  - `src/app/ballot/page.tsx` — added import of `getMeasuresForDistricts` and `MeasureProfile`. Added `measures` state. Replaced single `getCandidatesForDistricts` call with `Promise.all([getCandidatesForDistricts, getMeasuresForDistricts])` so both load in parallel. Added "Measures" section below candidate races: renders only when `measures.length > 0`, each card is a `<Link href="/measures/[id]">` showing title and district name. Tailwind arbitrary classes only, no new `style=` attributes.
+- Tests run: `npm run lint` (0 errors), `npm run build` (clean, 12 routes).
+- No Supabase policy changes. No schema changes. No seed data changes.
+- Known limits: if dummy data has no `ballot_measures` rows linked to user's districts, the Measures section does not render (expected).
+- Deferred: vote screen, profile screen, report inaccuracy.
+
 ## 2026-05-15 (measure profile)
 
 - Built read-only Measure Profile screen at `/measures/[id]` (commit `c84c331`).

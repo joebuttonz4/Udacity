@@ -1,10 +1,10 @@
 # Active Sprint
 
-## Sprint: Ballot → Measure Profile integration
+## Sprint: Build safe Vote screen
 
 ## Goal
 
-Wire `/ballot` so that measure cards link to `/measures/[id]`, giving users a full read-only Measure Profile from the ballot screen.
+Build the Vote screen with official links only — no direct vote casting, no external data beyond safe official URLs.
 
 ## Previously completed
 
@@ -19,19 +19,22 @@ Wire `/ballot` so that measure cards link to `/measures/[id]`, giving users a fu
 - /candidates/[id] — read-only candidate profile, manually tested May 15 2026
 - / (Home) — read-only Home screen, built May 15 2026, commit 48b81f3
 - /measures/[id] — read-only Measure Profile, built May 15 2026, commit c84c331
+- /ballot → /measures/[id] integration — measure cards link to Measure Profile, built May 15 2026, commit 183b070
 
 ## Acceptance criteria
 
-- [ ] Measure cards on `/ballot` are wrapped in `<Link href="/measures/[id]">` (same pattern as candidate cards)
-- [ ] `/measures/[id]` loads correctly when navigated to from `/ballot`
-- [ ] No new Supabase writes, policy changes, or schema changes
+- [ ] Vote screen exists at `/vote`
+- [ ] Shows official links only (safe URLs via `isSafeUrl` guard — https/http only)
+- [ ] No direct vote casting, no form submissions to external services
+- [ ] Auth-gated (redirects to `/onboarding` if no session)
+- [ ] Read-only, no Supabase writes
+- [ ] No new Supabase policy changes or schema changes
 - [ ] Mobile-first layout, Tailwind only, no inline styles
 - [ ] npm run lint passes (0 errors)
 - [ ] npm run build passes
 
 ## Do not do in this sprint
 
-- Do not build Vote screen yet
 - Do not build Profile screen yet
 - Do not build Report Inaccuracy yet
 - Do not build Data Sources yet
