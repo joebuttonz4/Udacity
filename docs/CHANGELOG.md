@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-05-16 (report inaccuracy shell)
+
+- Built UI-only Report Inaccuracy shell at `/report` (commit `6c63b51`).
+- Files changed:
+  - `src/app/report/page.tsx` — new client component. Auth-gated (redirects to `/onboarding` if no session). Collects subject type (candidate info / voting record / funding) and description in local component state only. Submit button disabled until description is 10+ characters. On submit, shows a clear beta notice: "Beta — report submission not yet enabled" with explicit statement that no data was recorded. No Supabase writes, no SQL, no tables, no RLS policies. Tailwind only, zero `style=` attributes.
+- Tests run: `npm run lint` (0 errors), `npm run build` (clean, 15 routes).
+- No Supabase policy changes. No schema changes. No seed data changes. No existing files changed.
+- Deferred: database-backed report submission pending separate SQL/RLS risk check approval.
+
 ## 2026-05-16 (profile screen)
 
 - Built read-only Profile screen at `/profile` (commit `bfe11ac`).

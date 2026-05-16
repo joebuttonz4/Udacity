@@ -79,15 +79,19 @@ Confirmed complete:
 - /ballot → /measures/[id] integration — measure cards link to Measure Profile, complete, commit 183b070, May 15 2026
 - /vote route — read-only Vote screen, official links only, isSafeUrl guard, read-only Supabase selects, no Edge Functions, lint passed, build passed, complete, commit bebed21, May 15 2026
 - /profile route — read-only Profile screen, auth-gated, reads profiles and civic_dna (latest row), shows 7 dimension scores or quiz nudge, no writes, lint passed, build passed, complete, commit bfe11ac, May 16 2026
+- /report route — UI-only Report Inaccuracy shell, auth-gated, local component state only, no Supabase writes, no SQL, no tables, no RLS policies, beta message shown on submit, lint passed, build passed, complete, commit 6c63b51, May 16 2026
 
 ## Immediate priorities
 
-1. Build Report Inaccuracy
-2. Build Data Sources
-3. Minimal admin voting-record entry
-4. Minimal admin review removal
-6. Patch remaining Supabase security risks
-7. Replace dummy data with real PSL data before beta invitations
+1. Build Data Sources
+2. Minimal admin voting-record entry
+3. Minimal admin review removal
+4. Patch remaining Supabase security risks
+5. Replace dummy data with real PSL data before beta invitations
+
+## Deferred — requires separate approval
+
+- Database-backed report submission for /report — needs new inaccuracy_reports table, INSERT policy, and SQL/RLS risk check approved before building
 
 ## Civic DNA source of truth
 
