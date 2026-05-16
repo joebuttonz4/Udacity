@@ -77,17 +77,17 @@ Confirmed complete:
 - / (Home) route — read-only Home screen, complete, commit 48b81f3, docs commit e2d3afb, May 15 2026
 - /measures/[id] route — read-only Measure Profile, complete, commit c84c331, May 15 2026
 - /ballot → /measures/[id] integration — measure cards link to Measure Profile, complete, commit 183b070, May 15 2026
+- /vote route — read-only Vote screen, official links only, isSafeUrl guard, read-only Supabase selects, no Edge Functions, lint passed, build passed, complete, commit bebed21, May 15 2026
 
 ## Immediate priorities
 
-1. Build safe Vote screen (official links only)
-3. Build Profile screen
-4. Build Report Inaccuracy
-5. Build Data Sources
-6. Minimal admin voting-record entry
-7. Minimal admin review removal
-8. Patch remaining Supabase security risks
-9. Replace dummy data with real PSL data before beta invitations
+1. Build Profile screen
+2. Build Report Inaccuracy
+3. Build Data Sources
+4. Minimal admin voting-record entry
+5. Minimal admin review removal
+6. Patch remaining Supabase security risks
+7. Replace dummy data with real PSL data before beta invitations
 
 ## Civic DNA source of truth
 

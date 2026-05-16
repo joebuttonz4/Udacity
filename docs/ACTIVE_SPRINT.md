@@ -1,10 +1,10 @@
 # Active Sprint
 
-## Sprint: Build safe Vote screen
+## Sprint: Build Profile screen
 
 ## Goal
 
-Build the Vote screen with official links only — no direct vote casting, no external data beyond safe official URLs.
+Build the read-only Profile screen so authenticated users can view their Civic DNA results and account details.
 
 ## Previously completed
 
@@ -20,14 +20,14 @@ Build the Vote screen with official links only — no direct vote casting, no ex
 - / (Home) — read-only Home screen, built May 15 2026, commit 48b81f3
 - /measures/[id] — read-only Measure Profile, built May 15 2026, commit c84c331
 - /ballot → /measures/[id] integration — measure cards link to Measure Profile, built May 15 2026, commit 183b070
+- /vote — read-only Vote screen, official links only, built May 15 2026, commit bebed21
 
 ## Acceptance criteria
 
-- [ ] Vote screen exists at `/vote`
-- [ ] Shows official links only (safe URLs via `isSafeUrl` guard — https/http only)
-- [ ] No direct vote casting, no form submissions to external services
+- [ ] Profile screen exists at `/profile`
 - [ ] Auth-gated (redirects to `/onboarding` if no session)
-- [ ] Read-only, no Supabase writes
+- [ ] Displays user's Civic DNA dimension scores
+- [ ] Read-only, no Supabase writes beyond what auth already handles
 - [ ] No new Supabase policy changes or schema changes
 - [ ] Mobile-first layout, Tailwind only, no inline styles
 - [ ] npm run lint passes (0 errors)
@@ -35,7 +35,6 @@ Build the Vote screen with official links only — no direct vote casting, no ex
 
 ## Do not do in this sprint
 
-- Do not build Profile screen yet
 - Do not build Report Inaccuracy yet
 - Do not build Data Sources yet
 - Do not build admin tools yet

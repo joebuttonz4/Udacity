@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-05-15 (vote screen)
+
+- Built read-only Vote screen at `/vote` (commit `bebed21`).
+- Files changed:
+  - `src/app/vote/page.tsx` — new client component. Auth-gated (redirects to `/onboarding` if no session). Reads upcoming elections via read-only Supabase select on the `elections` table (no writes, no Edge Functions, no external API lookups). Displays official government links only; all URLs pass through `isSafeUrl` (https/http only) before rendering as `<a>` tags. Back link to `/ballot`. Tailwind only, zero `style=` attributes.
+- Tests run: `npm run lint` (0 errors), `npm run build` (clean).
+- No Supabase policy changes. No schema changes. No seed data changes.
+- Deferred: profile screen, report inaccuracy, data sources.
+
 ## 2026-05-15 (ballot → measure profile integration)
 
 - Wired `/ballot` to load and link to `/measures/[id]` (commit `183b070`).
