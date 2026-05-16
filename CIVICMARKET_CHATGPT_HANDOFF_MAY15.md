@@ -8,7 +8,7 @@ Project path:
 
 J:\CivicMarket
 
-At the start of the next session, run:
+At the start of the next ChatGPT session, run:
 
 cd J:\CivicMarket
 git status
@@ -20,6 +20,7 @@ nothing to commit, working tree clean
 
 ## Latest commits
 
+9d2e6b5 Add ChatGPT handoff
 1621084 Document candidate profile manual test
 382e838 Add read-only candidate profile
 7b025d2 Ignore Claude local settings
@@ -57,6 +58,55 @@ Recent completed work:
 - No public launch features.
 - Manual browser test passed after commit 382e838.
 - Manual test documentation committed in 1621084.
+- ChatGPT handoff committed in 9d2e6b5.
+
+## Claude inspection after 9d2e6b5
+
+Prompt used:
+
+/civic-step inspect the current candidate profile, ballot, and candidate helper code. Recommend the next safest small step for beta readiness. Do not edit files.
+
+Result:
+
+- Working tree was clean.
+- No files were edited.
+- Tests were not run because this was read-only inspection.
+
+Files inspected by Claude:
+
+- src/app/ballot/page.tsx
+- src/app/candidates/[id]/page.tsx
+- src/lib/candidates.ts
+- docs/ACTIVE_SPRINT.md
+- CIVICMARKET_CURRENT_STATE.md
+- Supabase client/docs context
+
+Claude findings:
+
+- Ballot page is structurally sound.
+- Candidate profile page is structurally sound.
+- Candidate helper code uses read-only selects for ballot/profile/funding/voting records.
+- autoFollowCandidates is a write function in src/lib/candidates.ts, but it is not called by ballot or candidate profile.
+- docs/ACTIVE_SPRINT.md is stale and still warns not to build Ballot or Candidate Profile, even though both are done.
+- CIVICMARKET_CURRENT_STATE.md is stale and still lists Ballot and Candidate Profile as immediate priorities.
+- getCandidateVotingRecords does not filter archived_at, unlike candidate queries.
+- photo_url is fetched but not rendered.
+- school_board scope tag displays as County, which may be a display choice to revisit before real data.
+
+Claude recommended next safest step:
+
+Update docs/ACTIVE_SPRINT.md and CIVICMARKET_CURRENT_STATE.md to mark ballot and candidate profile complete, then move the sprint focus to the Home screen.
+
+Reason:
+
+- Stale docs are now the biggest risk for future AI sessions.
+- ACTIVE_SPRINT.md currently contradicts completed work.
+- Updating docs is safer than touching auth, Supabase policy, invite codes, or signup flow.
+- After docs are correct, Home screen is the next natural beta-readiness milestone.
+
+Suggested next Claude prompt:
+
+/civic-step update docs/ACTIVE_SPRINT.md and CIVICMARKET_CURRENT_STATE.md to reflect that /ballot and /candidates/[id] are complete and manually tested. Move the next sprint focus to the Home screen. Do not change code, Supabase policies, auth, or database behavior. After editing, show the diff and ask before committing.
 
 ## Important files
 
@@ -68,6 +118,9 @@ src/lib/dna.ts
 src/lib/supabase.ts
 .claude/commands/civic-step.md
 docs/CHANGELOG.md
+docs/ACTIVE_SPRINT.md
+CIVICMARKET_CURRENT_STATE.md
+CIVICMARKET_CHATGPT_HANDOFF_MAY15.md
 
 ## Active beta blockers
 
@@ -99,16 +152,26 @@ Do not build:
 - Voter roll matching
 - Public launch features
 
-## Recommended next step
+## Known limits to track
 
-Use Claude Code to inspect and recommend the next small beta-readiness step without editing:
-
-/civic-step inspect the current candidate profile, ballot, and candidate helper code. Recommend the next safest small step for beta readiness. Do not edit files.
-
-Likely next build step after review:
-
-Add a read-only Data Sources section to candidate profiles using existing source_url fields only. Do not add database writes, do not change Supabase policies, do not add public launch features, and do not create new tables. Run npm run lint and npm run build, update docs/CHANGELOG.md, and ask before committing.
+- getCandidateVotingRecords is missing archived_at filtering.
+- photo_url is fetched but not rendered.
+- Data Sources section does not exist yet.
+- Report Inaccuracy does not exist yet.
+- Home screen has not been built yet.
+- Invite code gate has not been built yet.
+- Legal pages do not exist yet.
 
 ## Working style
 
-Continue one step at a time. Use explicit PowerShell commands. Stop after each checkpoint. Ask for output before continuing. Do not delete anything without exact approval.
+Continue one step at a time.
+
+Use explicit PowerShell commands.
+
+Stop after each checkpoint.
+
+Ask for output before continuing.
+
+Do not delete anything without exact approval.
+
+Do not make Supabase/RLS/auth/security changes without read-only audit, scope, expected result, no-change check, exact proposal, user approval, verification queries, and documentation.
