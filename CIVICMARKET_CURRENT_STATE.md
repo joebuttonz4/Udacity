@@ -80,14 +80,14 @@ Confirmed complete:
 - /vote route — read-only Vote screen, official links only, isSafeUrl guard, read-only Supabase selects, no Edge Functions, lint passed, build passed, complete, commit bebed21, May 15 2026
 - /profile route — read-only Profile screen, auth-gated, reads profiles and civic_dna (latest row), shows 7 dimension scores or quiz nudge, no writes, lint passed, build passed, complete, commit bfe11ac, May 16 2026
 - /report route — UI-only Report Inaccuracy shell, auth-gated, local component state only, no Supabase writes, no SQL, no tables, no RLS policies, beta message shown on submit, lint passed, build passed, complete, commit 6c63b51, May 16 2026
+- /data-sources route — static Data Sources page, auth-gated, no Supabase reads beyond auth, five static methodology sections, no writes, no tables, lint passed, build passed, complete, commit b81e8ef, May 16 2026
 
 ## Immediate priorities
 
-1. Build Data Sources
-2. Minimal admin voting-record entry
-3. Minimal admin review removal
-4. Patch remaining Supabase security risks
-5. Replace dummy data with real PSL data before beta invitations
+1. Minimal admin voting-record entry
+2. Minimal admin review removal
+3. Patch remaining Supabase security risks
+4. Replace dummy data with real PSL data before beta invitations
 
 ## Deferred — requires separate approval
 

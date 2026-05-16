@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-05-16 (data sources page)
+
+- Built static Data Sources page at `/data-sources` (commit `b81e8ef`).
+- Files changed:
+  - `src/app/data-sources/page.tsx` — new client component. Auth-gated (redirects to `/onboarding` if no session). Auth check only — no Supabase reads beyond `getSession`, no data table queries, no writes, no tables, no RLS policies. Five static methodology sections: Candidate information, Voting records, Funding data, Ballot measures, Civic DNA scoring. Beta disclaimer card. Tailwind only, zero `style=` attributes.
+- Tests run: `npm run lint` (0 errors), `npm run build` (clean, 16 routes).
+- No Supabase policy changes. No schema changes. No seed data changes. No existing files changed.
+- Deferred: database-backed report submission for /report pending separate SQL/RLS risk check approval.
+
 ## 2026-05-16 (report inaccuracy shell)
 
 - Built UI-only Report Inaccuracy shell at `/report` (commit `6c63b51`).
