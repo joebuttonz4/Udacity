@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-05-15 (home screen)
+
+- Built Home screen at `/` (commit `48b81f3`).
+- Files changed:
+  - `src/app/page.tsx` — replaced Next.js boilerplate with CivicMarket Home screen. Client component, auth-gated (redirects to `/onboarding` if no session). Loads user districts and up to 3 upcoming race candidates via existing `getUserDistrictIds` and `getCandidatesForDistricts` helpers. Static dummy civic feed rows (3 hardcoded entries, no Supabase query). District name pills derived from candidate list. "View all" and "View Full Ballot" links to `/ballot`. Candidate cards link to `/candidates/[id]`. Read-only disclaimer. Tailwind arbitrary classes for fonts (`[font-family:var(--font-syne)]`), no inline style attributes.
+- Tests run: `npm run lint` (0 errors), `npm run build` (clean, 12 routes).
+- No database writes. No Supabase policy changes. No new tables queried.
+- Known limits: civic feed is static dummy text; no match scores or alignment bars (deferred); `/vote` and `/profile` nav links are still dead routes (separate sprint items).
+- Deferred: civic feed Supabase query (pending table/RLS confirmation), match score display, profile screen, vote screen.
+
 ## 2026-05-15 (candidate profile)
 
 - Built read-only candidate profile screen at `/candidates/[id]`.

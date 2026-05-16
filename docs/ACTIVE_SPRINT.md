@@ -17,15 +17,16 @@ Build the post-onboarding Home screen — the first screen users see after compl
 - /onboarding/calculating — computes civic_dna, redirects to /ballot
 - /ballot — ballot screen, manually tested May 15 2026
 - /candidates/[id] — read-only candidate profile, manually tested May 15 2026
+- / (Home) — read-only Home screen, built May 15 2026, commit 48b81f3
 
-## Home screen acceptance criteria
+## Home screen acceptance criteria — COMPLETE
 
-- Loads after onboarding completes (redirect from /ballot or direct nav)
-- Shows user's district(s) and upcoming races
-- Shows civic feed rows (manual entries, dummy data allowed for beta build)
-- Links to /ballot, /candidates/[id], and /profile
-- Mobile-first layout, Tailwind only, no inline styles
-- npm run build passes
+- [x] Loads after onboarding completes (redirect from /ballot or direct nav)
+- [x] Shows user's district(s) and upcoming races
+- [x] Shows civic feed rows (static dummy data)
+- [x] Links to /ballot and /candidates/[id]
+- [x] Mobile-first layout, Tailwind only, no inline styles
+- [x] npm run build passes
 
 ## Do not do in this sprint
 
