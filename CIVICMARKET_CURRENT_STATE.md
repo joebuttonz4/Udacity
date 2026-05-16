@@ -74,19 +74,19 @@ Confirmed complete:
 - src/lib/dna.ts exists
 - /ballot route — complete, manually tested May 15 2026
 - /candidates/[id] route — read-only candidate profile, complete, manually tested May 15 2026
+- / (Home) route — read-only Home screen, complete, commit 48b81f3, docs commit e2d3afb, May 15 2026
 
 ## Immediate priorities
 
-1. Build Home screen (first post-onboarding screen)
-2. Build Measure Profile
-3. Build safe Vote screen (official links only)
-4. Build Profile screen
-5. Build Report Inaccuracy
-6. Build Data Sources
-7. Minimal admin voting-record entry
-8. Minimal admin review removal
-9. Patch remaining Supabase security risks
-10. Replace dummy data with real PSL data before beta invitations
+1. Build Measure Profile
+2. Build safe Vote screen (official links only)
+3. Build Profile screen
+4. Build Report Inaccuracy
+5. Build Data Sources
+6. Minimal admin voting-record entry
+7. Minimal admin review removal
+8. Patch remaining Supabase security risks
+9. Replace dummy data with real PSL data before beta invitations
 
 ## Civic DNA source of truth
 
