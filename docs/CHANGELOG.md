@@ -4,10 +4,10 @@
 
 - Built read-only Measure Profile screen at `/measures/[id]` (commit `c84c331`).
 - Files changed:
-  - `src/lib/measures.ts` — added `Measure`, `MeasureVote` types and `getMeasure`, `getMeasureVotes` helper functions (read-only Supabase selects, no writes).
-  - `src/app/measures/[id]/page.tsx` — new client component. Auth-gated (redirects to `/onboarding` if no session). Loads measure detail and associated voting records. Shows: measure title/office/district header, summary, full text link (official source URL only), voting record list with for/against/abstain pills and candidate names, read-only disclaimer. Tailwind arbitrary classes for fonts, no inline style attributes.
+  - `src/lib/measures.ts` — new file. `MeasureProfile` type (id, title, type, plain_english_summary, full_text_url, district_name, district_scope, election_name, election_date). `MeasureDimensions` type (all seven locked dimension keys + scored_by + impact_summary). `getMeasureProfile` queries `ballot_measures` with `districts` and `elections` join, filters `archived_at IS NULL`, returns `maybeSingle`. `getMeasureDimensions` queries `measure_dimensions` by `measure_id`, returns `maybeSingle`. Read-only selects only.
+  - `src/app/measures/[id]/page.tsx` — new client component. Auth-gated (redirects to `/onboarding` if no session). Loads `getMeasureProfile` and `getMeasureDimensions` in parallel. Shows: type badge (bond/ordinance/zoning/referendum with color coding), title, district + election date context, "What it means" plain English summary, "Read Full Text" link guarded by `isSafeUrl` (https/http only), Civic DNA Impact section with all seven dimension scores formatted as +/- with teal/red coloring, `scored_by` label ("AI draft — not yet validated" for ai_draft), read-only disclaimer. Back link to `/ballot`. Tailwind only, zero `style=` attributes.
 - Tests run: `npm run lint` (0 errors), `npm run build` (clean).
-- No database writes. No Supabase policy changes. No new tables created.
+- No existing files changed. No Supabase policy changes. No seed data changes.
 - Known limits: `/ballot` does not yet link to `/measures/[id]` — that integration is the next sprint item.
 - Deferred: ballot → measure profile links, vote screen, profile screen.
 
