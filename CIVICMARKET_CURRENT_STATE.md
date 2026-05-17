@@ -1,6 +1,6 @@
 # CivicMarket Current State
 
-Last updated: May 16, 2026
+Last updated: May 17, 2026
 
 ## Authoritative order
 
@@ -81,13 +81,13 @@ Confirmed complete:
 - /profile route — read-only Profile screen, auth-gated, reads profiles and civic_dna (latest row), shows 7 dimension scores or quiz nudge, no writes, lint passed, build passed, complete, commit bfe11ac, May 16 2026
 - /report route — UI-only Report Inaccuracy shell, auth-gated, local component state only, no Supabase writes, no SQL, no tables, no RLS policies, beta message shown on submit, lint passed, build passed, complete, commit 6c63b51, May 16 2026
 - /data-sources route — static Data Sources page, auth-gated, no Supabase reads beyond auth, five static methodology sections, no writes, no tables, lint passed, build passed, complete, commit b81e8ef, May 16 2026
+- /admin/entry route — minimal admin voting-record entry form, admin-gated (profiles.is_admin = true, non-admin redirects to /), loads active candidates (archived_at IS NULL) ordered by name, form fields: candidate, issue title, issue description, bill number (optional), vote date, vote cast (for/against/abstain), dimension (all seven locked keys), source URL (required, isSafeUrl validated), inserts one row into voting_records on submit, RLS INSERT policy "Admins can insert voting records" added and verified in Supabase SQL Editor, existing "Voting records are publicly readable" SELECT policy unchanged, browser-tested with joebuttonz4@gmail.com, test row id 5a0e22b2-ed14-430d-995d-a333bb5d2838 (issue_title: TEST ONLY - Admin voting record entry, candidate: Angela Torres) remains in database, lint passed, build passed, complete, commit e24fe14, May 17 2026
 
 ## Immediate priorities
 
-1. Minimal admin voting-record entry
-2. Minimal admin review removal
-3. Patch remaining Supabase security risks
-4. Replace dummy data with real PSL data before beta invitations
+1. Minimal admin review/removal page
+2. Patch remaining Supabase security risks
+3. Replace dummy data with real PSL data before beta invitations
 
 ## Deferred — requires separate approval
 
@@ -114,13 +114,14 @@ Raw answers are stored as-is.
 ## Hard beta blockers
 
 No beta invitations until:
-- Real PSL data replaces dummy data
+- Real PSL data replaces dummy data (with real AI-scored voting records validated before use)
 - Voting records have official source URLs
 - Funding rows have source URLs
 - Legal pages exist
 - Invite code gate works
-- Report Inaccuracy exists
-- Data Sources exists
-- Admin can enter voting records
+- Report Inaccuracy database-backed submission exists (currently deferred — UI shell only)
+- Data Sources exists ✓
+- Admin can enter voting records ✓ (commit e24fe14)
+- Admin review/removal page exists
 - Security patch applied
 - Email confirmation re-enabled

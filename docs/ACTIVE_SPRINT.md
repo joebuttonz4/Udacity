@@ -1,10 +1,10 @@
 # Active Sprint
 
-## Sprint: Minimal Admin Voting-Record Entry
+## Sprint: Minimal Admin Review/Removal
 
 ## Goal
 
-Build the minimal admin interface so an admin can enter a voting record (candidate, issue, vote cast, source URL, dimension) that writes to the `voting_records` table. Required before beta — no beta user should see placeholder voting records.
+Build the minimal admin interface so an admin can list existing `voting_records` rows and delete incorrect or test entries. Required before beta — the test row entered during admin entry testing must be removable without direct Supabase access.
 
 ## Previously completed
 
@@ -24,19 +24,20 @@ Build the minimal admin interface so an admin can enter a voting record (candida
 - /profile — read-only Profile screen, Civic DNA results + account details, built May 16 2026, commit bfe11ac
 - /report — UI-only Report Inaccuracy shell, auth-gated, local state only, no Supabase writes, beta message shown on submit, built May 16 2026, commit 6c63b51
 - /data-sources — static Data Sources page, auth-gated, no Supabase reads beyond auth, static methodology content, built May 16 2026, commit b81e8ef
+- /admin/entry — minimal admin voting-record entry form, admin-gated, inserts into voting_records, browser-tested, RLS policy verified, built May 17 2026, commit e24fe14
 
 ## Acceptance criteria
 
-- [ ] Admin voting-record entry route exists (e.g. `/admin/entry`)
+- [ ] Admin review/removal route exists (e.g. `/admin/review`)
 - [ ] Protected — only accessible to users where `profiles.is_admin = true`
-- [ ] Form accepts: candidate (select or ID), issue title, issue description, vote date, vote cast (for/against/abstain), dimension, source URL
-- [ ] `source_url` is required (enforced in form and schema)
-- [ ] Submission writes one row to `voting_records`
+- [ ] Lists existing `voting_records` rows (candidate name, issue title, vote date, dimension)
+- [ ] Admin can delete a `voting_records` row
+- [ ] Deletion requires explicit confirmation before executing
 - [ ] No public-facing UI changes
 - [ ] Mobile-first layout, Tailwind only, no inline styles
 - [ ] npm run lint passes (0 errors)
 - [ ] npm run build passes
-- [ ] SQL/RLS security review approved before any write is built
+- [ ] SQL/RLS security review approved before any delete is built
 
 ## Do not do in this sprint
 

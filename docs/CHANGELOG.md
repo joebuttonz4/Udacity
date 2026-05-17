@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-05-17 (admin voting-record entry)
+
+- Built minimal admin voting-record entry page at `/admin/entry` (commit `e24fe14`).
+- Files changed:
+  - `src/app/admin/entry/page.tsx` — new client component. Auth-gated: checks `getSession` then queries `profiles.is_admin`; non-admin users (including unauthenticated) redirect to `/`. Loads active candidates (`archived_at IS NULL`) ordered by name. Form fields: candidate (select), issue title, issue description, bill/resolution number (optional), vote date, vote cast (for/against/abstain), Civic DNA dimension (all seven locked keys), source URL. `source_url` is required and validated with `isSafeUrl` (must start with `https://` or `http://`). On submit, inserts one row into `voting_records`. Success state shows saved title and "Add another record" button. No public-facing UI changes. Tailwind only, zero `style=` attributes.
+- Supabase RLS changes (verified in SQL Editor):
+  - Added: `"Admins can insert voting records"` on `voting_records` for INSERT — restricts insert to `profiles.is_admin = true`.
+  - Unchanged: `"Voting records are publicly readable"` SELECT policy — remains in place.
+- Browser-tested with admin account joebuttonz4@gmail.com. Test row verified in Supabase:
+  - id: `5a0e22b2-ed14-430d-995d-a333bb5d2838`, issue_title: `TEST ONLY - Admin voting record entry`, candidate: Angela Torres.
+  - Test row remains in the database — not deleted.
+- Tests run: `npm run lint` (0 errors), `npm run build` (clean, 17 routes including `/admin/entry`).
+- No schema changes. No seed data changes. No existing files changed beyond new page file.
+- Next priority: minimal admin review/removal page.
+
 ## 2026-05-16 (data sources page)
 
 - Built static Data Sources page at `/data-sources` (commit `b81e8ef`).
