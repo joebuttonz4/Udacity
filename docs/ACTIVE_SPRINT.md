@@ -1,10 +1,10 @@
 # Active Sprint
 
-## Sprint: Minimal Admin Review/Removal
+## Sprint: App Smoke Tests + Real PSL Data Preparation
 
 ## Goal
 
-Build the minimal admin interface so an admin can list existing `voting_records` rows and delete incorrect or test entries. Required before beta — the test row entered during admin entry testing must be removable without direct Supabase access.
+Verify the app is stable after the security grant patch, then replace all dummy PSL data with real, validated candidate, voting record, and funding data before beta invitations go out.
 
 ## Previously completed
 
@@ -27,28 +27,24 @@ Build the minimal admin interface so an admin can list existing `voting_records`
 - /admin/entry — minimal admin voting-record entry form, admin-gated, inserts into voting_records, browser-tested, RLS policy verified, built May 17 2026, commit e24fe14
 - /admin/records — read-only admin voting-record review list, admin-gated, no delete, no delete RLS, built May 17 2026, commit 93342f3
 - /admin/records (removal) — voting-record removal controls added, two-step confirmation, scored-record guard, DELETE RLS policy verified, TEST ONLY row deleted and confirmed gone, built May 17 2026, commit 31adca9
+- Supabase security grant patch — REVOKE TRUNCATE/TRIGGER/REFERENCES from anon/authenticated on all public tables; revoked INSERT/UPDATE/DELETE where no matching RLS policy existed; verified match_scores SELECT-only, reviews SELECT+INSERT only, profiles.is_admin not browser-writable, RLS enabled on all tables, applied May 17 2026 (manual SQL, no code commit)
 
 ## Acceptance criteria
 
-- [x] Admin review/removal route exists — `/admin/records`
-- [x] Protected — only accessible to users where `profiles.is_admin = true`
-- [x] Lists existing `voting_records` rows (candidate name, issue title, vote date, dimension)
-- [x] Admin can delete a `voting_records` row — by exact id, DELETE RLS policy in place
-- [x] Deletion requires explicit confirmation before executing — two-step: Remove → Confirm delete
-- [x] No public-facing UI changes
-- [x] Mobile-first layout, Tailwind only, no inline styles
-- [x] npm run lint passes (0 errors)
-- [x] npm run build passes
-- [x] SQL/RLS security review approved before any delete was built — policy verified before code shipped
-
-## Sprint complete
-
-All acceptance criteria met. Next sprint: patch remaining Supabase security risks.
+- [ ] Smoke test: onboarding flow (signup through calculating) still works after security patch
+- [ ] Smoke test: /ballot, /candidates/[id], /measures/[id], /vote load correctly
+- [ ] Smoke test: /admin/entry can still insert a voting record
+- [ ] Smoke test: /admin/records lists records and Remove/Confirm delete works
+- [ ] Smoke test: /profile, /report, /data-sources load correctly
+- [ ] Real PSL candidate data replaces dummy data
+- [ ] Real voting records with official source URLs replace dummy records
+- [ ] Real funding data with source URLs replaces dummy funding rows
+- [ ] All real data validated by admin before beta invitations
 
 ## Do not do in this sprint
 
 - Do not build database-backed report submission yet — deferred pending SQL/RLS risk check approval
 - Do not build full admin dashboard yet
 - Do not build Edge Functions yet
-- Do not replace dummy data with real PSL data yet
+- Do not send beta invitations until all real data is in place and validated
 

@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026-05-17 (Supabase security grant patch)
+
+- Applied Supabase security grant patch manually in SQL Editor. No code changes. No RLS policy changes. No schema changes. No data deleted.
+- Change 1 — Revoked overly-broad privilege types from `anon` and `authenticated` roles across all public tables:
+  ```sql
+  REVOKE TRUNCATE, TRIGGER, REFERENCES
+  ON ALL TABLES IN SCHEMA public
+  FROM anon, authenticated;
+  ```
+  Verification: inspection query returned no remaining TRUNCATE, TRIGGER, or REFERENCES grants to `anon` or `authenticated` on any public table.
+- Change 2 — Revoked INSERT/UPDATE/DELETE grants from `anon` and `authenticated` only on tables where no matching RLS policy existed (DO block, `matching_policy_count = 0` condition):
+  Verification: inspection query returned no rows — no remaining `anon` or `authenticated` INSERT/UPDATE/DELETE grants exist without a corresponding RLS policy.
+- Post-patch verification:
+  - RLS remains enabled on all public tables — confirmed.
+  - `profiles.is_admin` confirmed not browser-writable.
+  - `match_scores` has SELECT policy only — no INSERT or UPDATE policy.
+  - `reviews` has SELECT and INSERT only — no UPDATE policy.
+- Next priority: run full app smoke tests to confirm onboarding, ballot, candidate profile, and admin flows still work, then replace dummy data with real PSL data before beta.
+
 ## 2026-05-17 (admin voting-record removal)
 
 - Added voting-record removal controls to `/admin/records` (commit `31adca9`).
