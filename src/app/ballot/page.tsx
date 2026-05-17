@@ -181,34 +181,29 @@ export default function BallotPage() {
                       <Link
                         key={candidate.id}
                         href={`/candidates/${candidate.id}`}
-                        className="bg-[#F6F8FA] rounded-xl px-4 py-3 block active:scale-[0.98] transition-transform"
+                        className="bg-[#F6F8FA] border border-[#E8EDF2] rounded-xl px-4 py-3.5 flex items-center gap-3 active:scale-[0.98] transition-transform"
                       >
-                        <div className="flex items-center justify-between gap-3">
-                          <div className="flex items-center gap-3 flex-1 min-w-0">
-                            <div className="w-9 h-9 rounded-full bg-[#E5E7EB] flex items-center justify-center flex-shrink-0">
-                              <span className="text-sm font-bold text-[#6B7280] [font-family:var(--font-syne)]">
-                                {candidate.name.charAt(0)}
-                              </span>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <h2 className="text-[#0D1117] text-sm font-semibold leading-tight [font-family:var(--font-syne)]">
-                                  {candidate.name}
-                                </h2>
-                                {candidate.is_incumbent && (
-                                  <span className="text-[10px] font-semibold text-[#D97706] bg-[#FEF3C7] px-2 py-0.5 rounded-full [font-family:var(--font-syne)]">
-                                    Incumbent
-                                  </span>
-                                )}
-                              </div>
-                              <p className="text-[#6B7280] text-xs mt-0.5 truncate [font-family:var(--font-instrument-sans)]">
-                                {candidate.office}
-                              </p>
-                            </div>
-                          </div>
-
-                          <MatchScoreRing score={candidate.match_score} size="sm" />
+                        <div className="w-10 h-10 rounded-full bg-[#E5E7EB] flex items-center justify-center flex-shrink-0">
+                          <span className="text-sm font-bold text-[#6B7280] [font-family:var(--font-syne)]">
+                            {candidate.name.charAt(0)}
+                          </span>
                         </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h2 className="text-[#0D1117] text-[15px] font-semibold leading-tight [font-family:var(--font-syne)]">
+                              {candidate.name}
+                            </h2>
+                            {candidate.is_incumbent && (
+                              <span className="text-[10px] font-semibold text-[#D97706] bg-[#FEF3C7] px-2 py-0.5 rounded-full [font-family:var(--font-syne)]">
+                                Incumbent
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[#6B7280] text-xs mt-0.5 truncate [font-family:var(--font-instrument-sans)]">
+                            {candidate.office}
+                          </p>
+                        </div>
+                        <MatchScoreRing score={candidate.match_score} size="sm" />
                       </Link>
                     ))}
                   </div>
