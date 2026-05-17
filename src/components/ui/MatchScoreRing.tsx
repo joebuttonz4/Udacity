@@ -6,15 +6,15 @@ interface MatchScoreRingProps {
 }
 
 const DIMS = {
-  sm: { px: 36, stroke: 3, textClass: 'text-[9px]' },
-  md: { px: 44, stroke: 3.5, textClass: 'text-[11px]' },
-  lg: { px: 56, stroke: 4, textClass: 'text-sm' },
+  sm: { px: 48, stroke: 3.5, textClass: 'text-[10px]', lockSize: 14 },
+  md: { px: 72, stroke: 4.5, textClass: 'text-sm', lockSize: 20 },
+  lg: { px: 96, stroke: 5.5, textClass: 'text-base', lockSize: 28 },
 }
 
 const CONTAINER_CLASS = {
-  sm: 'w-9 h-9',
-  md: 'w-11 h-11',
-  lg: 'w-14 h-14',
+  sm: 'w-12 h-12',
+  md: 'w-[72px] h-[72px]',
+  lg: 'w-24 h-24',
 }
 
 function ringColor(score: number): string {
@@ -30,7 +30,7 @@ function textColorClass(score: number): string {
 }
 
 export default function MatchScoreRing({ score, size = 'sm' }: MatchScoreRingProps) {
-  const { px, stroke, textClass } = DIMS[size]
+  const { px, stroke, textClass, lockSize } = DIMS[size]
   const r = (px - stroke) / 2
   const cx = px / 2
   const cy = px / 2
@@ -48,18 +48,18 @@ export default function MatchScoreRing({ score, size = 'sm' }: MatchScoreRingPro
             cy={cy}
             r={r}
             fill="none"
-            stroke="#374151"
+            stroke="#D1D5DB"
             strokeWidth={stroke}
             strokeDasharray="4 3"
           />
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
           <svg
-            width="12"
-            height="12"
+            width={lockSize}
+            height={lockSize}
             viewBox="0 0 24 24"
             fill="none"
-            stroke="#6B7280"
+            stroke="#9CA3AF"
             strokeWidth="2.5"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -88,7 +88,7 @@ export default function MatchScoreRing({ score, size = 'sm' }: MatchScoreRingPro
         height={px}
         viewBox={`0 0 ${px} ${px}`}
       >
-        <circle cx={cx} cy={cy} r={r} fill="none" stroke="#1F2937" strokeWidth={stroke} />
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke="#E5E7EB" strokeWidth={stroke} />
         <circle
           cx={cx}
           cy={cy}

@@ -12,10 +12,10 @@ import {
 } from '@/lib/measures'
 
 const TYPE_STYLES: Record<string, { tag: string; label: string }> = {
-  bond: { tag: 'bg-[#EFF6FF] text-[#1D4ED8]', label: 'Bond' },
-  ordinance: { tag: 'bg-[#E6FAF6] text-[#00A688]', label: 'Ordinance' },
-  zoning: { tag: 'bg-[#FFF7ED] text-[#C2410C]', label: 'Zoning' },
-  referendum: { tag: 'bg-[#EEF2FF] text-[#4338CA]', label: 'Referendum' },
+  bond: { tag: 'bg-[#DBEAFE] text-[#1D4ED8]', label: 'Bond' },
+  ordinance: { tag: 'bg-[#CCFBF1] text-[#0F766E]', label: 'Ordinance' },
+  zoning: { tag: 'bg-[#FEF3C7] text-[#D97706]', label: 'Zoning' },
+  referendum: { tag: 'bg-[#E0E7FF] text-[#4338CA]', label: 'Referendum' },
 }
 
 const DIMENSION_LABELS: Record<string, string> = {
@@ -41,7 +41,7 @@ const DIMENSIONS = [
 type DimensionKey = (typeof DIMENSIONS)[number]
 
 function getTypeStyle(type: string) {
-  return TYPE_STYLES[type] ?? { tag: 'bg-[#374151] text-[#9CA3AF]', label: type }
+  return TYPE_STYLES[type] ?? { tag: 'bg-[#F3F4F6] text-[#6B7280]', label: type }
 }
 
 function isSafeUrl(url: string | null | undefined): boolean {
@@ -61,10 +61,10 @@ function formatScore(score: number | null | undefined): string {
 }
 
 function scoreColor(score: number | null | undefined): string {
-  if (score === null || score === undefined) return 'text-[#6B7280]'
-  if (score > 0) return 'text-[#00C9A7]'
-  if (score < 0) return 'text-[#FF6B6B]'
-  return 'text-[#9CA3AF]'
+  if (score === null || score === undefined) return 'text-[#9CA3AF]'
+  if (score > 0) return 'text-[#0F766E]'
+  if (score < 0) return 'text-[#DC2626]'
+  return 'text-[#6B7280]'
 }
 
 export default function MeasureProfilePage() {
@@ -117,145 +117,148 @@ export default function MeasureProfilePage() {
   }, [measureId, router])
 
   return (
-    <div className="min-h-screen bg-[#0D1117] px-6 pt-12 pb-28">
-      <Link
-        href="/ballot"
-        className="flex items-center gap-1 text-[#9CA3AF] text-sm mb-6 hover:text-[#00C9A7] transition-colors [font-family:var(--font-instrument-sans)]"
-      >
-        &lt;- Ballot
-      </Link>
+    <div className="min-h-screen flex flex-col">
+      {/* Dark hero header */}
+      <div className="bg-[#0D1117] px-6 pt-10 pb-8">
+        <Link
+          href="/ballot"
+          className="flex items-center gap-1.5 text-[#6B7280] text-sm mb-6 hover:text-[#00C9A7] transition-colors [font-family:var(--font-instrument-sans)]"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+          Ballot
+        </Link>
 
-      {loading && (
-        <div className="flex flex-col gap-4 animate-pulse">
-          <div className="h-4 w-20 bg-[#374151] rounded-full mb-1" />
-          <div className="h-6 w-64 bg-[#374151] rounded mb-1" />
-          <div className="h-3 w-40 bg-[#374151] rounded mb-4" />
-          <div className="h-28 bg-[#1F2937] rounded-2xl" />
-          <div className="h-48 bg-[#1F2937] rounded-2xl" />
-        </div>
-      )}
+        {loading && (
+          <div className="animate-pulse">
+            <div className="h-4 w-20 bg-[#1F2937] rounded-full mb-3" />
+            <div className="h-6 w-64 bg-[#1F2937] rounded mb-2" />
+            <div className="h-3 w-40 bg-[#1F2937] rounded" />
+          </div>
+        )}
 
-      {error && (
-        <div className="bg-[#FF6B6B]/10 border border-[#FF6B6B]/30 rounded-2xl p-4">
-          <p className="text-[#FF6B6B] text-sm [font-family:var(--font-instrument-sans)]">
-            {error}
-          </p>
-          <button
-            onClick={() => router.push('/ballot')}
-            className="mt-4 w-full bg-[#00C9A7] text-[#0D1117] font-bold py-3 rounded-xl text-sm active:scale-[0.98] transition-transform [font-family:var(--font-syne)]"
-          >
-            Back to Ballot
-          </button>
-        </div>
-      )}
-
-      {!loading && !error && measure && (
-        <div className="flex flex-col gap-5">
-          {/* Header */}
-          <header>
-            <div className="mb-2">
-              <span
-                className={`text-xs font-semibold px-2 py-0.5 rounded-full [font-family:var(--font-syne)] ${getTypeStyle(measure.type).tag}`}
-              >
-                {getTypeStyle(measure.type).label}
-              </span>
-            </div>
-            <h1 className="text-white text-xl font-bold leading-tight mb-2 [font-family:var(--font-syne)]">
+        {!loading && !error && measure && (
+          <>
+            <span className={`text-xs font-semibold px-2.5 py-1 rounded-full [font-family:var(--font-syne)] ${getTypeStyle(measure.type).tag}`}>
+              {getTypeStyle(measure.type).label}
+            </span>
+            <h1 className="text-white text-xl font-bold leading-tight mt-3 mb-2 [font-family:var(--font-syne)]">
               {measure.title}
             </h1>
             {(measure.district_name || measure.election_date) && (
               <p className="text-[#6B7280] text-xs [font-family:var(--font-instrument-sans)]">
                 {measure.district_name}
-                {measure.district_name && measure.election_date ? ' — ' : ''}
+                {measure.district_name && measure.election_date ? ' · ' : ''}
                 {measure.election_date ? formatDate(measure.election_date) : ''}
               </p>
             )}
-          </header>
+          </>
+        )}
+      </div>
 
-          {/* Plain English Summary */}
-          {measure.plain_english_summary && (
-            <section className="bg-[#1F2937] rounded-2xl p-4 border border-[#374151]">
-              <h2 className="text-[#9CA3AF] text-xs font-semibold uppercase tracking-wider mb-2 [font-family:var(--font-syne)]">
-                What it means
-              </h2>
-              <p className="text-[#D1D5DB] text-sm leading-6 [font-family:var(--font-instrument-sans)]">
-                {measure.plain_english_summary}
-              </p>
-            </section>
-          )}
-
-          {/* Full Text Link */}
-          {isSafeUrl(measure.full_text_url) && (
-            <a
-              href={measure.full_text_url!}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block w-full text-center bg-[#1F2937] border border-[#374151] text-[#00C9A7] font-semibold py-3 rounded-2xl text-sm active:scale-[0.98] transition-transform [font-family:var(--font-syne)]"
+      {/* Light content area */}
+      <div className="flex-1 bg-[#F6F8FA] px-4 pt-5 pb-24 flex flex-col gap-4">
+        {error && (
+          <div className="bg-[#FEF2F2] border border-[#FECACA] rounded-[20px] p-4">
+            <p className="text-[#DC2626] text-sm [font-family:var(--font-instrument-sans)]">
+              {error}
+            </p>
+            <button
+              onClick={() => router.push('/ballot')}
+              className="mt-4 w-full bg-[#00C9A7] text-[#0D1117] font-bold py-3 rounded-xl text-sm active:scale-[0.98] transition-transform [font-family:var(--font-syne)]"
             >
-              Read Full Text
-            </a>
-          )}
+              Back to Ballot
+            </button>
+          </div>
+        )}
 
-          {/* Dimension Scores */}
-          <section>
-            <h2 className="text-[#9CA3AF] text-xs font-semibold uppercase tracking-wider mb-2 [font-family:var(--font-syne)]">
-              Civic DNA Impact
-            </h2>
-            {dimensions ? (
-              <div className="bg-[#1F2937] rounded-2xl border border-[#374151] overflow-hidden">
-                {dimensions.impact_summary && (
-                  <div className="px-4 pt-4 pb-3 border-b border-[#374151]">
-                    <p className="text-[#D1D5DB] text-sm leading-6 [font-family:var(--font-instrument-sans)]">
+        {loading && (
+          <div className="flex flex-col gap-4 animate-pulse">
+            <div className="h-28 bg-white rounded-[20px] shadow-sm" />
+            <div className="h-48 bg-white rounded-[20px] shadow-sm" />
+          </div>
+        )}
+
+        {!loading && !error && measure && (
+          <>
+            {/* Plain English Summary */}
+            {measure.plain_english_summary && (
+              <section className="bg-white rounded-[20px] shadow-sm p-4">
+                <h2 className="text-[#6B7280] text-[11px] font-semibold uppercase tracking-widest mb-2 [font-family:var(--font-syne)]">
+                  What it means
+                </h2>
+                <p className="text-[#374151] text-sm leading-6 [font-family:var(--font-instrument-sans)]">
+                  {measure.plain_english_summary}
+                </p>
+              </section>
+            )}
+
+            {/* Full Text Link */}
+            {isSafeUrl(measure.full_text_url) && (
+              <a
+                href={measure.full_text_url!}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full text-center bg-[#0D1117] text-[#00C9A7] font-semibold py-3.5 rounded-[20px] text-sm active:scale-[0.98] transition-transform [font-family:var(--font-syne)]"
+              >
+                Read Full Text ↗
+              </a>
+            )}
+
+            {/* Dimension Scores */}
+            <section className="bg-white rounded-[20px] shadow-sm p-4">
+              <h2 className="text-[#6B7280] text-[11px] font-semibold uppercase tracking-widest mb-3 [font-family:var(--font-syne)]">
+                Civic DNA Impact
+              </h2>
+              {dimensions ? (
+                <>
+                  {dimensions.impact_summary && (
+                    <p className="text-[#374151] text-sm leading-6 mb-3 [font-family:var(--font-instrument-sans)]">
                       {dimensions.impact_summary}
                     </p>
+                  )}
+                  <div className="flex flex-col divide-y divide-[#F3F4F6]">
+                    {DIMENSIONS.map((key) => {
+                      const score = dimensions[key as DimensionKey]
+                      return (
+                        <div key={key} className="flex items-center justify-between py-2.5">
+                          <span className="text-[#6B7280] text-sm [font-family:var(--font-instrument-sans)]">
+                            {DIMENSION_LABELS[key]}
+                          </span>
+                          <span className={`text-sm font-semibold [font-family:var(--font-syne)] ${scoreColor(score)}`}>
+                            {formatScore(score)}
+                          </span>
+                        </div>
+                      )
+                    })}
                   </div>
-                )}
-                <div className="divide-y divide-[#374151]">
-                  {DIMENSIONS.map((key) => {
-                    const score = dimensions[key as DimensionKey]
-                    return (
-                      <div key={key} className="flex items-center justify-between px-4 py-3">
-                        <span className="text-[#9CA3AF] text-xs [font-family:var(--font-instrument-sans)]">
-                          {DIMENSION_LABELS[key]}
-                        </span>
-                        <span
-                          className={`text-sm font-semibold [font-family:var(--font-syne)] ${scoreColor(score)}`}
-                        >
-                          {formatScore(score)}
-                        </span>
-                      </div>
-                    )
-                  })}
-                </div>
-                {dimensions.scored_by && (
-                  <div className="px-4 py-2 border-t border-[#374151]">
-                    <p className="text-[#6B7280] text-xs [font-family:var(--font-instrument-sans)]">
+                  {dimensions.scored_by && (
+                    <p className="text-[#9CA3AF] text-xs mt-3 [font-family:var(--font-instrument-sans)]">
                       Scored by:{' '}
                       {dimensions.scored_by === 'ai_draft'
                         ? 'AI draft — not yet validated'
                         : dimensions.scored_by}
                     </p>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="bg-[#1F2937] rounded-2xl p-4 border border-[#374151]">
-                <p className="text-[#6B7280] text-sm [font-family:var(--font-instrument-sans)]">
+                  )}
+                </>
+              ) : (
+                <p className="text-[#9CA3AF] text-sm [font-family:var(--font-instrument-sans)]">
                   No scoring data yet.
                 </p>
-              </div>
-            )}
-          </section>
+              )}
+            </section>
 
-          {/* Read-only disclaimer */}
-          <div className="bg-[#374151]/30 border border-[#374151] rounded-2xl p-4">
-            <p className="text-[#6B7280] text-xs leading-5 [font-family:var(--font-instrument-sans)]">
-              This is a read-only beta measure profile using placeholder PSL data. Ballot
-              measure and scoring data must be replaced and validated before beta users.
-            </p>
-          </div>
-        </div>
-      )}
+            {/* Beta disclaimer */}
+            <div className="bg-[#FFFBEB] border border-[#FDE68A] rounded-[20px] p-4">
+              <p className="text-[#92400E] text-xs leading-5 [font-family:var(--font-instrument-sans)]">
+                Read-only beta using placeholder PSL data. Ballot measure and scoring data must
+                be replaced and validated before beta users.
+              </p>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   )
 }

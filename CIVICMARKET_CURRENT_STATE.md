@@ -1,6 +1,6 @@
 # CivicMarket Current State
 
-Last updated: May 17, 2026
+Last updated: May 17, 2026 (session 3)
 
 ## Authoritative order
 
@@ -90,6 +90,7 @@ Confirmed complete:
 - Ballot match rings — fixed, commit 153a356, May 17 2026.
 - Profile sign out button — fixed, commit 66d2518, May 17 2026.
 - All three post-grant-patch smoke test UI issues resolved.
+- UI design alignment pass — complete, lint passed, build passed, May 17 2026 session 3. Changes: NavBar converted to active-state-aware client component imported from layout (removed duplicate hardcoded nav), MatchScoreRing sizes updated to spec (sm=48px, md=72px, lg=96px), all main screens (/, /ballot, /candidates/[id], /measures/[id], /vote, /profile, /onboarding) converted from all-dark to split dark-hero-header + #F6F8FA light body with white shadow cards, all inline style= violations removed (converted to [font-family:var(--font-syne)] Tailwind classes), globals.css cleaned to @import "tailwindcss" only, scope tags updated to spec colors (city=teal, county=blue, state=indigo), back-button arrows improved on profile/measure pages, warning banners updated to amber tone.
 
 ## Immediate priorities
 
