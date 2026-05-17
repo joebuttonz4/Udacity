@@ -87,11 +87,13 @@ Confirmed complete:
 - Supabase security grant patch — manual SQL in SQL Editor, no code commit: (1) REVOKE TRUNCATE, TRIGGER, REFERENCES on all public tables from anon and authenticated; verified no remaining grants of those types. (2) DO block revoked INSERT/UPDATE/DELETE from anon and authenticated only where matching_policy_count = 0; verified no remaining unguarded grants. Post-patch: RLS enabled on all public tables confirmed, profiles.is_admin not browser-writable, match_scores SELECT-only, reviews SELECT and INSERT only (no UPDATE). No data deleted. No RLS policies changed. No schema changes. Complete, May 17 2026.
 - Post-grant-patch smoke test — run May 17 2026 after commit `51ca84d`. No code changes. No database changes. Routes confirmed working: /, /admin/entry (insert confirmed), /admin/records (list and two-step delete confirmed, TEST ONLY row deleted, no real rows deleted), /ballot (loaded, candidate cards and links worked, bottom nav appeared), /profile (loaded, normal profile/DNA state), /data-sources, /report (UI-only submit confirmed, no database write), /vote, /candidates/[id] (one profile, voting records and source links visible). No permission errors on any route. Known issues found: (1) ballot match rings not showing, (2) profile sign out not visible, (3) candidate profile Report Inaccuracy link/button missing. /measures/[id] not tested — no measure exists in current dummy data. Complete, May 17 2026.
 - /candidates/[id] Report Inaccuracy link — added "Report an Inaccuracy" Link at the bottom of the loaded candidate profile, after the read-only disclaimer, linking to /report. No database changes. No RLS changes. No /report behavior changes. lint passed, build passed, complete, May 17 2026.
+- Ballot match rings — fixed, commit 153a356, May 17 2026.
+- Profile sign out button — fixed, commit 66d2518, May 17 2026.
+- All three post-grant-patch smoke test UI issues resolved.
 
 ## Immediate priorities
 
-1. Fix two remaining known issues from smoke test before beta: ballot match rings not showing; profile sign out not visible
-2. Replace dummy data with real PSL data before beta invitations
+1. Replace dummy data with real validated PSL candidate, voting record, and funding data before beta invitations
 
 ## Deferred — requires separate approval
 
@@ -128,8 +130,8 @@ No beta invitations until:
 - Admin can enter voting records ✓ (commit e24fe14)
 - Admin review/removal page exists ✓ (commits 93342f3 + 31adca9) — review list and deletion controls complete, DELETE RLS policy verified, test row deleted
 - Security patch applied ✓ — grant patch May 17 2026 (REVOKE TRUNCATE/TRIGGER/REFERENCES; revoked unguarded INSERT/UPDATE/DELETE; verified match_scores SELECT-only, reviews no UPDATE, profiles.is_admin not browser-writable)
-- Ballot match rings not showing — fix required before beta
-- Profile sign out not visible — fix required before beta
+- Ballot match rings not showing ✓ — fixed, commit 153a356
+- Profile sign out not visible ✓ — fixed, commit 66d2518
 - Candidate profile Report Inaccuracy link/button missing ✓ — fixed, link added to /report
 - /measures/[id] smoke test pending — no measure data exists yet; must test once real measure data is in place
 - Email confirmation re-enabled
