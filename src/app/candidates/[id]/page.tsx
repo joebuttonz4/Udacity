@@ -391,6 +391,13 @@ export default function CandidateProfilePage() {
               voting record, and ballot data must be replaced and validated before beta users.
             </p>
           </div>
+
+          <Link
+            href="/report"
+            className="block w-full text-center bg-[#1F2937] border border-[#374151] text-[#9CA3AF] font-semibold py-3 rounded-2xl text-sm active:scale-[0.98] transition-transform [font-family:var(--font-syne)]"
+          >
+            Report an Inaccuracy
+          </Link>
         </div>
       )}
     </div>
