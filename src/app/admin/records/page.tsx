@@ -14,6 +14,8 @@ type VotingRecordRow = {
   dimension: string
   source_url: string
   created_at: string
+  community_score_count: number
+  community_score_final: number | null
   candidates: { name: string; office: string } | null
 }
 
@@ -57,6 +59,9 @@ export default function AdminRecordsPage() {
   const [loading, setLoading] = useState(true)
   const [records, setRecords] = useState<VotingRecordRow[]>([])
   const [error, setError] = useState<string | null>(null)
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   useEffect(() => {
     async function checkAdminAndLoad() {
@@ -91,6 +96,8 @@ export default function AdminRecordsPage() {
           dimension,
           source_url,
           created_at,
+          community_score_count,
+          community_score_final,
           candidates ( name, office )
         `)
         .order('created_at', { ascending: false })
@@ -107,6 +114,24 @@ export default function AdminRecordsPage() {
 
     checkAdminAndLoad()
   }, [router])
+
+  async function handleDelete(id: string) {
+    setDeleting(true)
+    setDeleteError(null)
+    try {
+      const { error: deleteErr } = await supabase
+        .from('voting_records')
+        .delete()
+        .eq('id', id)
+      if (deleteErr) throw deleteErr
+      setRecords((prev) => prev.filter((r) => r.id !== id))
+      setPendingDeleteId(null)
+    } catch (err: unknown) {
+      setDeleteError(err instanceof Error ? err.message : 'Delete failed. Try again.')
+    } finally {
+      setDeleting(false)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-[#0D1117] px-6 pt-12 pb-28">
@@ -128,7 +153,7 @@ export default function AdminRecordsPage() {
 
       <div className="bg-[#F59E0B]/10 border border-[#F59E0B]/30 rounded-2xl p-4 mb-6">
         <p className="text-[#F59E0B] text-xs leading-5 [font-family:var(--font-instrument-sans)]">
-          Review only. Removal controls are intentionally not enabled yet.
+          Admin only. Deletions are permanent and cannot be undone.
         </p>
       </div>
 
@@ -162,64 +187,125 @@ export default function AdminRecordsPage() {
             {records.length} record{records.length !== 1 ? 's' : ''} - newest first
           </p>
 
-          {records.map((record) => (
-            <article
-              key={record.id}
-              className="bg-[#1F2937] border border-[#374151] rounded-2xl p-4 flex flex-col gap-3"
-            >
-              <div>
-                <p className="text-white font-semibold text-sm leading-tight [font-family:var(--font-syne)]">
-                  {record.candidates?.name ?? '-'}
-                </p>
-                <p className="text-[#9CA3AF] text-xs mt-0.5 [font-family:var(--font-instrument-sans)]">
-                  {record.candidates?.office ?? '-'}
-                </p>
-              </div>
+          {records.map((record) => {
+            const isScored =
+              record.community_score_count > 0 || record.community_score_final !== null
+            const isPending = pendingDeleteId === record.id
 
-              <p className="text-[#D1D5DB] text-sm [font-family:var(--font-instrument-sans)]">
-                {record.issue_title}
-              </p>
+            return (
+              <article
+                key={record.id}
+                className="bg-[#1F2937] border border-[#374151] rounded-2xl p-4 flex flex-col gap-3"
+              >
+                <div>
+                  <p className="text-white font-semibold text-sm leading-tight [font-family:var(--font-syne)]">
+                    {record.candidates?.name ?? '-'}
+                  </p>
+                  <p className="text-[#9CA3AF] text-xs mt-0.5 [font-family:var(--font-instrument-sans)]">
+                    {record.candidates?.office ?? '-'}
+                  </p>
+                </div>
 
-              {record.bill_number && (
+                <p className="text-[#D1D5DB] text-sm [font-family:var(--font-instrument-sans)]">
+                  {record.issue_title}
+                </p>
+
+                {record.bill_number && (
+                  <p className="text-[#6B7280] text-xs [font-family:var(--font-instrument-sans)]">
+                    {record.bill_number}
+                  </p>
+                )}
+
+                <div className="flex flex-wrap gap-2 items-center">
+                  <span
+                    className={`text-xs font-semibold px-2.5 py-1 rounded-full [font-family:var(--font-syne)] ${voteCastClasses(record.vote_cast)}`}
+                  >
+                    {record.vote_cast.charAt(0).toUpperCase() + record.vote_cast.slice(1)}
+                  </span>
+                  <span className="text-[#9CA3AF] text-xs [font-family:var(--font-instrument-sans)]">
+                    {DIMENSION_LABELS[record.dimension] ?? record.dimension}
+                  </span>
+                  <span className="text-[#6B7280] text-xs [font-family:var(--font-instrument-sans)]">
+                    {formatDate(record.vote_date)}
+                  </span>
+                </div>
+
+                {isSafeUrl(record.source_url) ? (
+                  <a
+                    href={record.source_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#00C9A7] text-xs underline underline-offset-2 break-all [font-family:var(--font-instrument-sans)]"
+                  >
+                    {record.source_url}
+                  </a>
+                ) : (
+                  <p className="text-[#FF6B6B] text-xs [font-family:var(--font-instrument-sans)]">
+                    Invalid source URL
+                  </p>
+                )}
+
                 <p className="text-[#6B7280] text-xs [font-family:var(--font-instrument-sans)]">
-                  {record.bill_number}
+                  Added {formatDate(record.created_at)}
                 </p>
-              )}
 
-              <div className="flex flex-wrap gap-2 items-center">
-                <span
-                  className={`text-xs font-semibold px-2.5 py-1 rounded-full [font-family:var(--font-syne)] ${voteCastClasses(record.vote_cast)}`}
-                >
-                  {record.vote_cast.charAt(0).toUpperCase() + record.vote_cast.slice(1)}
-                </span>
-                <span className="text-[#9CA3AF] text-xs [font-family:var(--font-instrument-sans)]">
-                  {DIMENSION_LABELS[record.dimension] ?? record.dimension}
-                </span>
-                <span className="text-[#6B7280] text-xs [font-family:var(--font-instrument-sans)]">
-                  {formatDate(record.vote_date)}
-                </span>
-              </div>
-
-              {isSafeUrl(record.source_url) ? (
-                <a
-                  href={record.source_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[#00C9A7] text-xs underline underline-offset-2 break-all [font-family:var(--font-instrument-sans)]"
-                >
-                  {record.source_url}
-                </a>
-              ) : (
-                <p className="text-[#FF6B6B] text-xs [font-family:var(--font-instrument-sans)]">
-                  Invalid source URL
-                </p>
-              )}
-
-              <p className="text-[#6B7280] text-xs [font-family:var(--font-instrument-sans)]">
-                Added {formatDate(record.created_at)}
-              </p>
-            </article>
-          ))}
+                {isScored ? (
+                  <p className="text-[#9CA3AF] text-xs italic [font-family:var(--font-instrument-sans)]">
+                    Scored records require manual review before removal.
+                  </p>
+                ) : isPending ? (
+                  <div className="bg-[#FF6B6B]/10 border border-[#FF6B6B]/30 rounded-xl p-3 flex flex-col gap-3">
+                    <div>
+                      <p className="text-[#FF6B6B] text-xs font-semibold [font-family:var(--font-syne)]">
+                        Permanently delete?
+                      </p>
+                      <p className="text-[#D1D5DB] text-xs mt-1 [font-family:var(--font-instrument-sans)]">
+                        {record.issue_title} - {record.candidates?.name ?? '-'}
+                      </p>
+                      <p className="text-[#FF6B6B] text-xs mt-2 [font-family:var(--font-instrument-sans)]">
+                        This permanently deletes the voting record. This cannot be undone.
+                      </p>
+                    </div>
+                    {deleteError && (
+                      <p className="text-[#FF6B6B] text-xs [font-family:var(--font-instrument-sans)]">
+                        {deleteError}
+                      </p>
+                    )}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          setPendingDeleteId(null)
+                          setDeleteError(null)
+                        }}
+                        disabled={deleting}
+                        className="flex-1 bg-[#374151] text-[#D1D5DB] text-xs font-semibold py-2 rounded-lg disabled:opacity-40 disabled:pointer-events-none [font-family:var(--font-syne)]"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() => handleDelete(record.id)}
+                        disabled={deleting}
+                        className="flex-1 bg-[#FF6B6B] text-white text-xs font-semibold py-2 rounded-lg disabled:opacity-40 disabled:pointer-events-none [font-family:var(--font-syne)]"
+                      >
+                        {deleting ? 'Deleting...' : 'Confirm delete'}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setPendingDeleteId(record.id)
+                      setDeleteError(null)
+                    }}
+                    disabled={deleting}
+                    className="self-start text-xs text-[#FF6B6B] border border-[#FF6B6B]/40 px-3 py-1.5 rounded-lg hover:bg-[#FF6B6B]/10 transition-colors disabled:opacity-40 disabled:pointer-events-none [font-family:var(--font-syne)]"
+                  >
+                    Remove
+                  </button>
+                )}
+              </article>
+            )
+          })}
         </div>
       )}
     </div>
