@@ -28,14 +28,18 @@ Verify the app is stable after the security grant patch, then replace all dummy 
 - /admin/records — read-only admin voting-record review list, admin-gated, no delete, no delete RLS, built May 17 2026, commit 93342f3
 - /admin/records (removal) — voting-record removal controls added, two-step confirmation, scored-record guard, DELETE RLS policy verified, TEST ONLY row deleted and confirmed gone, built May 17 2026, commit 31adca9
 - Supabase security grant patch — REVOKE TRUNCATE/TRIGGER/REFERENCES from anon/authenticated on all public tables; revoked INSERT/UPDATE/DELETE where no matching RLS policy existed; verified match_scores SELECT-only, reviews SELECT+INSERT only, profiles.is_admin not browser-writable, RLS enabled on all tables, applied May 17 2026 (manual SQL, no code commit)
+- Post-grant-patch smoke test — run May 17 2026 after commit `51ca84d`; admin insert/list/delete confirmed working; /, /ballot, /candidates/[id], /vote, /profile, /report, /data-sources all loaded; no permission errors; three known issues found (see below); /measures/[id] not tested (no measure data); no code changes
 
 ## Acceptance criteria
 
 - [ ] Smoke test: onboarding flow (signup through calculating) still works after security patch
-- [ ] Smoke test: /ballot, /candidates/[id], /measures/[id], /vote load correctly
-- [ ] Smoke test: /admin/entry can still insert a voting record
-- [ ] Smoke test: /admin/records lists records and Remove/Confirm delete works
-- [ ] Smoke test: /profile, /report, /data-sources load correctly
+- [x] Smoke test: /ballot, /candidates/[id], /vote load correctly — loaded May 17 2026; /measures/[id] not tested (no measure data exists)
+- [x] Smoke test: /admin/entry can still insert a voting record — confirmed May 17 2026
+- [x] Smoke test: /admin/records lists records and Remove/Confirm delete works — confirmed May 17 2026
+- [x] Smoke test: /profile, /report, /data-sources load correctly — confirmed May 17 2026
+- [ ] Fix: ballot match rings not showing
+- [ ] Fix: profile sign out not visible
+- [ ] Fix: candidate profile Report Inaccuracy link/button missing
 - [ ] Real PSL candidate data replaces dummy data
 - [ ] Real voting records with official source URLs replace dummy records
 - [ ] Real funding data with source URLs replaces dummy funding rows

@@ -1,5 +1,27 @@
 # Changelog
 
+## 2026-05-17 (post-grant-patch smoke test)
+
+- Smoke testing run after commit `51ca84d` (Supabase security grant patch). No code changes. No database changes. No RLS policy changes. No schema changes.
+- Routes tested and results:
+  - `/` — loaded successfully.
+  - `/admin/entry` — loaded successfully. Inserted TEST ONLY row: issue_title `TEST ONLY - Grant patch smoke test`, candidate Angela Torres, bill number `TEST-GRANT-SMOKE`, vote cast abstain, dimension transparency, source URL `https://www.cityofpsl.com/`. No permission error on insert.
+  - `/admin/records` — loaded successfully. TEST ONLY row appeared as expected. Remove → Confirm delete path executed; row disappeared from list. No real rows deleted. No permission error on list or delete.
+  - `/ballot` — loaded; candidate cards appeared; card links worked; bottom nav appeared; no permission/data error. Known issue: match rings did not show.
+  - `/profile` — loaded; showed normal profile/DNA state; no permission/data error. Known issue: sign out not visible.
+  - `/data-sources` — loaded successfully.
+  - `/report` — loaded successfully; UI-only submit showed beta/no-recorded message; no database-backed report created.
+  - `/vote` — loaded successfully.
+  - `/candidates/[id]` (one profile) — loaded successfully with voting records and source links. Known issue: Report Inaccuracy link/button missing.
+  - `/measures/[id]` — not tested; no measure exists in current dummy data.
+- Security grant patch confirmed: no permission errors on any tested route.
+- Fixes needed before beta:
+  1. Ballot match rings not showing.
+  2. Profile sign out not visible.
+  3. Candidate profile Report Inaccuracy link/button missing.
+  4. `/measures/[id]` needs measure data before it can be tested.
+- Next priority: fix the three known issues, then replace dummy PSL data with real validated PSL data.
+
 ## 2026-05-17 (Supabase security grant patch)
 
 - Applied Supabase security grant patch manually in SQL Editor. No code changes. No RLS policy changes. No schema changes. No data deleted.
