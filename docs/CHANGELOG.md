@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-05-17 (admin voting-record review page)
+
+- Built read-only admin voting-record review page at `/admin/records` (commit `93342f3`).
+- Files changed:
+  - `src/app/admin/records/page.tsx` — new client component. Auth-gated: checks `getSession` then queries `profiles.is_admin`; non-admin users (including unauthenticated) redirect to `/`. Fetches all `voting_records` joined to `candidates (name, office)`, ordered by `created_at` descending (newest first). Displays per record: candidate name and office, issue title, bill number (conditional — omitted when null), vote cast pill (teal/For, red/Against, gray/Abstain), dimension label (human-readable), vote date (UTC-safe local parse for date-only strings), source URL as a clickable link guarded by `isSafeUrl`, and "Added [date]" from `created_at`. Record count shown above list. Loading skeleton, error card, and empty state included. Always-visible beta banner: "Review only. Removal controls are intentionally not enabled yet." No delete button, no delete logic, no DELETE RLS policy. No public-facing UI changes. Tailwind only, zero `style=` attributes.
+- No Supabase RLS changes. No schema changes. No seed data changes. No existing files changed.
+- Tests run: `npm run lint` (0 errors), `npm run build` (clean, 18 routes including `/admin/records`).
+- Deferred: voting-record removal controls — blocked until explicit SQL/RLS approval (same gate as report submission).
+
 ## 2026-05-17 (admin voting-record entry)
 
 - Built minimal admin voting-record entry page at `/admin/entry` (commit `e24fe14`).
@@ -133,3 +142,4 @@
 - Confirmed `npm run build` passes after the Civic DNA fix.
 - Manually tested onboarding flow from welcome through calculating screen.
 - Confirmed signup, ZIP, districts, DNA teaser, quiz, and calculating routes work locally.
+

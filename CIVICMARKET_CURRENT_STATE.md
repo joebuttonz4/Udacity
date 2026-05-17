@@ -82,16 +82,18 @@ Confirmed complete:
 - /report route — UI-only Report Inaccuracy shell, auth-gated, local component state only, no Supabase writes, no SQL, no tables, no RLS policies, beta message shown on submit, lint passed, build passed, complete, commit 6c63b51, May 16 2026
 - /data-sources route — static Data Sources page, auth-gated, no Supabase reads beyond auth, five static methodology sections, no writes, no tables, lint passed, build passed, complete, commit b81e8ef, May 16 2026
 - /admin/entry route — minimal admin voting-record entry form, admin-gated (profiles.is_admin = true, non-admin redirects to /), loads active candidates (archived_at IS NULL) ordered by name, form fields: candidate, issue title, issue description, bill number (optional), vote date, vote cast (for/against/abstain), dimension (all seven locked keys), source URL (required, isSafeUrl validated), inserts one row into voting_records on submit, RLS INSERT policy "Admins can insert voting records" added and verified in Supabase SQL Editor, existing "Voting records are publicly readable" SELECT policy unchanged, browser-tested with joebuttonz4@gmail.com, test row id 5a0e22b2-ed14-430d-995d-a333bb5d2838 (issue_title: TEST ONLY - Admin voting record entry, candidate: Angela Torres) remains in database, lint passed, build passed, complete, commit e24fe14, May 17 2026
+- /admin/records route — read-only admin voting-record review list, admin-gated (profiles.is_admin = true, non-admin redirects to /), fetches voting_records joined to candidates ordered by created_at descending, displays candidate name/office, issue title, bill number, vote cast, dimension, vote date, source URL, created_at, no delete button, no delete logic, no DELETE RLS policy, beta warning banner shown, lint passed, build passed, complete, commit 93342f3, May 17 2026
 
 ## Immediate priorities
 
-1. Minimal admin review/removal page
+1. Voting-record removal controls (blocked — requires explicit SQL/RLS approval before building)
 2. Patch remaining Supabase security risks
 3. Replace dummy data with real PSL data before beta invitations
 
 ## Deferred — requires separate approval
 
 - Database-backed report submission for /report — needs new inaccuracy_reports table, INSERT policy, and SQL/RLS risk check approved before building
+- Voting-record removal controls for /admin/records — needs DELETE RLS policy on voting_records and explicit approval before adding delete button or logic
 
 ## Civic DNA source of truth
 
@@ -122,6 +124,6 @@ No beta invitations until:
 - Report Inaccuracy database-backed submission exists (currently deferred — UI shell only)
 - Data Sources exists ✓
 - Admin can enter voting records ✓ (commit e24fe14)
-- Admin review/removal page exists
+- Admin review/removal page exists — read-only review page built (/admin/records, commit 93342f3); removal controls blocked pending explicit SQL/RLS approval
 - Security patch applied
 - Email confirmation re-enabled

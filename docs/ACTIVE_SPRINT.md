@@ -25,23 +25,26 @@ Build the minimal admin interface so an admin can list existing `voting_records`
 - /report — UI-only Report Inaccuracy shell, auth-gated, local state only, no Supabase writes, beta message shown on submit, built May 16 2026, commit 6c63b51
 - /data-sources — static Data Sources page, auth-gated, no Supabase reads beyond auth, static methodology content, built May 16 2026, commit b81e8ef
 - /admin/entry — minimal admin voting-record entry form, admin-gated, inserts into voting_records, browser-tested, RLS policy verified, built May 17 2026, commit e24fe14
+- /admin/records — read-only admin voting-record review list, admin-gated, no delete, no delete RLS, built May 17 2026, commit 93342f3
 
 ## Acceptance criteria
 
-- [ ] Admin review/removal route exists (e.g. `/admin/review`)
-- [ ] Protected — only accessible to users where `profiles.is_admin = true`
-- [ ] Lists existing `voting_records` rows (candidate name, issue title, vote date, dimension)
-- [ ] Admin can delete a `voting_records` row
-- [ ] Deletion requires explicit confirmation before executing
-- [ ] No public-facing UI changes
-- [ ] Mobile-first layout, Tailwind only, no inline styles
-- [ ] npm run lint passes (0 errors)
-- [ ] npm run build passes
-- [ ] SQL/RLS security review approved before any delete is built
+- [x] Admin review/removal route exists — `/admin/records`
+- [x] Protected — only accessible to users where `profiles.is_admin = true`
+- [x] Lists existing `voting_records` rows (candidate name, issue title, vote date, dimension)
+- [ ] Admin can delete a `voting_records` row — deferred pending explicit SQL/RLS approval
+- [ ] Deletion requires explicit confirmation before executing — deferred
+- [x] No public-facing UI changes
+- [x] Mobile-first layout, Tailwind only, no inline styles
+- [x] npm run lint passes (0 errors)
+- [x] npm run build passes
+- [ ] SQL/RLS security review approved before any delete is built — approval not yet given
 
 ## Do not do in this sprint
 
+- Do not add deletion controls until explicit SQL/RLS approval is given
 - Do not build database-backed report submission yet — deferred pending SQL/RLS risk check approval
 - Do not build full admin dashboard yet
 - Do not build Edge Functions yet
 - Do not replace dummy data with real PSL data yet
+
