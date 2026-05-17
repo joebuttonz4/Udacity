@@ -67,10 +67,12 @@ export type CandidateWithContext = {
   district_scope: string
   election_name: string
   election_date: string
+  match_score: number | null
 }
 
 export async function getCandidatesForDistricts(
-  districtIds: string[]
+  districtIds: string[],
+  userId?: string
 ): Promise<CandidateWithContext[]> {
   const { data, error } = await supabase
     .from('candidates')
@@ -89,7 +91,7 @@ export async function getCandidatesForDistricts(
 
   if (error) throw error
 
-  return ((data ?? []) as unknown as CandidateRow[]).map((row) => ({
+  const candidates = ((data ?? []) as unknown as CandidateRow[]).map((row) => ({
     id: row.id,
     name: row.name,
     office: row.office,
@@ -99,7 +101,24 @@ export async function getCandidatesForDistricts(
     district_scope: row.districts?.type ?? '',
     election_name: row.elections?.name ?? '',
     election_date: row.elections?.election_date ?? '',
+    match_score: null as number | null,
   }))
+
+  if (!userId || candidates.length === 0) return candidates
+
+  const candidateIds = candidates.map((c) => c.id)
+  const { data: scores } = await supabase
+    .from('match_scores')
+    .select('candidate_id, score')
+    .eq('user_id', userId)
+    .in('candidate_id', candidateIds)
+
+  if (!scores || scores.length === 0) return candidates
+
+  const scoreMap = new Map(
+    (scores as { candidate_id: string; score: number }[]).map((s) => [s.candidate_id, s.score])
+  )
+  return candidates.map((c) => ({ ...c, match_score: scoreMap.get(c.id) ?? null }))
 }
 
 export async function autoFollowCandidates(

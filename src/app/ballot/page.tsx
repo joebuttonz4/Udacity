@@ -10,6 +10,7 @@ import {
   type CandidateWithContext,
 } from '@/lib/candidates'
 import { getMeasuresForDistricts, type MeasureProfile } from '@/lib/measures'
+import MatchScoreRing from '@/components/ui/MatchScoreRing'
 
 const SCOPE_STYLES: Record<string, { tag: string; label: string }> = {
   city_council: {
@@ -80,7 +81,7 @@ export default function BallotPage() {
         }
 
         const [ballotCandidates, ballotMeasures] = await Promise.all([
-          getCandidatesForDistricts(districtIds),
+          getCandidatesForDistricts(districtIds, session.user.id),
           getMeasuresForDistricts(districtIds),
         ])
         setCandidates(ballotCandidates)
@@ -232,14 +233,17 @@ export default function BallotPage() {
                           </div>
                         </div>
 
-                        {candidate.is_incumbent && (
-                          <span
-                            className="text-xs font-semibold text-[#F59E0B] bg-[#F59E0B]/10 px-2 py-0.5 rounded-full flex-shrink-0"
-                            style={{ fontFamily: 'var(--font-syne)' }}
-                          >
-                            Incumbent
-                          </span>
-                        )}
+                        <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                          <MatchScoreRing score={candidate.match_score} size="sm" />
+                          {candidate.is_incumbent && (
+                            <span
+                              className="text-xs font-semibold text-[#F59E0B] bg-[#F59E0B]/10 px-2 py-0.5 rounded-full"
+                              style={{ fontFamily: 'var(--font-syne)' }}
+                            >
+                              Incumbent
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </Link>
                   ))}
