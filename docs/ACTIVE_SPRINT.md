@@ -26,23 +26,27 @@ Build the minimal admin interface so an admin can list existing `voting_records`
 - /data-sources — static Data Sources page, auth-gated, no Supabase reads beyond auth, static methodology content, built May 16 2026, commit b81e8ef
 - /admin/entry — minimal admin voting-record entry form, admin-gated, inserts into voting_records, browser-tested, RLS policy verified, built May 17 2026, commit e24fe14
 - /admin/records — read-only admin voting-record review list, admin-gated, no delete, no delete RLS, built May 17 2026, commit 93342f3
+- /admin/records (removal) — voting-record removal controls added, two-step confirmation, scored-record guard, DELETE RLS policy verified, TEST ONLY row deleted and confirmed gone, built May 17 2026, commit 31adca9
 
 ## Acceptance criteria
 
 - [x] Admin review/removal route exists — `/admin/records`
 - [x] Protected — only accessible to users where `profiles.is_admin = true`
 - [x] Lists existing `voting_records` rows (candidate name, issue title, vote date, dimension)
-- [ ] Admin can delete a `voting_records` row — deferred pending explicit SQL/RLS approval
-- [ ] Deletion requires explicit confirmation before executing — deferred
+- [x] Admin can delete a `voting_records` row — by exact id, DELETE RLS policy in place
+- [x] Deletion requires explicit confirmation before executing — two-step: Remove → Confirm delete
 - [x] No public-facing UI changes
 - [x] Mobile-first layout, Tailwind only, no inline styles
 - [x] npm run lint passes (0 errors)
 - [x] npm run build passes
-- [ ] SQL/RLS security review approved before any delete is built — approval not yet given
+- [x] SQL/RLS security review approved before any delete was built — policy verified before code shipped
+
+## Sprint complete
+
+All acceptance criteria met. Next sprint: patch remaining Supabase security risks.
 
 ## Do not do in this sprint
 
-- Do not add deletion controls until explicit SQL/RLS approval is given
 - Do not build database-backed report submission yet — deferred pending SQL/RLS risk check approval
 - Do not build full admin dashboard yet
 - Do not build Edge Functions yet

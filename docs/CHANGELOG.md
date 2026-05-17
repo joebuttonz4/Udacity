@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-05-17 (admin voting-record removal)
+
+- Added voting-record removal controls to `/admin/records` (commit `31adca9`).
+- Files changed:
+  - `src/app/admin/records/page.tsx` — added `pendingDeleteId`, `deleting`, and `deleteError` state. Added `handleDelete(id)`: calls `supabase.from('voting_records').delete().eq('id', id)` by exact UUID; on success removes the row from local state and clears `pendingDeleteId`; on failure sets `deleteError` inline and keeps the row visible; `deleting` is always cleared in `finally`. Added Remove button to each card (first click opens confirmation only — no Supabase call). Inline confirmation panel shows `issue_title`, candidate name, and warning: "This permanently deletes the voting record. This cannot be undone." Cancel resets `pendingDeleteId` and `deleteError`. Both buttons disabled while `deleting`. Added scored-record guard: if `community_score_count > 0` or `community_score_final` is not null, Remove is replaced by "Scored records require manual review before removal." `community_score_count` and `community_score_final` added to SELECT. Banner updated: "Admin only. Deletions are permanent and cannot be undone." No bulk delete. No automatic delete. Deletes by exact `id` only.
+- Supabase RLS changes (verified in SQL Editor):
+  - Added: `"Admins can delete voting records"` on `voting_records` for DELETE — restricts to `profiles.is_admin = true`.
+  - Unchanged: `"Admins can insert voting records"` for INSERT.
+  - Unchanged: `"Voting records are publicly readable"` for SELECT.
+- Deletion is hard delete — `voting_records` has no soft-delete field. `vote_community_scores` rows cascade-deleted automatically (0 rows for the test row).
+- Browser-tested with admin account joebuttonz4@gmail.com:
+  - Remove → Cancel path tested: row remained visible, no deletion occurred.
+  - Remove → Confirm delete path tested: TEST ONLY row deleted.
+  - Test row id `5a0e22b2-ed14-430d-995d-a333bb5d2838` (issue_title: `TEST ONLY - Admin voting record entry`, candidate: Angela Torres) confirmed gone — `SELECT` by that id returned no rows. Linked `vote_community_scores` count was 0.
+- Tests run: `npm run lint` (0 errors), `npm run build` (clean, 18 routes).
+- No schema changes. No seed data changes.
+- Next priority: patch remaining Supabase security risks, then replace dummy data with real PSL data before beta.
+
 ## 2026-05-17 (admin voting-record review page)
 
 - Built read-only admin voting-record review page at `/admin/records` (commit `93342f3`).
