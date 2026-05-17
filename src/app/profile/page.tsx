@@ -54,6 +54,7 @@ export default function ProfilePage() {
   const [dna, setDna] = useState<DnaRow | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [signOutError, setSignOutError] = useState<string | null>(null)
 
   useEffect(() => {
     async function loadProfile() {
@@ -102,6 +103,16 @@ export default function ProfilePage() {
 
     loadProfile()
   }, [router])
+
+  async function handleSignOut() {
+    setSignOutError(null)
+    const { error: signOutErr } = await supabase.auth.signOut()
+    if (signOutErr) {
+      setSignOutError('Could not sign out. Please try again.')
+      return
+    }
+    router.push('/onboarding')
+  }
 
   return (
     <div className="min-h-screen bg-[#0D1117] px-6 pt-12 pb-28">
@@ -229,6 +240,21 @@ export default function ProfilePage() {
               This is a read-only beta profile screen using placeholder PSL data. No data is
               written here. Account details and Civic DNA results reflect your onboarding choices.
             </p>
+          </div>
+
+          {/* Sign out */}
+          <div className="flex flex-col gap-2">
+            {signOutError && (
+              <p className="text-[#FF6B6B] text-xs text-center [font-family:var(--font-instrument-sans)]">
+                {signOutError}
+              </p>
+            )}
+            <button
+              onClick={handleSignOut}
+              className="w-full bg-[#1F2937] border border-[#374151] text-[#9CA3AF] font-semibold py-3 rounded-xl text-sm active:scale-[0.98] transition-transform [font-family:var(--font-syne)]"
+            >
+              Sign out
+            </button>
           </div>
 
         </div>
