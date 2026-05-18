@@ -1,0 +1,121 @@
+<svg viewBox="0 0 375 280" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <!-- Sky: dark teal at very top (for text readability), brightens toward horizon -->
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0%"   stop-color="#0E2A22" stop-opacity="1"/>
+      <stop offset="30%"  stop-color="#134030" stop-opacity="1"/>
+      <stop offset="60%"  stop-color="#1A5540" stop-opacity="1"/>
+      <stop offset="85%"  stop-color="#22624A" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#2A6E50" stop-opacity="0.6"/>
+    </linearGradient>
+    <!-- Ocean: vivid teal fading deeper -->
+    <linearGradient id="ocean" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#12806A" stop-opacity="0.95"/>
+      <stop offset="50%"  stop-color="#0A5A48" stop-opacity="0.98"/>
+      <stop offset="100%" stop-color="#063A2E" stop-opacity="1"/>
+    </linearGradient>
+    <!-- Sunrise warm radial at horizon -->
+    <radialGradient id="sunrise" cx="50%" cy="71%" r="55%" gradientUnits="objectBoundingBox">
+      <stop offset="0%"   stop-color="#F59E0B" stop-opacity="0.55"/>
+      <stop offset="28%"  stop-color="#EA7C28" stop-opacity="0.30"/>
+      <stop offset="55%"  stop-color="#C2561A" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#C2561A" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Teal upper-right sky glow -->
+    <radialGradient id="teal-glow" cx="72%" cy="18%" r="40%" gradientUnits="objectBoundingBox">
+      <stop offset="0%"   stop-color="#00C9A7" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#00C9A7" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Sky base (fills entire frame; top stays dark for text, mid/lower is visible teal) -->
+  <rect width="375" height="280" fill="url(#sky)"/>
+
+  <!-- Sunrise warm glow at horizon -->
+  <rect width="375" height="280" fill="url(#sunrise)"/>
+
+  <!-- Teal upper glow (upper right) -->
+  <ellipse cx="270" cy="50" rx="135" ry="90" fill="url(#teal-glow)"/>
+
+  <!-- Horizon warm bloom -->
+  <ellipse cx="187" cy="200" rx="215" ry="20" fill="#F59E0B" opacity="0.14"/>
+
+  <!-- Horizon line -->
+  <path d="M0 200 Q94 194 187 196 Q281 198 375 200"
+        stroke="#00C9A7" stroke-width="0.9" stroke-opacity="0.45" fill="none"/>
+
+  <!-- Ocean body -->
+  <path d="M0 200 Q94 194 187 196 Q281 198 375 200 L375 280 L0 280 Z"
+        fill="url(#ocean)"/>
+
+  <!-- Sun disc glow at horizon -->
+  <ellipse cx="187" cy="198" rx="20" ry="4.5" fill="#FBBF24" opacity="0.28"/>
+
+  <!-- Ocean shimmer waves -->
+  <path d="M0 214 Q80 210 162 214 Q242 218 322 212 Q355 210 375 214"
+        stroke="#00C9A7" stroke-width="1.0" stroke-opacity="0.34" fill="none"/>
+  <path d="M0 232 Q100 228 202 232 Q285 236 375 230"
+        stroke="#00C9A7" stroke-width="0.6" stroke-opacity="0.20" fill="none"/>
+  <path d="M20 252 Q120 248 222 252 Q312 256 375 250"
+        stroke="#00C9A7" stroke-width="0.4" stroke-opacity="0.12" fill="none"/>
+
+  <!-- ═══ LEFT PALMS ═══ -->
+  <!-- Primary — tall, leans right -->
+  <path d="M20 280 C18 242 14 196 11 158 C9 130 9 102 15 66"
+        stroke="#03100C" stroke-width="11" stroke-linecap="round" fill="none"/>
+  <!-- Leaves -->
+  <path d="M15 66 C-14 36 -48 42 -46 62 C-24 30 8 46 15 66Z"  fill="#03100C"/>
+  <path d="M15 66 C7 36 11 10 27 4   C31 24 25 50 15 66Z"     fill="#03100C"/>
+  <path d="M15 66 C38 40 70 34 82 52 C64 26 42 42 15 66Z"     fill="#03100C"/>
+  <path d="M15 66 C40 54 68 62 80 82 C62 56 42 58 15 66Z"     fill="#03100C"/>
+  <path d="M15 66 C36 82 56 104 58 130 C40 98 26 82 15 66Z"   fill="#03100C"/>
+  <path d="M15 66 C-2 82 -16 106 -20 134 C-4 102 8 84 15 66Z" fill="#03100C"/>
+
+  <!-- Secondary left — shorter, lighter -->
+  <path d="M66 280 C64 246 60 208 57 180 C55 158 56 138 60 116"
+        stroke="#03100C" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.78"/>
+  <path d="M60 116 C42 98 18 102 16 116 C34 88 54 102 60 116Z" fill="#03100C" opacity="0.78"/>
+  <path d="M60 116 C54 94 56 78 68 70  C72 88 68 104 60 116Z"  fill="#03100C" opacity="0.78"/>
+  <path d="M60 116 C76 96 104 88 116 104 C98 80 78 96 60 116Z" fill="#03100C" opacity="0.78"/>
+  <path d="M60 116 C78 106 98 118 102 138 C84 110 70 108 60 116Z" fill="#03100C" opacity="0.65"/>
+  <path d="M60 116 C48 126 38 144 34 164 C46 132 56 122 60 116Z" fill="#03100C" opacity="0.65"/>
+
+  <!-- ═══ RIGHT PALMS ═══ -->
+  <!-- Primary — tallest -->
+  <path d="M352 280 C354 232 360 178 364 130 C368 98 366 66 358 28"
+        stroke="#03100C" stroke-width="13" stroke-linecap="round" fill="none"/>
+  <path d="M358 28 C330 2 294 6 288 26 C308 -4 336 8 358 28Z"   fill="#03100C"/>
+  <path d="M358 28 C350 0 354 -24 370 -32 C374 -10 368 14 358 28Z" fill="#03100C"/>
+  <path d="M358 28 C380 2 414 -6 426 14 C408 -12 384 4 358 28Z" fill="#03100C"/>
+  <path d="M358 28 C384 16 414 24 426 46 C406 18 384 20 358 28Z" fill="#03100C"/>
+  <path d="M358 28 C380 46 404 68 408 96 C388 64 372 48 358 28Z" fill="#03100C"/>
+  <path d="M358 28 C332 46 316 68 312 98 C330 66 344 48 358 28Z" fill="#03100C"/>
+
+  <!-- Secondary right -->
+  <path d="M314 278 C312 240 308 200 306 170 C304 146 304 126 308 102"
+        stroke="#03100C" stroke-width="9" stroke-linecap="round" fill="none" opacity="0.70"/>
+  <path d="M308 102 C290 82 262 86 258 102 C276 74 298 88 308 102Z" fill="#03100C" opacity="0.70"/>
+  <path d="M308 102 C302 80 304 64 316 56  C320 74 316 92 308 102Z" fill="#03100C" opacity="0.70"/>
+  <path d="M308 102 C324 80 352 72 364 88 C348 64 326 80 308 102Z"  fill="#03100C" opacity="0.70"/>
+  <path d="M308 102 C326 94 348 106 354 126 C336 98 320 96 308 102Z" fill="#03100C" opacity="0.58"/>
+  <path d="M308 102 C296 114 286 132 282 154 C294 122 304 110 308 102Z" fill="#03100C" opacity="0.58"/>
+
+  <!-- Center depth palm (receding, lighter) -->
+  <path d="M222 276 C223 248 226 218 228 194 C230 174 229 156 225 136"
+        stroke="#03100C" stroke-width="6" stroke-linecap="round" fill="none" opacity="0.38"/>
+  <path d="M225 136 C209 120 188 124 186 138 C200 112 218 124 225 136Z" fill="#03100C" opacity="0.38"/>
+  <path d="M225 136 C219 116 221 102 232 96  C236 112 232 128 225 136Z" fill="#03100C" opacity="0.38"/>
+  <path d="M225 136 C240 114 262 108 270 124 C256 102 238 116 225 136Z" fill="#03100C" opacity="0.30"/>
+  <path d="M225 136 C238 128 256 140 258 158 C244 130 232 126 225 136Z" fill="#03100C" opacity="0.28"/>
+
+  <!-- Stars in upper sky -->
+  <circle cx="98"  cy="20" r="1.3" fill="white" opacity="0.60"/>
+  <circle cx="148" cy="42" r="1.0" fill="white" opacity="0.46"/>
+  <circle cx="188" cy="12" r="0.9" fill="white" opacity="0.52"/>
+  <circle cx="234" cy="34" r="1.1" fill="white" opacity="0.40"/>
+  <circle cx="274" cy="18" r="1.0" fill="white" opacity="0.34"/>
+  <circle cx="78"  cy="60" r="0.8" fill="white" opacity="0.28"/>
+  <circle cx="162" cy="64" r="0.7" fill="white" opacity="0.25"/>
+  <circle cx="252" cy="54" r="0.7" fill="white" opacity="0.30"/>
+  <circle cx="120" cy="30" r="0.6" fill="white" opacity="0.22"/>
+</svg>

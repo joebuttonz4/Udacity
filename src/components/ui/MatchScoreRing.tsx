@@ -6,9 +6,9 @@ interface MatchScoreRingProps {
 }
 
 const DIMS = {
-  sm: { px: 48, stroke: 3.5, textClass: 'text-[10px]', lockSize: 14 },
-  md: { px: 72, stroke: 4.5, textClass: 'text-sm', lockSize: 20 },
-  lg: { px: 96, stroke: 5.5, textClass: 'text-base', lockSize: 28 },
+  sm: { px: 48, stroke: 4.5, textClass: 'text-[10px]', lockSize: 18 },
+  md: { px: 72, stroke: 5.5, textClass: 'text-sm', lockSize: 24 },
+  lg: { px: 96, stroke: 7, textClass: 'text-base', lockSize: 32 },
 }
 
 const CONTAINER_CLASS = {
@@ -43,14 +43,15 @@ export default function MatchScoreRing({ score, size = 'sm' }: MatchScoreRingPro
         aria-label="Match score locked"
       >
         <svg width={px} height={px} viewBox={`0 0 ${px} ${px}`}>
+          {/* Lighter, airier dashed track for locked state */}
           <circle
             cx={cx}
             cy={cy}
             r={r}
             fill="none"
-            stroke="#D1D5DB"
-            strokeWidth={stroke}
-            strokeDasharray="4 3"
+            stroke="#DDE5EF"
+            strokeWidth={stroke * 0.75}
+            strokeDasharray="4 7"
           />
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
@@ -59,8 +60,8 @@ export default function MatchScoreRing({ score, size = 'sm' }: MatchScoreRingPro
             height={lockSize}
             viewBox="0 0 24 24"
             fill="none"
-            stroke="#9CA3AF"
-            strokeWidth="2.5"
+            stroke="#B8C4D0"
+            strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
             aria-hidden="true"
@@ -88,7 +89,20 @@ export default function MatchScoreRing({ score, size = 'sm' }: MatchScoreRingPro
         height={px}
         viewBox={`0 0 ${px} ${px}`}
       >
-        <circle cx={cx} cy={cy} r={r} fill="none" stroke="#E5E7EB" strokeWidth={stroke} />
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke="#F1F5F9" strokeWidth={stroke} />
+        {/* Soft glow bloom behind main arc */}
+        <circle
+          cx={cx}
+          cy={cy}
+          r={r}
+          fill="none"
+          stroke={color}
+          strokeWidth={stroke * 2}
+          strokeDasharray={circumference}
+          strokeDashoffset={dashOffset}
+          strokeLinecap="round"
+          className="opacity-[0.14]"
+        />
         <circle
           cx={cx}
           cy={cy}
@@ -102,7 +116,7 @@ export default function MatchScoreRing({ score, size = 'sm' }: MatchScoreRingPro
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className={`${textClass} font-bold leading-none ${textColorClass(score)}`}>
+        <span className={`${textClass} font-bold leading-none [font-family:var(--font-syne)] ${textColorClass(score)}`}>
           {score}
         </span>
       </div>

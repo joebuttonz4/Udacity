@@ -54,7 +54,7 @@ export default function NavBar() {
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 h-16 bg-[#0D1117] border-t border-[#1F2937] flex items-stretch justify-around z-50">
+    <nav className="fixed bottom-5 left-4 right-4 h-[62px] bg-white/90 backdrop-blur-xl border border-[#E8EDF2]/70 rounded-[28px] flex items-stretch justify-around z-50 shadow-[0_8px_32px_rgba(0,0,0,0.10)]">
       {TABS.map(({ href, label, Icon }) => {
         const isActive =
           href === '/' ? pathname === '/' : pathname.startsWith(href);
@@ -62,13 +62,13 @@ export default function NavBar() {
           <Link
             key={href}
             href={href}
-            className={`relative flex flex-col items-center justify-center gap-0.5 flex-1 outline-none focus-visible:ring-2 focus-visible:ring-[#00C9A7]/50 focus-visible:rounded-lg transition-colors [font-family:var(--font-syne)] ${
-              isActive ? 'text-[#00C9A7]' : 'text-[#64748B] hover:text-[#94A3B8]'
+            className={`relative flex flex-col items-center justify-center gap-0.5 flex-1 outline-none transition-colors [font-family:var(--font-syne)] ${
+              isActive ? 'text-[#00C9A7]' : 'text-[#94A3B8]'
             }`}
           >
             {/* Active pip at top edge */}
             <span
-              className={`absolute top-0 h-0.5 w-8 rounded-full transition-opacity ${
+              className={`absolute top-0 h-0.5 w-7 rounded-full transition-opacity ${
                 isActive ? 'bg-[#00C9A7] opacity-100' : 'opacity-0'
               }`}
             />

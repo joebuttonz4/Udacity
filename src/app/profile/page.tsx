@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
+import CoastalHero from '@/components/CoastalHero'
 
 const DIMENSIONS = [
   'growth_development',
@@ -45,6 +46,67 @@ function scoreColor(v: number | null | undefined): string {
   if (v > 0) return 'text-[#0F766E]'
   if (v < 0) return 'text-[#DC2626]'
   return 'text-[#6B7280]'
+}
+
+function SettingsRow({
+  href,
+  label,
+  disabled = false,
+  onClick,
+  danger = false,
+}: {
+  href?: string
+  label: string
+  disabled?: boolean
+  onClick?: () => void
+  danger?: boolean
+}) {
+  const inner = (
+    <div
+      className={`flex items-center justify-between px-4 py-[15px] border-b border-[#F6F8FA] last:border-0 ${
+        disabled ? 'opacity-45' : ''
+      }`}
+    >
+      <span
+        className={`text-sm [font-family:var(--font-instrument-sans)] ${
+          danger ? 'text-[#DC2626]' : 'text-[#0D1117]'
+        }`}
+      >
+        {label}
+      </span>
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke={danger ? '#DC2626' : '#C4C9D4'}
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M9 18l6-6-6-6" />
+      </svg>
+    </div>
+  )
+  if (onClick) {
+    return (
+      <button
+        onClick={onClick}
+        className={`block w-full text-left transition-colors ${
+          danger ? 'active:bg-[#FEF2F2]' : 'active:bg-[#F6F8FA]'
+        }`}
+      >
+        {inner}
+      </button>
+    )
+  }
+  if (!href || disabled) return <div>{inner}</div>
+  return (
+    <Link href={href} className="block active:bg-[#F6F8FA] transition-colors">
+      {inner}
+    </Link>
+  )
 }
 
 export default function ProfilePage() {
@@ -116,32 +178,23 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Dark hero header */}
-      <div className="bg-[#0D1117] px-6 pt-12 pb-8">
-        <p className="text-[#00C9A7] text-xs font-semibold uppercase tracking-widest mb-3 [font-family:var(--font-syne)]">
-          Profile
-        </p>
-        <h1 className="text-3xl font-bold text-white leading-tight mb-2 [font-family:var(--font-syne)]">
-          Your account
-        </h1>
-        {!loading && email && (
-          <p className="text-[#6B7280] text-sm [font-family:var(--font-instrument-sans)]">
-            {email}
-          </p>
-        )}
-      </div>
+      <CoastalHero
+        eyebrow="Profile"
+        title="Your account"
+        subtitle="Manage your settings and Civic DNA."
+      />
 
       {/* Light content area */}
-      <div className="flex-1 bg-[#F6F8FA] px-4 pt-5 pb-24 flex flex-col gap-4">
+      <div className="flex-1 bg-[#F6F8FA] px-4 pt-5 pb-28 flex flex-col gap-4">
         {loading && (
           <div className="flex flex-col gap-4 animate-pulse">
-            <div className="h-24 bg-white rounded-[20px] shadow-sm" />
-            <div className="h-48 bg-white rounded-[20px] shadow-sm" />
+            <div className="h-24 bg-white rounded-[24px] shadow-sm" />
+            <div className="h-48 bg-white rounded-[24px] shadow-sm" />
           </div>
         )}
 
         {error && (
-          <div className="bg-[#FEF2F2] border border-[#FECACA] rounded-[20px] p-4">
+          <div className="bg-[#FEF2F2] border border-[#FECACA] rounded-[24px] p-4">
             <p className="text-[#DC2626] text-sm [font-family:var(--font-instrument-sans)]">
               {error}
             </p>
@@ -156,14 +209,56 @@ export default function ProfilePage() {
 
         {!loading && !error && (
           <>
+            {/* Identity card */}
+            <section className="bg-gradient-to-br from-[#081F1A] via-[#0D1117] to-[#060C14] rounded-[24px] p-5 flex items-center gap-4 shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
+              <div className="w-14 h-14 rounded-full bg-[#00C9A7]/20 border-2 border-[#00C9A7]/30 flex items-center justify-center flex-shrink-0">
+                <span className="text-2xl font-bold text-[#00C9A7] [font-family:var(--font-syne)]">
+                  {(profile?.display_name ?? email ?? 'U').charAt(0).toUpperCase()}
+                </span>
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-white font-bold text-base leading-tight truncate [font-family:var(--font-syne)]">
+                  {profile?.display_name ?? 'Your account'}
+                </p>
+                {email && (
+                  <p className="text-[#64748B] text-sm mt-0.5 truncate [font-family:var(--font-instrument-sans)]">
+                    {email}
+                  </p>
+                )}
+                {profile?.zip_code && (
+                  <p className="text-[#00C9A7] text-xs mt-1 [font-family:var(--font-instrument-sans)]">
+                    {profile.zip_code} · Port St. Lucie, FL
+                  </p>
+                )}
+              </div>
+            </section>
+
+            {/* Settings — navigation rows + sign out */}
+            <section className="bg-white rounded-[24px] shadow-sm overflow-hidden">
+              <h2 className="text-[#6B7280] text-[11px] font-semibold uppercase tracking-widest px-4 pt-4 pb-2 [font-family:var(--font-syne)]">
+                Settings
+              </h2>
+              <SettingsRow href="/ballot" label="My Districts" />
+              <SettingsRow href="/data-sources" label="Data Sources" />
+              <SettingsRow href="/report" label="Report an Issue" />
+              <SettingsRow label="Notifications" disabled />
+              <SettingsRow label="About CivicMarket" disabled />
+              {signOutError && (
+                <p className="text-[#DC2626] text-xs px-4 pb-1 [font-family:var(--font-instrument-sans)]">
+                  {signOutError}
+                </p>
+              )}
+              <SettingsRow onClick={handleSignOut} label="Sign out" danger />
+            </section>
+
             {/* Account details */}
-            <section className="bg-white rounded-[20px] shadow-sm p-4">
+            <section className="bg-white rounded-[24px] shadow-sm p-4">
               <h2 className="text-[#6B7280] text-[11px] font-semibold uppercase tracking-widest mb-3 [font-family:var(--font-syne)]">
                 Account
               </h2>
-              <div className="flex flex-col divide-y divide-[#F3F4F6]">
+              <div className="flex flex-col gap-1.5">
                 {email && (
-                  <div className="py-2.5">
+                  <div className="bg-[#F8FAFC] rounded-xl px-3 py-2.5">
                     <p className="text-[#9CA3AF] text-[11px] mb-0.5 [font-family:var(--font-instrument-sans)]">
                       Email
                     </p>
@@ -173,7 +268,7 @@ export default function ProfilePage() {
                   </div>
                 )}
                 {profile?.display_name && (
-                  <div className="py-2.5">
+                  <div className="bg-[#F8FAFC] rounded-xl px-3 py-2.5">
                     <p className="text-[#9CA3AF] text-[11px] mb-0.5 [font-family:var(--font-instrument-sans)]">
                       Display name
                     </p>
@@ -183,7 +278,7 @@ export default function ProfilePage() {
                   </div>
                 )}
                 {profile?.zip_code && (
-                  <div className="py-2.5">
+                  <div className="bg-[#F8FAFC] rounded-xl px-3 py-2.5">
                     <p className="text-[#9CA3AF] text-[11px] mb-0.5 [font-family:var(--font-instrument-sans)]">
                       ZIP code
                     </p>
@@ -197,17 +292,22 @@ export default function ProfilePage() {
 
             {/* Civic DNA */}
             {profile?.dna_quiz_status === 'completed' && dna ? (
-              <section className="bg-white rounded-[20px] shadow-sm p-4">
+              <section className="bg-white rounded-[24px] shadow-sm p-4">
                 <h2 className="text-[#6B7280] text-[11px] font-semibold uppercase tracking-widest mb-3 [font-family:var(--font-syne)]">
                   Civic DNA
                 </h2>
-                <div className="flex flex-col divide-y divide-[#F3F4F6]">
+                <div className="flex flex-col gap-1.5">
                   {DIMENSIONS.map((dim) => (
-                    <div key={dim} className="flex items-center justify-between py-2.5">
+                    <div
+                      key={dim}
+                      className="flex items-center justify-between bg-[#F8FAFC] rounded-xl px-3 py-2.5"
+                    >
                       <p className="text-[#374151] text-sm [font-family:var(--font-instrument-sans)]">
                         {DIMENSION_LABELS[dim]}
                       </p>
-                      <span className={`text-sm font-bold [font-family:var(--font-syne)] ${scoreColor(dna[dim])}`}>
+                      <span
+                        className={`text-sm font-bold [font-family:var(--font-syne)] ${scoreColor(dna[dim])}`}
+                      >
                         {formatScore(dna[dim])}
                       </span>
                     </div>
@@ -219,7 +319,7 @@ export default function ProfilePage() {
                 </p>
               </section>
             ) : (
-              <section className="bg-white rounded-[20px] shadow-sm p-4">
+              <section className="bg-white rounded-[24px] shadow-sm p-4">
                 <h2 className="text-[#6B7280] text-[11px] font-semibold uppercase tracking-widest mb-3 [font-family:var(--font-syne)]">
                   Civic DNA
                 </h2>
@@ -237,26 +337,11 @@ export default function ProfilePage() {
             )}
 
             {/* Beta disclaimer */}
-            <div className="bg-[#FFFBEB] border border-[#FDE68A] rounded-[20px] p-4">
+            <div className="bg-[#FFFBEB] border border-[#FDE68A] rounded-[24px] p-4">
               <p className="text-[#92400E] text-xs leading-5 [font-family:var(--font-instrument-sans)]">
                 Read-only beta profile. Account details and Civic DNA results reflect your
                 onboarding choices. No data is written here.
               </p>
-            </div>
-
-            {/* Sign out */}
-            <div className="flex flex-col gap-2">
-              {signOutError && (
-                <p className="text-[#DC2626] text-xs text-center [font-family:var(--font-instrument-sans)]">
-                  {signOutError}
-                </p>
-              )}
-              <button
-                onClick={handleSignOut}
-                className="w-full bg-white border border-[#E5E7EB] text-[#6B7280] font-semibold py-3.5 rounded-[20px] text-sm active:scale-[0.98] transition-transform shadow-sm [font-family:var(--font-syne)]"
-              >
-                Sign out
-              </button>
             </div>
           </>
         )}

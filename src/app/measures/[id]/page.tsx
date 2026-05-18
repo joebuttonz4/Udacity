@@ -158,7 +158,7 @@ export default function MeasureProfilePage() {
       </div>
 
       {/* Light content area */}
-      <div className="flex-1 bg-[#F6F8FA] px-4 pt-5 pb-24 flex flex-col gap-4">
+      <div className="flex-1 bg-[#F6F8FA] px-4 pt-5 pb-28 flex flex-col gap-4">
         {error && (
           <div className="bg-[#FEF2F2] border border-[#FECACA] rounded-[20px] p-4">
             <p className="text-[#DC2626] text-sm [font-family:var(--font-instrument-sans)]">

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { getUserDistrictIds } from '@/lib/candidates'
+import CoastalHero from '@/components/CoastalHero'
 
 type UpcomingElection = {
   id: string
@@ -78,22 +79,14 @@ export default function VotePage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Dark hero header */}
-      <div className="bg-[#0D1117] px-6 pt-12 pb-8">
-        <p className="text-[#00C9A7] text-xs font-semibold uppercase tracking-widest mb-3 [font-family:var(--font-syne)]">
-          Vote
-        </p>
-        <h1 className="text-3xl font-bold text-white leading-tight mb-2 [font-family:var(--font-syne)]">
-          How to vote
-        </h1>
-        <p className="text-[#6B7280] text-sm leading-6 [font-family:var(--font-instrument-sans)]">
-          Official resources for Port St. Lucie. Links open official government websites
-          — we never collect your voting data.
-        </p>
-      </div>
+      <CoastalHero
+        eyebrow="Vote"
+        title="How to vote"
+        subtitle="Official resources for Port St. Lucie. Links open official government websites — we never collect your voting data."
+      />
 
       {/* Light content area */}
-      <div className="flex-1 bg-[#F6F8FA] px-4 pt-5 pb-24 flex flex-col gap-4">
+      <div className="flex-1 bg-[#F6F8FA] px-4 pt-5 pb-28 flex flex-col gap-4">
         {loading && (
           <div className="flex flex-col gap-4 animate-pulse">
             <div className="h-20 bg-white rounded-[20px] shadow-sm" />
