@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-05-17 (coastal UI design system — session 4)
+
+- Applied full coastal Florida mobile consumer UI design system. No data changes. No Supabase schema, RLS, or policy changes. No new routes.
+- Brand PNG assets added to `public/brand/`:
+  - `home-hero-coastal.png` — warm sunrise/palm scene used on Home hero.
+  - `candidate-hero-palms.png` — dark moody teal/palm scene used on candidate profile and compact dark headers.
+  - `dna-hero-coastal-light.png` — light pastel beach scene used on Civic DNA teaser.
+- `src/components/CoastalHero.tsx` updated — dark variant now uses PNG background images via `<img>` (decorative, `aria-hidden`). `warm=true` renders `home-hero-coastal.png`; `warm=false` renders `candidate-hero-palms.png`. Dark gradient overlay for text readability. Teal atmospheric accent + horizon shimmer preserved. SVG illustration (`public/brand/florida-coast-hero.svg`) superseded but kept in repo.
+- `src/app/onboarding/dna-teaser/page.tsx` updated — hero section uses `dna-hero-coastal-light.png` with a left-to-right white gradient overlay (`from-white/92 via-white/78 to-white/20`) that protects left-aligned dark text while keeping image visible on the right. Title `text-slate-950`, subtitle `text-slate-700`.
+- `src/app/page.tsx` updated — countdown hydration mismatch eliminated: changed from `useState(computeCountdown)` lazy initializer (which called `Date.now()` on the server) to `useState<Countdown | null>(null)` with a named inner `tick()` function inside `useEffect`, preventing any server/client time divergence. Countdown renders `--` before client mount, then live 4-box seconds-tick values. Countdown boxes changed to `bg-black/[0.22]`, labels to `text-white/70 text-[11px] font-medium` for readability over image. Candidate rows given rank badges (1/2/3). "Civic Pulse" section heading renamed to "Civic Feed."
+- `src/app/candidates/[id]/page.tsx` — candidate avatar enlarged: `w-16 h-16` → `w-20 h-20`, initials `text-2xl` → `text-3xl`. `pb-28` bottom padding. Content always scrollable (no scroll-locked tab system).
+- `src/app/ballot/page.tsx` — `pb-28` bottom padding confirmed.
+- `src/app/vote/page.tsx` — `pb-28` bottom padding confirmed.
+- `src/app/profile/page.tsx` — `pb-28` bottom padding confirmed.
+- `src/app/measures/[id]/page.tsx` — `pb-28` bottom padding confirmed.
+- `docs/design/README.md` — new file documenting approved coastal design direction, brand assets, design tokens, and preservation requirements.
+- Tests run: `npm run lint` (0 errors), `npm run build` (clean). Commit `415e732` (plus subsequent accessibility patch commits).
+
 ## 2026-05-17 (post-grant-patch smoke test)
 
 - Smoke testing run after commit `51ca84d` (Supabase security grant patch). No code changes. No database changes. No RLS policy changes. No schema changes.

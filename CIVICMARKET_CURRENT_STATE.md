@@ -1,6 +1,6 @@
 # CivicMarket Current State
 
-Last updated: May 17, 2026 (session 3)
+Last updated: May 17, 2026 (session 4)
 
 ## Authoritative order
 
@@ -91,6 +91,10 @@ Confirmed complete:
 - Profile sign out button — fixed, commit 66d2518, May 17 2026.
 - All three post-grant-patch smoke test UI issues resolved.
 - UI design alignment pass — complete, lint passed, build passed, May 17 2026 session 3. Changes: NavBar converted to active-state-aware client component imported from layout (removed duplicate hardcoded nav), MatchScoreRing sizes updated to spec (sm=48px, md=72px, lg=96px), all main screens (/, /ballot, /candidates/[id], /measures/[id], /vote, /profile, /onboarding) converted from all-dark to split dark-hero-header + #F6F8FA light body with white shadow cards, all inline style= violations removed (converted to [font-family:var(--font-syne)] Tailwind classes), globals.css cleaned to @import "tailwindcss" only, scope tags updated to spec colors (city=teal, county=blue, state=indigo), back-button arrows improved on profile/measure pages, warning banners updated to amber tone.
+- Coastal UI design system — approved brand PNG assets (home-hero-coastal.png, candidate-hero-palms.png, dna-hero-coastal-light.png) placed in public/brand/; CoastalHero updated to use PNG backgrounds for dark variant (warm=true → home-hero-coastal.png, warm=false → candidate-hero-palms.png); SVG illustration superseded; DNA teaser hero updated to light coastal style using dna-hero-coastal-light.png with left-to-right white gradient overlay (from-white/92 via-white/78 to-white/20) protecting left-aligned dark text; candidate avatar enlarged (w-20 h-20); docs/design/README.md created; commit 415e732, lint passed, build passed, May 17 2026 session 4.
+- Home countdown hydration fix — useState<Countdown | null>(null) with named inner tick() function in useEffect eliminates SSR/client Date.now() mismatch; countdown renders -- before client mount, then live values; lint passed, build passed, May 17 2026 session 4.
+- Countdown and DNA teaser accessibility fixes — countdown boxes changed to bg-black/[0.22], labels to text-white/70 text-[11px] font-medium for readability over image background; DNA teaser subtitle changed to text-slate-700 with left-to-right overlay for consistent protection; lint passed, build passed, May 17 2026 session 4.
+- Civic Feed rename — visible UI text updated from "Civic Pulse" to "Civic Feed" everywhere it appears in rendered UI; no database tables, file names, or backend naming changed; May 17 2026 session 4.
 
 ## Immediate priorities
 
