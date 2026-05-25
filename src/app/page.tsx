@@ -56,7 +56,7 @@ export default function HomePage() {
         const districtIds = await getUserDistrictIds(session.user.id)
 
         if (!districtIds.length) {
-          setLoading(false)
+          router.push('/onboarding/zip')
           return
         }
 
@@ -173,7 +173,7 @@ export default function HomePage() {
               {previewCandidates.length === 0 ? (
                 <div className="bg-[#F6F8FA] rounded-xl p-4">
                   <p className="text-[#9CA3AF] text-sm [font-family:var(--font-instrument-sans)]">
-                    No races found. Complete onboarding to set your districts.
+                    No races found for your districts yet.
                   </p>
                 </div>
               ) : (

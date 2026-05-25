@@ -87,8 +87,7 @@ export default function BallotPage() {
         const districtIds = await getUserDistrictIds(session.user.id)
 
         if (!districtIds.length) {
-          setError('No districts found yet. Please complete onboarding first.')
-          setLoading(false)
+          router.push('/onboarding/zip')
           return
         }
 
@@ -185,7 +184,7 @@ export default function BallotPage() {
               No candidates found
             </h2>
             <p className="text-[#6B7280] text-sm leading-6 [font-family:var(--font-instrument-sans)]">
-              Complete onboarding to see your local races.
+              No candidates found for your districts yet.
             </p>
           </div>
         )}
