@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-05-25 (civic feed strategic planning)
+
+- Added docs/design/CIVIC_FEED_STRATEGY.md as the source-of-truth strategy document for the civic feed.
+- Repositioned the civic feed from a secondary election-season feature to a core year-round civic awareness pillar.
+- Documented beta-safe civic intelligence direction: AI-powered personalized local government awareness.
+- Documented semi-automated feed planning with government-source ingestion, AI-assisted summaries, and required admin review before publishing.
+- Kept public posting, unrestricted comments, autonomous publishing, Edge Functions, scraping automation, and advanced multi-city crawling deferred until separately approved.
+- Updated CIVICMARKET_CURRENT_STATE.md and docs/ACTIVE_SPRINT.md to reflect the planning direction.
+- No code changes. No Supabase schema changes. No RLS or policy changes. No data changes.
+
 ## 2026-05-17 (coastal UI design system — session 4)
 
 - Applied full coastal Florida mobile consumer UI design system. No data changes. No Supabase schema, RLS, or policy changes. No new routes.
@@ -219,4 +229,6 @@
 - Confirmed `npm run build` passes after the Civic DNA fix.
 - Manually tested onboarding flow from welcome through calculating screen.
 - Confirmed signup, ZIP, districts, DNA teaser, quiz, and calculating routes work locally.
+
+
 
