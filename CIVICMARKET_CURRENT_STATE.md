@@ -100,6 +100,29 @@ Confirmed complete:
 
 1. Replace dummy data with real validated PSL candidate, voting record, and funding data before beta invitations
 
+
+## Civic feed strategic direction
+
+The civic feed is now a core product pillar, not a secondary election-season feature.
+
+New direction:
+- CivicMarket should become a year-round civic awareness platform
+- The feed should help residents understand local government activity before it affects them
+- The feed should support personalized civic intelligence based on district, neighborhood, followed topics, Civic DNA, and user engagement
+- The beta version should use semi-automated civic feed planning with human review before publishing
+
+Beta-safe definition:
+AI-powered personalized local government awareness.
+
+Beta feed approach:
+- Government sources may be ingested from agendas, public notices, city announcements, and meeting materials
+- AI may summarize, classify, and simplify source material
+- Admin review is required before feed items are published
+- Public posting, unrestricted comments, autonomous publishing, and advanced multi-city crawling remain deferred
+
+Source of truth:
+- docs/design/CIVIC_FEED_STRATEGY.md
+
 ## Deferred — requires separate approval
 
 - Database-backed report submission for /report — needs new inaccuracy_reports table, INSERT policy, and SQL/RLS risk check approved before building
@@ -140,3 +163,4 @@ No beta invitations until:
 - Candidate profile Report Inaccuracy link/button missing ✓ — fixed, link added to /report
 - /measures/[id] smoke test pending — no measure data exists yet; must test once real measure data is in place
 - Email confirmation re-enabled
+
