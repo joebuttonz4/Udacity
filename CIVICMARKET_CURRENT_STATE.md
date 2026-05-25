@@ -1,6 +1,6 @@
 # CivicMarket Current State
 
-Last updated: May 17, 2026 (session 4)
+Last updated: May 25, 2026
 
 ## Authoritative order
 
@@ -95,6 +95,12 @@ Confirmed complete:
 - Home countdown hydration fix — useState<Countdown | null>(null) with named inner tick() function in useEffect eliminates SSR/client Date.now() mismatch; countdown renders -- before client mount, then live values; lint passed, build passed, May 17 2026 session 4.
 - Countdown and DNA teaser accessibility fixes — countdown boxes changed to bg-black/[0.22], labels to text-white/70 text-[11px] font-medium for readability over image background; DNA teaser subtitle changed to text-slate-700 with left-to-right overlay for consistent protection; lint passed, build passed, May 17 2026 session 4.
 - Civic Feed rename — visible UI text updated from "Civic Pulse" to "Civic Feed" everywhere it appears in rendered UI; no database tables, file names, or backend naming changed; May 17 2026 session 4.
+- Onboarding gate fix — incomplete logged-in users (valid auth session but no user_districts row) now redirect to /onboarding/zip from / (Home) and /ballot instead of showing an empty or broken screen; commit 2d87085, May 25 2026.
+- /onboarding/zip unsupported ZIP notice — replaced harsh red error text with a friendly beta availability card: title "CivicMarket is not available in your area yet", body explaining the PSL beta and future expansion, teal helper text "Try a Port St. Lucie beta ZIP"; not an error state — no red styling; commit c8195d5, May 25 2026.
+- /onboarding/zip stale error clearing — error message and beta notice both clear on every keystroke via handleZipChange; a previous unsupported or invalid ZIP no longer blocks a subsequent valid attempt; commit c8195d5, May 25 2026.
+- /onboarding/zip user_districts write — replaced upsert with delete-then-insert; upsert ON CONFLICT DO UPDATE required an UPDATE RLS policy that user_districts intentionally does not have, causing silent RLS failure on re-attempts; DELETE and INSERT policies both exist and are used; commit 1b1719e, May 25 2026.
+- /onboarding/zip Enter-key submit — outer div converted to a form with a named handleSubmit(e: React.FormEvent); e.preventDefault() called first; Continue button is type="submit"; pressing Enter in the ZIP field triggers identical handleSubmit logic as clicking Continue; commits 9e5a5ea and 1d0df4f, May 25 2026.
+- /onboarding/zip Enter-submit regression fix — Back button missing type="button" defaulted to type="submit" inside the form; pressing Enter caused browser to fire router.back() before the form onSubmit could run, making unsupported ZIP notice flash then navigate away; fixed by adding type="button" to Back button; commit 1d0df4f, May 25 2026.
 
 ## Immediate priorities
 

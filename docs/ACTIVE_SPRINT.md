@@ -30,6 +30,8 @@ Verify the app is stable after the security grant patch, then replace all dummy 
 - Supabase security grant patch — REVOKE TRUNCATE/TRIGGER/REFERENCES from anon/authenticated on all public tables; revoked INSERT/UPDATE/DELETE where no matching RLS policy existed; verified match_scores SELECT-only, reviews SELECT+INSERT only, profiles.is_admin not browser-writable, RLS enabled on all tables, applied May 17 2026 (manual SQL, no code commit)
 - Post-grant-patch smoke test — run May 17 2026 after commit `51ca84d`; admin insert/list/delete confirmed working; /, /ballot, /candidates/[id], /vote, /profile, /report, /data-sources all loaded; no permission errors; three known issues found (see below); /measures/[id] not tested (no measure data); no code changes
 - Coastal UI design system — approved PNG brand assets integrated (home-hero-coastal.png, candidate-hero-palms.png, dna-hero-coastal-light.png); CoastalHero updated; DNA teaser light coastal style; home countdown 4-box live UI; hydration mismatch fix; countdown and DNA teaser accessibility/contrast fixes; Civic Feed rename; docs/design/README.md created; commit 415e732, lint passed, build passed, May 17 2026 session 4
+- Onboarding gate fix — incomplete logged-in users (auth session but no user_districts row) redirect to /onboarding/zip from / and /ballot; commit 2d87085, May 25 2026
+- /onboarding/zip ZIP screen fixes — friendly beta availability notice for unsupported ZIPs; stale error/notice clears on every keystroke; user_districts write switched from upsert to delete-then-insert (no UPDATE policy on user_districts); Enter key submits via form onSubmit; Back button type="button" prevents Enter from triggering router.back(); commits c8195d5, 1b1719e, 9e5a5ea, 1d0df4f; lint passed, build passed; May 25 2026
 
 
 ## Civic feed planning update
@@ -49,7 +51,7 @@ This sprint may document and plan civic feed intelligence, but should not build 
 
 ## Acceptance criteria
 
-- [ ] Smoke test: onboarding flow (signup through calculating) still works after security patch
+- [x] Smoke test: onboarding flow (signup through calculating) still works — ZIP gate, submit, Enter key, and district write all fixed and verified, May 25 2026
 - [x] Smoke test: /ballot, /candidates/[id], /vote load correctly — loaded May 17 2026; /measures/[id] not tested (no measure data exists)
 - [x] Smoke test: /admin/entry can still insert a voting record — confirmed May 17 2026
 - [x] Smoke test: /admin/records lists records and Remove/Confirm delete works — confirmed May 17 2026

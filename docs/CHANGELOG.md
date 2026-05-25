@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-05-25 (onboarding gate + ZIP screen fixes)
+
+- Onboarding gate fix (commit `2d87085`): / (Home) and /ballot now detect incomplete logged-in users — a valid auth session with no `user_districts` row — and redirect them to /onboarding/zip instead of showing an empty or broken screen. No schema changes. No RLS changes.
+- Unsupported ZIP notice (commit `c8195d5`): replaced harsh red error text on /onboarding/zip with a friendly beta availability card. Title: "CivicMarket is not available in your area yet." Body explains the Port St. Lucie beta and future expansion. Teal helper text: "Try a Port St. Lucie beta ZIP." Not styled as an error — no red.
+- Stale error clearing (commit `c8195d5`): `handleZipChange` now clears both `error` and `showBetaNotice` state on every keystroke. A prior unsupported or invalid ZIP no longer blocks a subsequent valid attempt.
+- user_districts delete-then-insert (commit `1b1719e`): replaced `.upsert(rows, { onConflict: 'user_id,district_id' })` with `.delete().eq('user_id', user.id)` followed by `.insert(districtRows)`. Root cause: Supabase upsert with `ON CONFLICT DO UPDATE` requires an UPDATE RLS policy; `user_districts` intentionally has no UPDATE policy; the upsert silently failed with an RLS violation on any re-attempt. DELETE and INSERT policies both exist. `console.error` logging added on every Supabase call. No schema changes. No RLS changes.
+- Enter-key submit (commit `9e5a5ea`): outer `div` on /onboarding/zip converted to `<form onSubmit={handleSubmit}>`. Continue button changed to `type="submit"`. Pressing Enter in the ZIP input fires the same `handleSubmit` logic as clicking Continue. `loading` guard at top of `handleSubmit` prevents double-submit on repeated Enter presses.
+- Enter-submit regression fix (commit `1d0df4f`): `← Back` button was missing `type="button"`, so the browser treated it as the first `type="submit"` button in the form. Pressing Enter fired a `click` on the Back button (calling `router.back()`) before the form's `onSubmit` could run, causing unsupported ZIP notice to flash then navigate away. Fixed by adding `type="button"` to the Back button and promoting the inline `onSubmit` arrow to a named `handleSubmit(e: React.FormEvent)` so `e.preventDefault()` is the first call. `setLoading(false)` added explicitly in the unsupported-ZIP branch as a defensive guard.
+- Files changed: `src/app/onboarding/zip/page.tsx` (and any Home/Ballot gate changes in commit `2d87085`).
+- Tests run: `npm run lint` (0 errors), `npm run build` (clean, 18 routes) after each commit.
+- No database schema changes. No RLS or policy changes. No new routes. No Edge Functions.
+
 ## 2026-05-25 (civic feed strategic planning)
 
 - Added docs/design/CIVIC_FEED_STRATEGY.md as the source-of-truth strategy document for the civic feed.
