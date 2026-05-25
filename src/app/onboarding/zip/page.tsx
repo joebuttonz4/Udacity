@@ -28,7 +28,8 @@ export default function ZipPage() {
     setShowBetaNotice(false);
   }
 
-  async function handleContinue() {
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
     if (loading) return;
     setError('');
     setShowBetaNotice(false);
@@ -40,6 +41,7 @@ export default function ZipPage() {
 
     if (!PSL_ZIPS.includes(zip)) {
       setShowBetaNotice(true);
+      setLoading(false);
       return;
     }
 
@@ -99,13 +101,14 @@ export default function ZipPage() {
 
   return (
     <form
-      onSubmit={(e) => { e.preventDefault(); handleContinue(); }}
+      onSubmit={handleSubmit}
       className="flex-1 flex flex-col items-center justify-between px-6 py-12 min-h-screen"
     >
 
       {/* Header */}
       <div className="flex flex-col items-center pt-8 w-full max-w-sm">
         <button
+          type="button"
           onClick={() => router.back()}
           className="self-start text-[#6B7280] hover:text-white transition-colors mb-8"
         >
