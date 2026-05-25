@@ -13,10 +13,17 @@ export default function CalculatingPage() {
     async function computeMatchScores() {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session?.access_token) return
-      await fetch('/api/compute-match-scores', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      })
+      const lockKey = `match-scores-computing-${session.user.id}`
+      if (sessionStorage.getItem(lockKey)) return
+      sessionStorage.setItem(lockKey, '1')
+      try {
+        await fetch('/api/compute-match-scores', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        })
+      } finally {
+        sessionStorage.removeItem(lockKey)
+      }
     }
 
     Promise.all([
