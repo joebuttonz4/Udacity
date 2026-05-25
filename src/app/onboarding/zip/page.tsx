@@ -44,20 +44,38 @@ export default function ZipPage() {
 
     setLoading(true);
 
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-    if (!user) {
+    if (authError || !user) {
+      console.error('[ZipPage] auth.getUser failed:', authError);
       router.push('/onboarding/signup');
       return;
     }
 
     // Write ZIP to profile
-    await supabase
+    const { error: profileError } = await supabase
       .from('profiles')
       .update({ zip_code: zip })
       .eq('id', user.id);
 
-    // Write all 5 PSL districts to user_districts
+    if (profileError) {
+      console.error('[ZipPage] profiles update failed:', profileError);
+    }
+
+    // Clear any existing districts for this user before inserting fresh ones.
+    // user_districts has no UPDATE policy so upsert fails on conflict; DELETE + INSERT works.
+    const { error: deleteError } = await supabase
+      .from('user_districts')
+      .delete()
+      .eq('user_id', user.id);
+
+    if (deleteError) {
+      console.error('[ZipPage] user_districts delete failed:', deleteError);
+      setError('Something went wrong. Please try again.');
+      setLoading(false);
+      return;
+    }
+
     const districtRows = ALL_PSL_DISTRICTS.map(d => ({
       user_id: user.id,
       district_id: d.id,
@@ -66,9 +84,10 @@ export default function ZipPage() {
 
     const { error: districtError } = await supabase
       .from('user_districts')
-      .upsert(districtRows, { onConflict: 'user_id,district_id' });
+      .insert(districtRows);
 
     if (districtError) {
+      console.error('[ZipPage] user_districts insert failed:', districtError);
       setError('Something went wrong. Please try again.');
       setLoading(false);
       return;
