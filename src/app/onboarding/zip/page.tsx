@@ -19,10 +19,18 @@ export default function ZipPage() {
   const router = useRouter();
   const [zip, setZip] = useState('');
   const [error, setError] = useState('');
+  const [showBetaNotice, setShowBetaNotice] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  function handleZipChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setZip(e.target.value.replace(/\D/g, ''));
+    setError('');
+    setShowBetaNotice(false);
+  }
 
   async function handleContinue() {
     setError('');
+    setShowBetaNotice(false);
 
     if (zip.length !== 5 || !/^\d+$/.test(zip)) {
       setError('Please enter a valid 5-digit ZIP code.');
@@ -30,7 +38,7 @@ export default function ZipPage() {
     }
 
     if (!PSL_ZIPS.includes(zip)) {
-      setError('CivicMarket is currently only available in Port St. Lucie, FL. Beta is expanding soon!');
+      setShowBetaNotice(true);
       return;
     }
 
@@ -83,10 +91,7 @@ export default function ZipPage() {
         <div className="w-12 h-12 rounded-full bg-[#00C9A7]/10 flex items-center justify-center mb-4">
           <span className="text-2xl">📍</span>
         </div>
-        <h2
-          className="text-2xl font-bold text-white text-center"
-          style={{ fontFamily: 'var(--font-syne)' }}
-        >
+        <h2 className="[font-family:var(--font-syne)] text-2xl font-bold text-white text-center">
           What&apos;s your ZIP code?
         </h2>
         <p className="text-[#6B7280] text-sm text-center mt-2">
@@ -101,12 +106,23 @@ export default function ZipPage() {
           inputMode="numeric"
           maxLength={5}
           value={zip}
-          onChange={(e) => setZip(e.target.value.replace(/\D/g, ''))}
+          onChange={handleZipChange}
           placeholder="34984"
           className="h-16 bg-[#1F2937] border border-[#374151] rounded-2xl px-6 text-white text-2xl text-center placeholder-[#4B5563] focus:outline-none focus:border-[#00C9A7] tracking-widest transition-colors"
         />
         {error && (
           <p className="text-[#FF6B6B] text-sm text-center">{error}</p>
+        )}
+        {showBetaNotice && (
+          <div className="rounded-2xl bg-[#1F2937] border border-[#374151] p-4 text-center">
+            <p className="[font-family:var(--font-syne)] text-white font-semibold text-sm mb-2">
+              CivicMarket is not available in your area yet
+            </p>
+            <p className="text-[#6B7280] text-xs leading-relaxed mb-3">
+              We are currently testing CivicMarket in Port St. Lucie, Florida. We are starting small so we can keep local election and civic data accurate. Please check back later as CivicMarket expands to more communities.
+            </p>
+            <p className="text-[#00C9A7] text-xs font-medium">Try a Port St. Lucie beta ZIP</p>
+          </div>
         )}
       </div>
 
@@ -115,8 +131,7 @@ export default function ZipPage() {
         <button
           onClick={handleContinue}
           disabled={loading || zip.length !== 5}
-          className="w-full h-14 bg-[#00C9A7] hover:bg-[#00A688] disabled:opacity-40 text-[#0D1117] font-bold rounded-2xl transition-colors"
-          style={{ fontFamily: 'var(--font-syne)' }}
+          className="[font-family:var(--font-syne)] w-full h-14 bg-[#00C9A7] hover:bg-[#00A688] disabled:opacity-40 text-[#0D1117] font-bold rounded-2xl transition-colors"
         >
           {loading ? 'Finding your races...' : 'Continue'}
         </button>
