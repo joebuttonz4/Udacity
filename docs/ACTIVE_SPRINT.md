@@ -31,6 +31,22 @@ Verify the app is stable after the security grant patch, then replace all dummy 
 - Post-grant-patch smoke test — run May 17 2026 after commit `51ca84d`; admin insert/list/delete confirmed working; /, /ballot, /candidates/[id], /vote, /profile, /report, /data-sources all loaded; no permission errors; three known issues found (see below); /measures/[id] not tested (no measure data); no code changes
 - Coastal UI design system — approved PNG brand assets integrated (home-hero-coastal.png, candidate-hero-palms.png, dna-hero-coastal-light.png); CoastalHero updated; DNA teaser light coastal style; home countdown 4-box live UI; hydration mismatch fix; countdown and DNA teaser accessibility/contrast fixes; Civic Feed rename; docs/design/README.md created; commit 415e732, lint passed, build passed, May 17 2026 session 4
 
+
+## Civic feed planning update
+
+The civic feed is now a core product pillar for year-round engagement and civic intelligence.
+
+Current sprint planning additions:
+- Define the beta-safe civic intelligence scope
+- Review docs/design/CIVIC_FEED_STRATEGY.md as the source of truth
+- Plan semi-automated government-source ingestion without implementing it yet
+- Plan an admin review workflow before any AI-generated feed item is published
+- Identify feed card UX needs for local impact, source links, meeting dates, and follow actions
+- Keep public posting, unrestricted comments, autonomous publishing, and advanced multi-city crawling deferred
+
+Important boundary:
+This sprint may document and plan civic feed intelligence, but should not build Edge Functions, scraping automation, or autonomous publishing until a separate implementation step is approved.
+
 ## Acceptance criteria
 
 - [ ] Smoke test: onboarding flow (signup through calculating) still works after security patch
@@ -52,4 +68,5 @@ Verify the app is stable after the security grant patch, then replace all dummy 
 - Do not build full admin dashboard yet
 - Do not build Edge Functions yet
 - Do not send beta invitations until all real data is in place and validated
+
 
