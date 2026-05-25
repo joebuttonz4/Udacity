@@ -2,16 +2,33 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
 
 export default function CalculatingPage() {
   const router = useRouter()
 
   useEffect(() => {
-    // Give the animation time to play, then redirect to ballot
-    const timer = setTimeout(() => {
-      router.push('/ballot')
-    }, 2500)
-    return () => clearTimeout(timer)
+    let cancelled = false
+
+    async function computeMatchScores() {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) return
+      await fetch('/api/compute-match-scores', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      })
+    }
+
+    Promise.all([
+      computeMatchScores().catch(() => {}),
+      new Promise<void>((resolve) => setTimeout(resolve, 2500)),
+    ]).then(() => {
+      if (!cancelled) router.push('/ballot')
+    })
+
+    return () => {
+      cancelled = true
+    }
   }, [router])
 
   return (
