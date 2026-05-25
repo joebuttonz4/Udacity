@@ -29,6 +29,7 @@ export default function ZipPage() {
   }
 
   async function handleContinue() {
+    if (loading) return;
     setError('');
     setShowBetaNotice(false);
 
@@ -97,7 +98,10 @@ export default function ZipPage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-between px-6 py-12 min-h-screen">
+    <form
+      onSubmit={(e) => { e.preventDefault(); handleContinue(); }}
+      className="flex-1 flex flex-col items-center justify-between px-6 py-12 min-h-screen"
+    >
 
       {/* Header */}
       <div className="flex flex-col items-center pt-8 w-full max-w-sm">
@@ -148,7 +152,7 @@ export default function ZipPage() {
       {/* CTA */}
       <div className="w-full max-w-sm">
         <button
-          onClick={handleContinue}
+          type="submit"
           disabled={loading || zip.length !== 5}
           className="[font-family:var(--font-syne)] w-full h-14 bg-[#00C9A7] hover:bg-[#00A688] disabled:opacity-40 text-[#0D1117] font-bold rounded-2xl transition-colors"
         >
@@ -156,6 +160,6 @@ export default function ZipPage() {
         </button>
       </div>
 
-    </div>
+    </form>
   );
 }
