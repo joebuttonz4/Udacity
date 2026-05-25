@@ -87,7 +87,7 @@ Confirmed complete:
 - Supabase security grant patch — manual SQL in SQL Editor, no code commit: (1) REVOKE TRUNCATE, TRIGGER, REFERENCES on all public tables from anon and authenticated; verified no remaining grants of those types. (2) DO block revoked INSERT/UPDATE/DELETE from anon and authenticated only where matching_policy_count = 0; verified no remaining unguarded grants. Post-patch: RLS enabled on all public tables confirmed, profiles.is_admin not browser-writable, match_scores SELECT-only, reviews SELECT and INSERT only (no UPDATE). No data deleted. No RLS policies changed. No schema changes. Complete, May 17 2026.
 - Post-grant-patch smoke test — run May 17 2026 after commit `51ca84d`. No code changes. No database changes. Routes confirmed working: /, /admin/entry (insert confirmed), /admin/records (list and two-step delete confirmed, TEST ONLY row deleted, no real rows deleted), /ballot (loaded, candidate cards and links worked, bottom nav appeared), /profile (loaded, normal profile/DNA state), /data-sources, /report (UI-only submit confirmed, no database write), /vote, /candidates/[id] (one profile, voting records and source links visible). No permission errors on any route. Known issues found: (1) ballot match rings not showing, (2) profile sign out not visible, (3) candidate profile Report Inaccuracy link/button missing. /measures/[id] not tested — no measure exists in current dummy data. Complete, May 17 2026.
 - /candidates/[id] Report Inaccuracy link — added "Report an Inaccuracy" Link at the bottom of the loaded candidate profile, after the read-only disclaimer, linking to /report. No database changes. No RLS changes. No /report behavior changes. lint passed, build passed, complete, May 17 2026.
-- Ballot match rings — fixed, commit 153a356, May 17 2026.
+- Ballot match rings (display/read path only) — fixed, commit 153a356, May 17 2026. The ring UI correctly reads and renders existing match_scores rows. Verified May 25 2026 via manual SQL insert for civicmarket.test.01@example.com: five rings unlocked (Maria Santos 65, Linda Marsh 75, Patricia Nguyen 71, Angela Torres 79, James Whitfield 38). David Okafor, Carlos Reyes, and Robert Chambers remained locked — they have no scored voting records or candidate_positions rows. Gap identified: no code creates match_scores rows automatically after quiz completion — see hard beta blockers.
 - Profile sign out button — fixed, commit 66d2518, May 17 2026.
 - All three post-grant-patch smoke test UI issues resolved.
 - UI design alignment pass — complete, lint passed, build passed, May 17 2026 session 3. Changes: NavBar converted to active-state-aware client component imported from layout (removed duplicate hardcoded nav), MatchScoreRing sizes updated to spec (sm=48px, md=72px, lg=96px), all main screens (/, /ballot, /candidates/[id], /measures/[id], /vote, /profile, /onboarding) converted from all-dark to split dark-hero-header + #F6F8FA light body with white shadow cards, all inline style= violations removed (converted to [font-family:var(--font-syne)] Tailwind classes), globals.css cleaned to @import "tailwindcss" only, scope tags updated to spec colors (city=teal, county=blue, state=indigo), back-button arrows improved on profile/measure pages, warning banners updated to amber tone.
@@ -104,7 +104,8 @@ Confirmed complete:
 
 ## Immediate priorities
 
-1. Replace dummy data with real validated PSL candidate, voting record, and funding data before beta invitations
+1. Build automatic match score generation after Civic DNA completion (server-side compute, no schema changes, no RLS changes)
+2. Replace dummy data with real validated PSL candidate, voting record, and funding data before beta invitations
 
 
 ## Civic feed strategic direction
@@ -164,9 +165,10 @@ No beta invitations until:
 - Admin can enter voting records ✓ (commit e24fe14)
 - Admin review/removal page exists ✓ (commits 93342f3 + 31adca9) — review list and deletion controls complete, DELETE RLS policy verified, test row deleted
 - Security patch applied ✓ — grant patch May 17 2026 (REVOKE TRUNCATE/TRIGGER/REFERENCES; revoked unguarded INSERT/UPDATE/DELETE; verified match_scores SELECT-only, reviews no UPDATE, profiles.is_admin not browser-writable)
-- Ballot match rings not showing ✓ — fixed, commit 153a356
+- Ballot match rings not showing ✓ — display/read path fixed, commit 153a356 (rings render correctly when match_scores rows exist)
 - Profile sign out not visible ✓ — fixed, commit 66d2518
 - Candidate profile Report Inaccuracy link/button missing ✓ — fixed, link added to /report
+- Automatic match score generation after Civic DNA completion — MISSING. /onboarding/calculating computes civic_dna and redirects to /ballot but never writes match_scores rows. Users who complete the quiz see locked rings on /ballot. Root cause: no server-side compute path exists. Implementation constraints: no schema changes, no RLS changes, no broad browser INSERT policy, writes scores for the authenticated user only, uses computed_at (not created_at), averages only non-null candidate_positions dimensions (current partial dummy data has gaps). Required acceptance test: fresh test user completes Civic DNA quiz → match_scores rows created automatically → /ballot rings unlock without manual SQL.
 - /measures/[id] smoke test pending — no measure data exists yet; must test once real measure data is in place
 - Email confirmation re-enabled
 

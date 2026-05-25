@@ -34,6 +34,31 @@ Verify the app is stable after the security grant patch, then replace all dummy 
 - /onboarding/zip ZIP screen fixes — friendly beta availability notice for unsupported ZIPs; stale error/notice clears on every keystroke; user_districts write switched from upsert to delete-then-insert (no UPDATE policy on user_districts); Enter key submits via form onSubmit; Back button type="button" prevents Enter from triggering router.back(); commits c8195d5, 1b1719e, 9e5a5ea, 1d0df4f; lint passed, build passed; May 25 2026
 
 
+## Match score generation gap
+
+**Root cause identified May 25 2026.**
+
+The quiz flow computes and stores civic_dna correctly. /onboarding/calculating redirects to /ballot after writing the civic_dna row. No code in the onboarding flow creates match_scores rows. The Supabase security grant patch (May 17 2026) confirmed match_scores is SELECT-only from the browser — no INSERT or UPDATE policy exists for authenticated users.
+
+Verified behavior (manual SQL insert for civicmarket.test.01@example.com, May 25 2026):
+- Five rings unlocked when rows were inserted manually: Maria Santos 65, Linda Marsh 75, Patricia Nguyen 71, Angela Torres 79, James Whitfield 38.
+- David Okafor, Carlos Reyes, and Robert Chambers remained locked — no scored voting records or candidate_positions rows exist for those candidates.
+- The /ballot display/read path works correctly. The gap is write-side only.
+
+Implementation approach for match score generation:
+- Build a trusted server-side compute path (Next.js API route or Server Action).
+- No schema changes.
+- No RLS changes — do not add a broad browser INSERT policy for match_scores.
+- Only write scores for the authenticated user making the request.
+- Use computed_at, not created_at, as the timestamp field.
+- Average only non-null candidate_positions dimensions to handle partial dummy data.
+- Trigger automatically when /onboarding/calculating completes.
+
+Required acceptance test:
+- Fresh test user completes Civic DNA quiz.
+- match_scores rows are created automatically (no manual SQL).
+- /ballot rings unlock without manual SQL.
+
 ## Civic feed planning update
 
 The civic feed is now a core product pillar for year-round engagement and civic intelligence.
@@ -56,9 +81,10 @@ This sprint may document and plan civic feed intelligence, but should not build 
 - [x] Smoke test: /admin/entry can still insert a voting record — confirmed May 17 2026
 - [x] Smoke test: /admin/records lists records and Remove/Confirm delete works — confirmed May 17 2026
 - [x] Smoke test: /profile, /report, /data-sources load correctly — confirmed May 17 2026
-- [x] Fix: ballot match rings not showing — fixed, commit 153a356, May 17 2026
+- [x] Fix: ballot match rings not showing — display/read path fixed, commit 153a356, May 17 2026 (rings render when match_scores rows exist)
 - [x] Fix: profile sign out not visible — fixed, commit 66d2518, May 17 2026
 - [x] Fix: candidate profile Report Inaccuracy link/button missing — fixed, link to /report added, May 17 2026
+- [ ] Fix: automatic match score generation after Civic DNA completion — gap identified May 25 2026; fresh test user must complete quiz and see /ballot rings unlock without manual SQL
 - [ ] Real PSL candidate data replaces dummy data
 - [ ] Real voting records with official source URLs replace dummy records
 - [ ] Real funding data with source URLs replaces dummy funding rows

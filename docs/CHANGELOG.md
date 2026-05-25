@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-05-25 (match score generation gap identified)
+
+- Gap identified: automatic match score generation after Civic DNA completion does not exist.
+- Root cause: /onboarding/calculating computes civic_dna and writes the civic_dna row, then redirects to /ballot. No code in the onboarding flow creates match_scores rows. The May 17 2026 security grant patch confirmed match_scores is SELECT-only from the browser — no browser INSERT policy exists.
+- Verified behavior via manual SQL insert for civicmarket.test.01@example.com:
+  - Five rings unlocked: Maria Santos 65, Linda Marsh 75, Patricia Nguyen 71, Angela Torres 79, James Whitfield 38.
+  - David Okafor, Carlos Reyes, and Robert Chambers remained locked — no scored voting records or candidate_positions rows exist for those candidates.
+  - The /ballot display/read path (commit 153a356) is correct. The gap is write-side only.
+- Prior entry "Ballot match rings — fixed, commit 153a356" now clarified as display/read path only. The fix was real and correct; it revealed that the write path was never built.
+- Implementation constraints for the fix (not yet built):
+  - Server-side compute path only (Next.js API route or Server Action).
+  - No schema changes. No RLS changes. No broad browser INSERT policy for match_scores.
+  - Writes scores for the authenticated user only.
+  - Uses computed_at, not created_at.
+  - Averages only non-null candidate_positions dimensions for current partial dummy data.
+- Required acceptance test: fresh test user completes Civic DNA quiz → match_scores rows created automatically → /ballot rings unlock without manual SQL.
+- New hard beta blocker added to CIVICMARKET_CURRENT_STATE.md. New section added to docs/ACTIVE_SPRINT.md. No code changes. No Supabase schema changes. No RLS or policy changes.
+
 ## 2026-05-25 (onboarding gate + ZIP screen fixes)
 
 - Onboarding gate fix (commit `2d87085`): / (Home) and /ballot now detect incomplete logged-in users — a valid auth session with no `user_districts` row — and redirect them to /onboarding/zip instead of showing an empty or broken screen. No schema changes. No RLS changes.
