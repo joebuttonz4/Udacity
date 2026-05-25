@@ -32,9 +32,10 @@ Verify the app is stable after the security grant patch, then replace all dummy 
 - Coastal UI design system — approved PNG brand assets integrated (home-hero-coastal.png, candidate-hero-palms.png, dna-hero-coastal-light.png); CoastalHero updated; DNA teaser light coastal style; home countdown 4-box live UI; hydration mismatch fix; countdown and DNA teaser accessibility/contrast fixes; Civic Feed rename; docs/design/README.md created; commit 415e732, lint passed, build passed, May 17 2026 session 4
 - Onboarding gate fix — incomplete logged-in users (auth session but no user_districts row) redirect to /onboarding/zip from / and /ballot; commit 2d87085, May 25 2026
 - /onboarding/zip ZIP screen fixes — friendly beta availability notice for unsupported ZIPs; stale error/notice clears on every keystroke; user_districts write switched from upsert to delete-then-insert (no UPDATE policy on user_districts); Enter key submits via form onSubmit; Back button type="button" prevents Enter from triggering router.back(); commits c8195d5, 1b1719e, 9e5a5ea, 1d0df4f; lint passed, build passed; May 25 2026
+- Automatic match score generation after Civic DNA completion — /onboarding/calculating calls POST /api/compute-match-scores; sessionStorage lock scoped to user ID prevents React Strict Mode duplicate calls; acceptance test passed May 25 2026 with civicmarket.test.04@example.com: 5 match_scores rows generated automatically (Maria Santos 70, Patricia Nguyen 63, Angela Torres 42, James Whitfield 38, Linda Marsh 38), single computed_at = 2026-05-25 23:12:00.986+00, no manual SQL; commits 4c4479d and f4e5786; lint passed, build passed (19 routes); May 25 2026
 
 
-## Match score generation gap
+## Match score generation (complete)
 
 **Root cause identified May 25 2026.**
 
@@ -54,10 +55,12 @@ Implementation approach for match score generation:
 - Average only non-null candidate_positions dimensions to handle partial dummy data.
 - Trigger automatically when /onboarding/calculating completes.
 
-Required acceptance test:
-- Fresh test user completes Civic DNA quiz.
-- match_scores rows are created automatically (no manual SQL).
-- /ballot rings unlock without manual SQL.
+Acceptance test result — passed May 25 2026:
+- civicmarket.test.04@example.com (user_id 479780fe-e447-4c6e-9462-338841bbaa4b) retook Civic DNA.
+- /onboarding/calculating generated 5 match_scores rows automatically. No manual SQL.
+- Rows: Maria Santos 70, Patricia Nguyen 63, Angela Torres 42, James Whitfield 38, Linda Marsh 38.
+- All 5 rows had the same computed_at = 2026-05-25 23:12:00.986+00 (no duplicates).
+- /ballot rings unlocked. Carlos Reyes, David Okafor, Robert Chambers remained locked (no candidate_positions — expected).
 
 ## Civic feed planning update
 
@@ -84,7 +87,7 @@ This sprint may document and plan civic feed intelligence, but should not build 
 - [x] Fix: ballot match rings not showing — display/read path fixed, commit 153a356, May 17 2026 (rings render when match_scores rows exist)
 - [x] Fix: profile sign out not visible — fixed, commit 66d2518, May 17 2026
 - [x] Fix: candidate profile Report Inaccuracy link/button missing — fixed, link to /report added, May 17 2026
-- [ ] Fix: automatic match score generation after Civic DNA completion — gap identified May 25 2026; fresh test user must complete quiz and see /ballot rings unlock without manual SQL
+- [x] Fix: automatic match score generation after Civic DNA completion — complete, commits 4c4479d and f4e5786; acceptance test passed May 25 2026 with civicmarket.test.04@example.com; 5 rows, single computed_at, no manual SQL
 - [ ] Real PSL candidate data replaces dummy data
 - [ ] Real voting records with official source URLs replace dummy records
 - [ ] Real funding data with source URLs replaces dummy funding rows

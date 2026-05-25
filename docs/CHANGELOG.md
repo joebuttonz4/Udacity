@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-05-25 (automatic match score generation — complete)
+
+- Built automatic match score generation after Civic DNA completion (commit `4c4479d`).
+- New files:
+  - `src/lib/supabase-server.ts` — server-only Supabase client factory using `SUPABASE_SERVICE_ROLE_KEY` (no `NEXT_PUBLIC_` prefix, never imported from client components).
+  - `src/app/api/compute-match-scores/route.ts` — POST handler. Validates caller via `supabase.auth.getUser(token)`. Fetches latest `civic_dna` row for the user, user's `user_districts`, `candidates` in those districts (`archived_at IS NULL`), and `candidate_positions` for those candidates. Computes alignment score per candidate: for each non-null `candidate_positions` dimension, `alignment = 100 − (|user_dna[dim] − candidate_pos[dim]| / 4.0) × 100`; averages non-null alignments; rounds to integer; clamps 0–100. Deletes only existing `match_scores` candidate rows for this user where `candidate_id IN (candidateIds)` — measure rows untouched. Inserts new rows using `computed_at`. Returns `{ inserted, skipped, total_candidates }` for debugging. No secrets or user data in responses. No schema changes. No RLS changes. No grants or policy changes. No measure score computation.
+  - `src/app/onboarding/calculating/page.tsx` (modified) — added session fetch and API call via `Promise.all([computeMatchScores().catch(() => {}), sleep(2500)])`. Errors swallowed so user always reaches `/ballot`. Animation plays for minimum 2.5s.
+- Fixed duplicate match score generation from React Strict Mode double-mount (commit `f4e5786`). In development, Strict Mode mounts → runs effect → unmounts (sets `cancelled = true`) → remounts → runs effect again. Both `getSession()` calls returned before either had started the fetch, so both passed the null check and both hit the delete-then-insert, producing 10 rows (2 per candidate). Fix: sessionStorage key `match-scores-computing-<userId>` is set synchronously before the fetch starts. JavaScript is single-threaded — the second effect's callback sees the key and returns early. The `finally` block removes the key after the fetch completes so a future quiz retake can recompute.
+- Acceptance test passed May 25 2026: civicmarket.test.04@example.com (user_id `479780fe-e447-4c6e-9462-338841bbaa4b`) retook Civic DNA quiz. /onboarding/calculating generated match_scores automatically with no manual SQL. SQL confirmed exactly 5 rows, single `computed_at = 2026-05-25 23:12:00.986+00`.
+  - Maria Santos — 70
+  - Patricia Nguyen — 63
+  - Angela Torres — 42
+  - James Whitfield — 38
+  - Linda Marsh — 38
+  - Carlos Reyes, David Okafor, Robert Chambers — no rows (no candidate_positions, expected).
+- Tests run: `npm run lint` (0 errors), `npm run build` (clean, 19 routes including new `ƒ /api/compute-match-scores`).
+- No database schema changes. No RLS or policy changes. No grant changes. No measure score computation. No civic feed automation.
+
 ## 2026-05-25 (match score generation gap identified)
 
 - Gap identified: automatic match score generation after Civic DNA completion does not exist.

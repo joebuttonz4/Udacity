@@ -101,11 +101,11 @@ Confirmed complete:
 - /onboarding/zip user_districts write — replaced upsert with delete-then-insert; upsert ON CONFLICT DO UPDATE required an UPDATE RLS policy that user_districts intentionally does not have, causing silent RLS failure on re-attempts; DELETE and INSERT policies both exist and are used; commit 1b1719e, May 25 2026.
 - /onboarding/zip Enter-key submit — outer div converted to a form with a named handleSubmit(e: React.FormEvent); e.preventDefault() called first; Continue button is type="submit"; pressing Enter in the ZIP field triggers identical handleSubmit logic as clicking Continue; commits 9e5a5ea and 1d0df4f, May 25 2026.
 - /onboarding/zip Enter-submit regression fix — Back button missing type="button" defaulted to type="submit" inside the form; pressing Enter caused browser to fire router.back() before the form onSubmit could run, making unsupported ZIP notice flash then navigate away; fixed by adding type="button" to Back button; commit 1d0df4f, May 25 2026.
+- Automatic match score generation after Civic DNA completion — complete, commits 4c4479d and f4e5786, May 25 2026. POST /api/compute-match-scores validates user session via service-role client, fetches latest civic_dna and candidate_positions, computes alignment scores (average of non-null dimensions, 0–100 integer, using computed_at), deletes only candidate match_scores rows being recomputed (measure rows untouched), inserts fresh rows. sessionStorage lock key scoped to user ID prevents React Strict Mode double-mount from firing two concurrent API calls. New files: src/lib/supabase-server.ts (server-only service-role client), src/app/api/compute-match-scores/route.ts (POST handler). Acceptance test passed May 25 2026: civicmarket.test.04@example.com retook Civic DNA quiz, /onboarding/calculating generated 5 match_scores rows automatically (Maria Santos 70, Patricia Nguyen 63, Angela Torres 42, James Whitfield 38, Linda Marsh 38), single computed_at = 2026-05-25 23:12:00.986+00, no manual SQL. No schema changes. No RLS changes. No grant or policy changes. No measure score computation. lint passed, build passed (19 routes).
 
 ## Immediate priorities
 
-1. Build automatic match score generation after Civic DNA completion (server-side compute, no schema changes, no RLS changes)
-2. Replace dummy data with real validated PSL candidate, voting record, and funding data before beta invitations
+1. Replace dummy data with real validated PSL candidate, voting record, and funding data before beta invitations
 
 
 ## Civic feed strategic direction
@@ -168,7 +168,7 @@ No beta invitations until:
 - Ballot match rings not showing ✓ — display/read path fixed, commit 153a356 (rings render correctly when match_scores rows exist)
 - Profile sign out not visible ✓ — fixed, commit 66d2518
 - Candidate profile Report Inaccuracy link/button missing ✓ — fixed, link added to /report
-- Automatic match score generation after Civic DNA completion — MISSING. /onboarding/calculating computes civic_dna and redirects to /ballot but never writes match_scores rows. Users who complete the quiz see locked rings on /ballot. Root cause: no server-side compute path exists. Implementation constraints: no schema changes, no RLS changes, no broad browser INSERT policy, writes scores for the authenticated user only, uses computed_at (not created_at), averages only non-null candidate_positions dimensions (current partial dummy data has gaps). Required acceptance test: fresh test user completes Civic DNA quiz → match_scores rows created automatically → /ballot rings unlock without manual SQL.
+- Automatic match score generation after Civic DNA completion ✓ — complete, commits 4c4479d and f4e5786. Acceptance test passed May 25 2026: civicmarket.test.04@example.com (user_id 479780fe-e447-4c6e-9462-338841bbaa4b) retook Civic DNA quiz, 5 match_scores rows generated automatically (Maria Santos 70, Patricia Nguyen 63, Angela Torres 42, James Whitfield 38, Linda Marsh 38), single computed_at = 2026-05-25 23:12:00.986+00, /ballot rings unlocked without manual SQL. No schema changes. No RLS changes. No grant or policy changes.
 - /measures/[id] smoke test pending — no measure data exists yet; must test once real measure data is in place
 - Email confirmation re-enabled
 
