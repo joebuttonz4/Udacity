@@ -64,3 +64,24 @@ Limits:
 - Does not prove voting records.
 - Does not provide full candidate bios.
 - Does not provide candidate website URLs for all candidates.
+
+## 2026-06-26: Fredric Meltzer VoterFocus Candidate Reports
+
+Source inventory title: Fredric Meltzer VoterFocus Candidate Reports
+Status decision: accepted with limits
+Reviewed by: Mike + ChatGPT
+
+Accepted for:
+- Candidate-specific campaign finance/report discovery for Fredric Meltzer
+- Office confirmation for City of Port St. Lucie City Council District 1
+- Visible report-period contribution, in-kind, and expenditure summary values, if transcribed exactly from the official/local campaign finance page
+
+Not accepted for:
+- Neighbor donation totals
+- PAC/corporate funding split
+- Institutional percentage
+- Any voting record or issue-position claim
+
+Reasoning:
+This is a candidate-specific official/local campaign finance reporting page. It is suitable for confirming that candidate's finance-report source and report availability. It is not by itself sufficient for CivicMarket's richer funding-breakdown fields unless individual contribution transactions are reviewed and categorized.
+
