@@ -40,3 +40,27 @@ No real data rows have been approved yet.
 - Need official candidate source for Port St. Lucie City Council District 1.
 - Need candidate-specific funding source.
 - Need official voting record sources for incumbents, if applicable.
+
+### 2026-06-25 - Port St. Lucie City Council District 1 candidate source review
+
+Status: accepted
+
+Source reviewed:
+https://www.cityofpsl.com/Government/Your-City-Government/Departments/City-Clerk/Elections
+
+Decision:
+Accepted for candidate existence and race placement.
+
+What this source supports:
+- 2026 Port St. Lucie District 1 race exists.
+- District 1 candidates listed by the City:
+  - Eric Reikenis
+  - Indony Baptiste
+  - Kevin Zimmerman
+  - Fredric Meltzer
+
+Limits:
+- Does not prove campaign finance totals.
+- Does not prove voting records.
+- Does not provide full candidate bios.
+- Does not provide candidate website URLs for all candidates.
