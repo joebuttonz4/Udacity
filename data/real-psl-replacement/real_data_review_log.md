@@ -85,3 +85,24 @@ Not accepted for:
 Reasoning:
 This is a candidate-specific official/local campaign finance reporting page. It is suitable for confirming that candidate's finance-report source and report availability. It is not by itself sufficient for CivicMarket's richer funding-breakdown fields unless individual contribution transactions are reviewed and categorized.
 
+
+## 2026-06-26: Eric Reikenis VoterFocus Candidate Reports
+
+Source inventory title: Eric Reikenis VoterFocus Candidate Reports
+Status decision: accepted with limits
+Reviewed by: Mike + ChatGPT
+
+Accepted for:
+- Candidate-specific campaign finance/report discovery for Eric Reikenis
+- Office confirmation for City of Port St. Lucie City Council District 1
+- Visible report-period contribution, in-kind, and expenditure summary values, if transcribed exactly from the official/local campaign finance page
+
+Not accepted for:
+- Neighbor donation totals
+- PAC/corporate funding split
+- Institutional percentage
+- Any voting record or issue-position claim
+
+Reasoning:
+This is a candidate-specific official/local campaign finance reporting page. It is suitable for confirming that candidate's finance-report source and report availability. It is not by itself sufficient for CivicMarket's richer funding-breakdown fields unless individual contribution transactions are reviewed and categorized.
+
