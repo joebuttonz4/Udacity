@@ -14,22 +14,28 @@ Write-Host "Commit message:"
 Write-Host $Message
 Write-Host ""
 
-Write-Host "Current changed files:"
-git status --short
-Write-Host ""
-
 $statusShort = git status --short
+
+Write-Host "Files to review:"
 if (-not $statusShort) {
   Write-Host "No changes to commit."
   exit 0
 }
 
+$statusShort
+Write-Host ""
+
 Write-Host "Running CSV validation:"
 node .\scripts\validate-real-psl-csvs.cjs
 Write-Host ""
 
-Write-Host "Diff summary:"
-git diff --stat
+Write-Host "Tracked-file diff summary:"
+$diffStat = git diff --stat
+if ($diffStat) {
+  $diffStat
+} else {
+  Write-Host "No tracked-file diff. Changes may be new untracked files only."
+}
 Write-Host ""
 
 Write-Host "Full status:"
