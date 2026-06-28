@@ -158,3 +158,32 @@ Not accepted for:
 Reasoning:
 These are official City of Port St. Lucie records and meeting-access sources. They are suitable for discovering and verifying City Council voting records when an item-specific official source supports the vote description date item and vote cast. Meeting videos may be used to confirm vote details where written minutes or action agendas are incomplete. Public records requests are accepted as an official path to obtain missing records but should not replace item-specific source URLs when online records are available.
 
+
+## 2026-06-28: PSL District 1 Voting Records No-Data Decision
+
+Source inventory titles reviewed:
+- City of Port St. Lucie Elections
+- City of Port St. Lucie Agendas and Meetings
+- PSL Legistar City Council
+- PSL-TV20 Granicus Public Meetings Archive
+- City Clerk Public Records Requests
+
+Status decision: no voting rows added yet
+Reviewed by: Mike + ChatGPT
+
+Decision:
+- Leave voting_records_real.csv header-only for now.
+
+Reasoning:
+The current PSL District 1 candidate rows all mark is_incumbent as false. The accepted official voting-record sources are suitable for discovering and verifying City Council votes, but no candidate-specific official vote history has been verified for Eric Reikenis, Indony Baptiste, Kevin Zimmerman, or Fredric Meltzer. CivicMarket should not create voting-record rows unless an official item-specific source confirms the candidate, item, date, description, and vote cast.
+
+Impact:
+- No voting records are added for non-incumbent candidates at this stage.
+- Candidate position scores and match scores must remain uncomputed or locked until supported voting records or another accepted scoring basis exists.
+- This does not block keeping the candidates in candidates_real.csv.
+- This does not change summary funding rows.
+
+Deferred:
+- If an official source later proves prior Council service or an item-specific vote by one of these candidates, add voting_records_real.csv rows one at a time with exact official source URLs.
+- If no such source exists, keep voting records blank and document candidate profiles as having no verified official voting record in the pilot dataset.
+
