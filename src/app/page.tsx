@@ -12,10 +12,10 @@ import {
 import MatchScoreRing from '@/components/ui/MatchScoreRing'
 import CoastalHero from '@/components/CoastalHero'
 
-const DUMMY_FEED = [
-  { id: 1, title: 'Election Day — Port St. Lucie', meta: 'Nov 3, 2026 · All districts' },
-  { id: 2, title: 'Candidate filing deadline approaching', meta: 'Oct 15, 2026 · City of Port St. Lucie' },
-  { id: 3, title: 'PSL City Council meeting rescheduled', meta: 'Oct 28, 2026 · City Council' },
+const CIVIC_FEED = [
+  { id: 1, title: 'Candidate profiles loaded from verified source records', meta: 'Port St. Lucie District 1' },
+  { id: 2, title: 'Funding summaries available where official totals were reviewed', meta: 'Source-linked campaign finance data' },
+  { id: 3, title: 'Voting records locked until official candidate vote history is verified', meta: 'No unsupported vote rows shown' },
 ]
 
 const ELECTION_DATE = new Date('2026-11-03T00:00:00')
@@ -241,7 +241,7 @@ export default function HomePage() {
                 Civic feed
               </h2>
               <div className="flex flex-col gap-2.5">
-                {DUMMY_FEED.map((item) => (
+                {CIVIC_FEED.map((item) => (
                   <div
                     key={item.id}
                     className="bg-[#F8FAFC] border border-[#EEF2F7] rounded-2xl px-4 py-3.5"
@@ -259,7 +259,7 @@ export default function HomePage() {
 
             <div className="bg-[#FFFBEB] border border-[#FDE68A] rounded-[24px] p-4">
               <p className="text-[#92400E] text-xs leading-5 [font-family:var(--font-instrument-sans)]">
-                Beta — placeholder PSL data only. Real candidate, funding, and ballot data coming before launch.
+                Port St. Lucie pilot data is source-reviewed. Voting records and match details stay locked unless official records support them.
               </p>
             </div>
           </>
@@ -268,3 +268,4 @@ export default function HomePage() {
     </div>
   )
 }
+
