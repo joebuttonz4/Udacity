@@ -279,8 +279,7 @@ export default function BallotPage() {
 
             <div className="bg-[#FFFBEB] border border-[#FDE68A] rounded-[24px] p-4">
               <p className="text-[#92400E] text-xs leading-5 [font-family:var(--font-instrument-sans)]">
-                Read-only beta using placeholder PSL data. Candidate, funding, voting record,
-                and ballot data must be replaced before beta users.
+                Port St. Lucie pilot data is source-reviewed. Voting records, ballot details, and match scores stay locked unless official records support them.
               </p>
             </div>
           </>
@@ -289,3 +288,4 @@ export default function BallotPage() {
     </div>
   )
 }
+
