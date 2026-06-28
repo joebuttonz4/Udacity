@@ -1,0 +1,40 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "CivicMarket: Status",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        ".\\tools\\civic-status.ps1"
+      ],
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "CivicMarket: Guided Commit",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        ".\\tools\\civic-commit.ps1",
+        "-Message",
+        "${input:commitMessage}"
+      ],
+      "group": "build",
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "commitMessage",
+      "type": "promptString",
+      "description": "Commit message"
+    }
+  ]
+}
