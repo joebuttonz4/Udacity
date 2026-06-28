@@ -19,6 +19,10 @@ Write-Host "CSV validation:"
 node .\scripts\validate-real-psl-csvs.cjs
 Write-Host ""
 
+Write-Host "Real data guard:"
+.\tools\civic-real-data-guard.ps1
+Write-Host ""
+
 Write-Host "Real PSL row counts:"
 $candidateRows = @(Import-Csv .\data\real-psl-replacement\candidates_real.csv).Count
 $votingRows = @(Import-Csv .\data\real-psl-replacement\voting_records_real.csv).Count
