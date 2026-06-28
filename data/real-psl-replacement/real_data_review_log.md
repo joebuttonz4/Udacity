@@ -129,3 +129,32 @@ Not accepted for:
 Reasoning:
 This is an official/local Supervisor of Elections candidate profile and campaign finance navigation source. It is suitable for confirming candidate status, finding candidate-specific reports, and transcribing exact visible summary values. It is not by itself sufficient for CivicMarket's richer funding-breakdown fields unless individual contribution transactions are reviewed and categorized.
 
+
+## 2026-06-28: Official Port St. Lucie Voting Record Source Set
+
+Source inventory titles:
+- City of Port St. Lucie Agendas and Meetings
+- PSL Legistar City Council
+- PSL-TV20 Granicus Public Meetings Archive
+- City Clerk Public Records Requests
+
+Status decision: accepted with limits
+Reviewed by: Mike + ChatGPT
+
+Accepted for:
+- Official City Council agenda and meeting-record discovery
+- Official agenda packet and action agenda review
+- Official minutes review where minutes are available
+- Official meeting video confirmation where needed
+- Public records request path for missing official vote records
+
+Not accepted for:
+- Candidate issue-position claims
+- Campaign claims
+- Third-party or AI-generated meeting summaries
+- Voting-record rows without item-specific official source support
+- Any row where the vote cast cannot be verified from an official agenda minutes action agenda video or records response
+
+Reasoning:
+These are official City of Port St. Lucie records and meeting-access sources. They are suitable for discovering and verifying City Council voting records when an item-specific official source supports the vote description date item and vote cast. Meeting videos may be used to confirm vote details where written minutes or action agendas are incomplete. Public records requests are accepted as an official path to obtain missing records but should not replace item-specific source URLs when online records are available.
+
