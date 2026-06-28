@@ -115,9 +115,7 @@ export default function DataSourcesPage() {
           {/* Beta disclaimer */}
           <div className="bg-[#374151]/30 border border-[#374151] rounded-2xl p-4">
             <p className="text-[#6B7280] text-xs leading-5 [font-family:var(--font-instrument-sans)]">
-              This is a beta build. All candidate, voting record, funding, and ballot data is
-              reviewed and replaced with validated Port St. Lucie data before beta invitations
-              go out. Placeholder data is used in this build only.
+              This pilot build shows source-reviewed Port St. Lucie data where available. Candidate, funding, voting record, ballot, and match details stay hidden or locked unless supported by reviewed official sources.
             </p>
           </div>
 
@@ -126,3 +124,4 @@ export default function DataSourcesPage() {
     </div>
   )
 }
+
