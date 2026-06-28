@@ -28,6 +28,23 @@
       ],
       "group": "build",
       "problemMatcher": []
+    },
+    {
+      "label": "CivicMarket: New Review Entry",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        ".\\tools\\civic-new-review-entry.ps1",
+        "-Title",
+        "${input:reviewTitle}",
+        "-Status",
+        "${input:reviewStatus}"
+      ],
+      "group": "none",
+      "problemMatcher": []
     }
   ],
   "inputs": [
@@ -35,6 +52,16 @@
       "id": "commitMessage",
       "type": "promptString",
       "description": "Commit message"
+    },
+    {
+      "id": "reviewTitle",
+      "type": "promptString",
+      "description": "Review entry title"
+    },
+    {
+      "id": "reviewStatus",
+      "type": "promptString",
+      "description": "Review status, for example accepted with limits"
     }
   ]
 }
