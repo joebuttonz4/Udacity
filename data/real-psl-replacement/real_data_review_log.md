@@ -106,3 +106,26 @@ Not accepted for:
 Reasoning:
 This is a candidate-specific official/local campaign finance reporting page. It is suitable for confirming that candidate's finance-report source and report availability. It is not by itself sufficient for CivicMarket's richer funding-breakdown fields unless individual contribution transactions are reviewed and categorized.
 
+
+## 2026-06-26: St. Lucie Supervisor of Elections Candidate Profiles
+
+Source inventory title: St. Lucie Supervisor of Elections Candidate Profiles
+Status decision: accepted with limits
+Reviewed by: Mike + ChatGPT
+
+Accepted for:
+- Official/local candidate profile discovery for Port St. Lucie City Council District 1 candidates
+- Candidate status where visible on the official/local profile page
+- Candidate-specific report navigation
+- Visible monetary contribution, in-kind, and expenditure summary values, if transcribed exactly from the official/local campaign finance page
+
+Not accepted for:
+- Neighbor donation totals
+- PAC/corporate funding split
+- Institutional percentage
+- Any voting record or issue-position claim
+- Candidate biography fields beyond what is actually shown on the official/local page
+
+Reasoning:
+This is an official/local Supervisor of Elections candidate profile and campaign finance navigation source. It is suitable for confirming candidate status, finding candidate-specific reports, and transcribing exact visible summary values. It is not by itself sufficient for CivicMarket's richer funding-breakdown fields unless individual contribution transactions are reviewed and categorized.
+
