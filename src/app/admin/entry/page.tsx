@@ -352,8 +352,7 @@ export default function AdminEntryPage() {
 
           <div className="bg-[#F59E0B]/10 border border-[#F59E0B]/30 rounded-2xl p-4">
             <p className="text-[#F59E0B] text-xs leading-5 [font-family:var(--font-instrument-sans)]">
-              Admin only. Do not enter real voting records until dummy candidate data has been
-              replaced with validated PSL data.
+              Admin only. Enter voting records only when the candidate, item, date, description, vote cast, and source URL are verified from official records.
             </p>
           </div>
         </form>
@@ -361,3 +360,4 @@ export default function AdminEntryPage() {
     </div>
   )
 }
+
