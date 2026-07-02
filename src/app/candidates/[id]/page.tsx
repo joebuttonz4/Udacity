@@ -376,8 +376,8 @@ export default function CandidateProfilePage() {
             {/* Details / disclaimer */}
             <section id="section-details" className="bg-[#FFFBEB] border border-[#FDE68A] rounded-[24px] p-4">
               <p className="text-[#92400E] text-xs leading-5 [font-family:var(--font-instrument-sans)]">
-                Read-only beta using placeholder PSL data. Candidate, funding, and voting record
-                data must be replaced and validated before beta users.
+                CivicMarket beta — candidate and funding data sourced from official public records.
+                Voting records are not yet available for these candidates.
               </p>
             </section>
 
