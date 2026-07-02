@@ -23,6 +23,10 @@ Write-Host "Real data guard:"
 .\tools\civic-real-data-guard.ps1
 Write-Host ""
 
+Write-Host "App-facing placeholder scan:"
+.\tools\civic-app-placeholder-scan.ps1
+Write-Host ""
+
 Write-Host "Real PSL row counts:"
 $candidateRows = @(Import-Csv .\data\real-psl-replacement\candidates_real.csv).Count
 $votingRows = @(Import-Csv .\data\real-psl-replacement\voting_records_real.csv).Count
@@ -38,3 +42,4 @@ Get-Content .\data\real-psl-replacement\real_data_review_log.md | Select-Object 
 Write-Host ""
 
 Write-Host "=== Done ==="
+
