@@ -7,6 +7,8 @@ import { supabase } from '@/lib/supabase';
 
 export default function SignupPage() {
   const router = useRouter();
+  const [inviteCode, setInviteCode] = useState('');
+  const [inviteError, setInviteError] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -14,7 +16,26 @@ export default function SignupPage() {
 
   async function handleSignup() {
     setError('');
+    setInviteError('');
     setLoading(true);
+
+    try {
+      const res = await fetch('/api/validate-invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: inviteCode }),
+      });
+      const data = await res.json();
+      if (!data.valid) {
+        setInviteError('Invalid invite code. Please check your code and try again.');
+        setLoading(false);
+        return;
+      }
+    } catch {
+      setInviteError('Could not verify invite code. Please try again.');
+      setLoading(false);
+      return;
+    }
 
     const { error } = await supabase.auth.signUp({ email, password });
 
@@ -66,6 +87,27 @@ export default function SignupPage() {
 
       {/* Form */}
       <div className="flex flex-col gap-4 w-full max-w-sm">
+        <div className="flex flex-col gap-1">
+          <label
+            className="text-[#9CA3AF] text-xs font-medium"
+            style={{ fontFamily: 'var(--font-syne)' }}
+          >
+            Invite Code
+          </label>
+          <input
+            type="text"
+            value={inviteCode}
+            onChange={(e) => { setInviteCode(e.target.value); setInviteError(''); }}
+            placeholder="Enter your invite code"
+            autoCapitalize="none"
+            autoCorrect="off"
+            className="h-12 bg-[#1F2937] border border-[#374151] rounded-xl px-4 text-white placeholder-[#4B5563] focus:outline-none focus:border-[#00C9A7] transition-colors"
+          />
+          {inviteError && (
+            <p className="text-[#FF6B6B] text-xs mt-1">{inviteError}</p>
+          )}
+        </div>
+
         <div className="flex flex-col gap-1">
           <label
             className="text-[#9CA3AF] text-xs font-medium"
