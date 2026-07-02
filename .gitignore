@@ -33,6 +33,9 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# Beta invite code (keep off git — contains the live invite code)
+BETA_INVITE_CODE.txt
+
 # vercel
 .vercel
 
