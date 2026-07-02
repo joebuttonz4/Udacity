@@ -105,7 +105,9 @@ Confirmed complete:
 
 ## Immediate priorities
 
-1. Replace dummy data with real validated PSL candidate, voting record, and funding data before beta invitations
+1. Validate real PSL candidates and funding in app — check ballot screen, candidate profiles, and funding display
+2. Flip email confirmation toggle in Supabase dashboard (Authentication → Email → Confirm email ON)
+3. Replace dummy data with real validated PSL candidate, voting record, and funding data before beta invitations
 
 
 ## Civic feed strategic direction
@@ -155,9 +157,9 @@ Raw answers are stored as-is.
 ## Hard beta blockers
 
 No beta invitations until:
-- Real PSL data replaces dummy data (with real AI-scored voting records validated before use)
-- Voting records have official source URLs
-- Funding rows have source URLs
+- Real PSL candidate and funding data imported ✓ — 8 dummy candidates deleted, 4 real PSL District 1 candidates inserted (Reikenis, Baptiste, Zimmerman, Meltzer), 4 funding rows inserted with SOE source URL, import script scripts/import-real-psl-data.cjs committed 5f3b65a, live run July 2 2026. Ballot rings locked — no candidate_positions until voting records exist.
+- Voting records with official source URLs — intentionally empty; all 4 candidates are non-incumbents with no verified Council vote history; leave voting_records_real.csv header-only until official item-specific source confirms a vote
+- Funding rows with source URLs ✓ — total_raised amounts from SOE with source_url, imported July 2 2026
 - Legal pages exist ✓ — /privacy and /terms, both public static pages, beta-draft notice on each, no contact email until domain exists, consent notice added to /onboarding/signup, commit 94cae59, July 2 2026
 - Invite code gate works ✓ — server-side POST /api/validate-invite checks INVITE_CODE env var (never NEXT_PUBLIC_), case-insensitive, fails closed if env var missing; invite code field added above email on /onboarding/signup; login path untouched; commit 7dfb181, July 2 2026. Requires INVITE_CODE=<code> in .env.local to activate.
 - Report Inaccuracy database-backed submission exists (currently deferred — UI shell only)
