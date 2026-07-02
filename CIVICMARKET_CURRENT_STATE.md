@@ -171,6 +171,6 @@ No beta invitations until:
 - Profile sign out not visible ✓ — fixed, commit 66d2518
 - Candidate profile Report Inaccuracy link/button missing ✓ — fixed, link added to /report
 - Automatic match score generation after Civic DNA completion ✓ — complete, commits 4c4479d and f4e5786. Acceptance test passed May 25 2026: civicmarket.test.04@example.com (user_id 479780fe-e447-4c6e-9462-338841bbaa4b) retook Civic DNA quiz, 5 match_scores rows generated automatically (Maria Santos 70, Patricia Nguyen 63, Angela Torres 42, James Whitfield 38, Linda Marsh 38), single computed_at = 2026-05-25 23:12:00.986+00, /ballot rings unlocked without manual SQL. No schema changes. No RLS changes. No grant or policy changes.
-- /measures/[id] smoke test pending — no measure data exists yet; must test once real measure data is in place
+- /measures/[id] smoke test ✓ — route verified July 2 2026 using temporary test measure (now deleted): hero header, type tag, plain English summary, full text link, Civic DNA Impact scores (including null dimensions showing —), AI draft label, and back-to-ballot nav all rendered correctly. No real PSL ballot measures exist yet for the Nov 2026 election; insert real measures when confirmed by official source.
 - Email confirmation re-enabled ✓ — signup page handles pending confirmation state (session null → check-inbox screen, commit 9c244f8, July 2 2026); Supabase dashboard toggle confirmed ON July 2 2026
 

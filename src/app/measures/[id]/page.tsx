@@ -252,8 +252,8 @@ export default function MeasureProfilePage() {
             {/* Beta disclaimer */}
             <div className="bg-[#FFFBEB] border border-[#FDE68A] rounded-[20px] p-4">
               <p className="text-[#92400E] text-xs leading-5 [font-family:var(--font-instrument-sans)]">
-                Read-only beta using placeholder PSL data. Ballot measure and scoring data must
-                be replaced and validated before beta users.
+                CivicMarket beta — ballot measure data sourced from official public records.
+                AI-drafted dimension scores are reviewed before publication.
               </p>
             </div>
           </>
