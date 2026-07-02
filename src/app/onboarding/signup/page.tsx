@@ -13,6 +13,7 @@ export default function SignupPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [pendingConfirmation, setPendingConfirmation] = useState(false);
 
   async function handleSignup() {
     setError('');
@@ -37,10 +38,16 @@ export default function SignupPage() {
       return;
     }
 
-    const { error } = await supabase.auth.signUp({ email, password });
+    const { data, error } = await supabase.auth.signUp({ email, password });
 
     if (error) {
       setError(error.message);
+      setLoading(false);
+      return;
+    }
+
+    if (!data.session) {
+      setPendingConfirmation(true);
       setLoading(false);
       return;
     }
@@ -61,6 +68,41 @@ export default function SignupPage() {
     }
 
     router.push('/');
+  }
+
+  if (pendingConfirmation) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 min-h-screen gap-6">
+        <div className="w-full max-w-sm flex flex-col gap-6">
+          <div className="bg-[#1F2937] border border-[#374151] rounded-2xl p-6 flex flex-col gap-3">
+            <p className="text-[#00C9A7] text-sm font-semibold [font-family:var(--font-syne)]">
+              Check your inbox
+            </p>
+            <p className="text-white text-base font-bold [font-family:var(--font-syne)]">
+              Confirm your email to continue
+            </p>
+            <p className="text-[#9CA3AF] text-sm leading-6 [font-family:var(--font-instrument-sans)]">
+              We sent a confirmation link to{' '}
+              <span className="text-white">{email}</span>. Click it to activate
+              your account, then sign in below.
+            </p>
+          </div>
+          <button
+            onClick={handleLogin}
+            disabled={loading}
+            className="w-full h-14 bg-[#00C9A7] hover:bg-[#00A688] disabled:opacity-50 text-[#0D1117] font-bold rounded-2xl transition-colors [font-family:var(--font-syne)]"
+          >
+            I&apos;ve confirmed — sign me in
+          </button>
+          <button
+            onClick={() => { setPendingConfirmation(false); setError(''); }}
+            className="text-[#6B7280] text-sm hover:text-white transition-colors [font-family:var(--font-instrument-sans)]"
+          >
+            Use a different email
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
