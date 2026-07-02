@@ -158,7 +158,7 @@ No beta invitations until:
 - Real PSL data replaces dummy data (with real AI-scored voting records validated before use)
 - Voting records have official source URLs
 - Funding rows have source URLs
-- Legal pages exist
+- Legal pages exist ✓ — /privacy and /terms, both public static pages, beta-draft notice on each, no contact email until domain exists, consent notice added to /onboarding/signup, commit 94cae59, July 2 2026
 - Invite code gate works
 - Report Inaccuracy database-backed submission exists (currently deferred — UI shell only)
 - Data Sources exists ✓
