@@ -159,7 +159,7 @@ No beta invitations until:
 - Voting records have official source URLs
 - Funding rows have source URLs
 - Legal pages exist ✓ — /privacy and /terms, both public static pages, beta-draft notice on each, no contact email until domain exists, consent notice added to /onboarding/signup, commit 94cae59, July 2 2026
-- Invite code gate works
+- Invite code gate works ✓ — server-side POST /api/validate-invite checks INVITE_CODE env var (never NEXT_PUBLIC_), case-insensitive, fails closed if env var missing; invite code field added above email on /onboarding/signup; login path untouched; commit 7dfb181, July 2 2026. Requires INVITE_CODE=<code> in .env.local to activate.
 - Report Inaccuracy database-backed submission exists (currently deferred — UI shell only)
 - Data Sources exists ✓
 - Admin can enter voting records ✓ (commit e24fe14)
