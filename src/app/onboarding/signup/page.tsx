@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 
 export default function SignupPage() {
@@ -101,6 +102,19 @@ export default function SignupPage() {
           <p className="text-[#FF6B6B] text-sm text-center">{error}</p>
         )}
       </div>
+
+      {/* Consent notice */}
+      <p className="text-[#6B7280] text-xs text-center w-full max-w-sm [font-family:var(--font-instrument-sans)]">
+        By creating an account you agree to our{' '}
+        <Link href="/terms" className="text-[#00C9A7] underline hover:text-[#00A688]">
+          Terms of Service
+        </Link>{' '}
+        and{' '}
+        <Link href="/privacy" className="text-[#00C9A7] underline hover:text-[#00A688]">
+          Privacy Policy
+        </Link>
+        .
+      </p>
 
       {/* CTAs */}
       <div className="flex flex-col items-center gap-3 w-full max-w-sm">
