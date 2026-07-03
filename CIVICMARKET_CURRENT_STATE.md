@@ -105,9 +105,9 @@ Confirmed complete:
 
 ## Immediate priorities
 
-1. Validate real PSL candidates and funding in app — check ballot screen, candidate profiles, and funding display
-2. Flip email confirmation toggle in Supabase dashboard (Authentication → Email → Confirm email ON)
-3. Replace dummy data with real validated PSL candidate, voting record, and funding data before beta invitations
+1. Validate real PSL candidates and funding in app ✓ — confirmed July 2 2026 (see Hard beta blockers: Real PSL candidate and funding data imported)
+2. Flip email confirmation toggle in Supabase dashboard ✓ — confirmed ON July 2 2026 (see Hard beta blockers: Email confirmation re-enabled)
+3. Voting records with official source URLs — the only remaining item; intentionally blocked until an official item-specific source verifies candidate, item, date, description, and vote cast (see Hard beta blockers)
 
 
 ## Civic feed strategic direction
