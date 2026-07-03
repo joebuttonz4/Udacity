@@ -16,9 +16,12 @@ const SUBJECTS: { value: SubjectType; label: string }[] = [
 export default function ReportPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
+  const [userId, setUserId] = useState<string | null>(null)
   const [subjectType, setSubjectType] = useState<SubjectType>('candidate_info')
   const [description, setDescription] = useState('')
+  const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   useEffect(() => {
     async function checkAuth() {
@@ -29,14 +32,32 @@ export default function ReportPage() {
         router.push('/onboarding')
         return
       }
+      setUserId(session.user.id)
       setLoading(false)
     }
     checkAuth()
   }, [router])
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (!userId) return
+    setSubmitting(true)
+    setSubmitError(null)
+
+    const { error } = await supabase.from('inaccuracy_reports').insert({
+      user_id: userId,
+      subject_type: subjectType,
+      description: description.trim(),
+    })
+
+    if (error) {
+      setSubmitError('Something went wrong. Please try again.')
+      setSubmitting(false)
+      return
+    }
+
     setSubmitted(true)
+    setSubmitting(false)
   }
 
   return (
@@ -67,17 +88,17 @@ export default function ReportPage() {
 
       {!loading && submitted && (
         <div className="bg-[#1F2937] rounded-2xl p-5 border border-[#374151]">
-          <p className="text-[#F59E0B] text-sm font-semibold mb-2 [font-family:var(--font-syne)]">
-            Beta — report submission not yet enabled
+          <p className="text-[#00C9A7] text-sm font-semibold mb-2 [font-family:var(--font-syne)]">
+            Report received
           </p>
           <p className="text-[#9CA3AF] text-sm leading-6 [font-family:var(--font-instrument-sans)]">
-            Thank you for flagging this. Report submission is not active in this build — your
-            input was not recorded. This feature will be enabled before beta invitations go out.
+            Thank you for flagging this. Our team will review your report before the next data update.
           </p>
           <button
             onClick={() => {
               setSubmitted(false)
               setDescription('')
+              setSubjectType('candidate_info')
             }}
             className="mt-4 w-full bg-[#374151] text-[#D1D5DB] font-semibold py-3 rounded-xl text-sm active:scale-[0.98] transition-transform [font-family:var(--font-syne)]"
           >
@@ -135,20 +156,19 @@ export default function ReportPage() {
             />
           </section>
 
+          {submitError && (
+            <p className="text-[#FF6B6B] text-sm text-center [font-family:var(--font-instrument-sans)]">
+              {submitError}
+            </p>
+          )}
+
           <button
             type="submit"
-            disabled={description.trim().length < 10}
+            disabled={description.trim().length < 10 || submitting}
             className="w-full bg-[#00C9A7] text-[#0D1117] font-bold py-3 rounded-xl text-sm active:scale-[0.98] transition-transform disabled:opacity-40 disabled:pointer-events-none [font-family:var(--font-syne)]"
           >
-            Submit report
+            {submitting ? 'Submitting…' : 'Submit report'}
           </button>
-
-          <div className="bg-[#374151]/30 border border-[#374151] rounded-2xl p-4">
-            <p className="text-[#6B7280] text-xs leading-5 [font-family:var(--font-instrument-sans)]">
-              This is a beta build. Report submission is not yet active — no data will be
-              recorded. This feature will be enabled before beta invitations go out.
-            </p>
-          </div>
         </form>
       )}
     </div>

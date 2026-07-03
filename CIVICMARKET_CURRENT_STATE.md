@@ -162,7 +162,7 @@ No beta invitations until:
 - Funding rows with source URLs ✓ — total_raised amounts from SOE with source_url, imported July 2 2026
 - Legal pages exist ✓ — /privacy and /terms, both public static pages, beta-draft notice on each, no contact email until domain exists, consent notice added to /onboarding/signup, commit 94cae59, July 2 2026
 - Invite code gate works ✓ — server-side POST /api/validate-invite checks INVITE_CODE env var (never NEXT_PUBLIC_), case-insensitive, fails closed if env var missing; invite code field added above email on /onboarding/signup; login path untouched; commit 7dfb181, July 2 2026. Requires INVITE_CODE=<code> in .env.local to activate.
-- Report Inaccuracy database-backed submission exists (currently deferred — UI shell only)
+- Report Inaccuracy database-backed submission exists ✓ — inaccuracy_reports table created with RLS (INSERT authenticated, SELECT admin-only, no UPDATE/DELETE), /report page writes on submit, "Report received" success state, browser-tested July 2 2026
 - Data Sources exists ✓
 - Admin can enter voting records ✓ (commit e24fe14)
 - Admin review/removal page exists ✓ (commits 93342f3 + 31adca9) — review list and deletion controls complete, DELETE RLS policy verified, test row deleted
