@@ -154,6 +154,18 @@ Q8-Q14 are reversed at compute time only.
 
 Raw answers are stored as-is.
 
+## Data availability limits
+
+These are intentional data gaps, not app bugs. Do not manufacture, guess, or "fix" the following without new official source data:
+
+- `voting_records_real.csv` is intentionally header-only.
+- The current 4 PSL District 1 candidates are non-incumbents, so no verified council voting history has been entered.
+- Do not add voting records unless an official item-specific source verifies candidate, item, date, description, and vote cast.
+- No real PSL ballot measures are currently confirmed in the database.
+- Do not add ballot measures unless an official source confirms the measure title, type, election/date, summary, and source URL.
+- Locked match rings are expected while candidate_positions and verified voting records are unavailable.
+- This is a data availability limit, not an app bug.
+
 ## Hard beta blockers
 
 No beta invitations until:
