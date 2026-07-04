@@ -4,9 +4,14 @@ Use these templates to collect validated real Port St. Lucie beta data before re
 
 ## Files
 
-- candidates_template.csv
-- voting_records_template.csv
-- funding_template.csv
+- candidates_template.csv — blank template for collecting new candidate rows
+- voting_records_template.csv — blank template for collecting new voting record rows
+- funding_template.csv — blank template for collecting new funding rows
+- candidates_real.csv — validated real PSL candidate data, checked by civic-status.ps1
+- voting_records_real.csv — validated real PSL voting record data, currently header-only
+- funding_real.csv — validated real PSL funding data, checked by civic-status.ps1
+- sources_inventory.csv — official source URLs reviewed for candidate/funding/voting-record use
+- real_data_review_log.md — dated log of source review decisions
 
 ## Rules before database replacement
 
