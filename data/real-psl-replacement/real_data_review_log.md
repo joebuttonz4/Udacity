@@ -187,3 +187,28 @@ Deferred:
 - If an official source later proves prior Council service or an item-specific vote by one of these candidates, add voting_records_real.csv rows one at a time with exact official source URLs.
 - If no such source exists, keep voting records blank and document candidate profiles as having no verified official voting record in the pilot dataset.
 
+## 2026-07-04: Source Scope Expansion — Mayor and City Council District 3
+
+Source inventory titles:
+- City of Port St. Lucie Elections
+- St. Lucie Supervisor of Elections Candidate Profiles
+
+Status decision: accepted (source-scope expansion only)
+Reviewed by: Mike + ChatGPT
+
+Decision:
+- The same official City of Port St. Lucie Elections page and St. Lucie Supervisor of Elections candidate profiles page already accepted for the City Council District 1 race are now also accepted as source categories for the Mayor race and the City Council District 3 race.
+
+Reasoning:
+CivicMarket is expanding from a single validated race (City Council District 1) to the full confirmed 2026 City of Port St. Lucie municipal race inventory: Mayor, City Council District 1, and City Council District 3. Mayor and City Council seats are citywide voting contexts in Port St. Lucie, even though City Council candidates must reside in their district. The two source categories already reviewed and accepted for District 1 are official, citywide sources and are suitable for the Mayor and District 3 races on the same basis.
+
+Scope:
+- This is source-scope expansion only.
+- No candidate rows have been added for Mayor or City Council District 3.
+- No funding rows have been added for Mayor or City Council District 3.
+- No voting records have been added.
+- No ballot measures have been added.
+
+Deferred:
+- Candidate rows for Mayor and City Council District 3 will be added in a separate, later step, after per-candidate details (incumbency, ballot appearance, official candidate source URL) are confirmed against these accepted sources.
+
