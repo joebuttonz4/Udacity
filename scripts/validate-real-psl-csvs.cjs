@@ -98,6 +98,9 @@ const placeholderPatterns = [
   /tbd/i,
   /john doe/i,
   /jane doe/i,
+  /mock/i,
+  /todo/i,
+  /lorem/i,
 ]
 
 function parseCsv(content) {
