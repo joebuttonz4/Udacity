@@ -16,7 +16,10 @@ $patterns = @(
   "fake",
   "placeholder PSL data",
   "Read-only beta using placeholder",
-  "DUMMY_FEED"
+  "DUMMY_FEED",
+  "mock",
+  "TODO",
+  "lorem"
 )
 
 $matches = Select-String -Path $paths -Pattern $patterns -CaseSensitive:$false -ErrorAction SilentlyContinue
