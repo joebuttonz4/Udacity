@@ -17,14 +17,26 @@ Write-Host ""
 
 Write-Host "CSV validation:"
 node .\scripts\validate-real-psl-csvs.cjs
+if ($LASTEXITCODE -ne 0) {
+  Write-Host "FAIL: CSV validation failed" -ForegroundColor Red
+  exit 1
+}
 Write-Host ""
 
 Write-Host "Real data guard:"
 .\tools\civic-real-data-guard.ps1
+if ($LASTEXITCODE -ne 0) {
+  Write-Host "FAIL: Real data guard failed" -ForegroundColor Red
+  exit 1
+}
 Write-Host ""
 
 Write-Host "App-facing placeholder scan:"
 .\tools\civic-app-placeholder-scan.ps1
+if ($LASTEXITCODE -ne 0) {
+  Write-Host "FAIL: App-facing placeholder scan failed" -ForegroundColor Red
+  exit 1
+}
 Write-Host ""
 
 Write-Host "Real PSL row counts:"
