@@ -1,6 +1,6 @@
 # CivicMarket Current State
 
-Last updated: May 25, 2026
+Last updated: July 4, 2026
 
 ## Authoritative order
 
@@ -102,6 +102,7 @@ Confirmed complete:
 - /onboarding/zip Enter-key submit — outer div converted to a form with a named handleSubmit(e: React.FormEvent); e.preventDefault() called first; Continue button is type="submit"; pressing Enter in the ZIP field triggers identical handleSubmit logic as clicking Continue; commits 9e5a5ea and 1d0df4f, May 25 2026.
 - /onboarding/zip Enter-submit regression fix — Back button missing type="button" defaulted to type="submit" inside the form; pressing Enter caused browser to fire router.back() before the form onSubmit could run, making unsupported ZIP notice flash then navigate away; fixed by adding type="button" to Back button; commit 1d0df4f, May 25 2026.
 - Automatic match score generation after Civic DNA completion — complete, commits 4c4479d and f4e5786, May 25 2026. POST /api/compute-match-scores validates user session via service-role client, fetches latest civic_dna and candidate_positions, computes alignment scores (average of non-null dimensions, 0–100 integer, using computed_at), deletes only candidate match_scores rows being recomputed (measure rows untouched), inserts fresh rows. sessionStorage lock key scoped to user ID prevents React Strict Mode double-mount from firing two concurrent API calls. New files: src/lib/supabase-server.ts (server-only service-role client), src/app/api/compute-match-scores/route.ts (POST handler). Acceptance test passed May 25 2026: civicmarket.test.04@example.com retook Civic DNA quiz, /onboarding/calculating generated 5 match_scores rows automatically (Maria Santos 70, Patricia Nguyen 63, Angela Torres 42, James Whitfield 38, Linda Marsh 38), single computed_at = 2026-05-25 23:12:00.986+00, no manual SQL. No schema changes. No RLS changes. No grant or policy changes. No measure score computation. lint passed, build passed (19 routes).
+- Schema addendum — current_officials and review_summaries tables added, officials_for_user view added, commit f1b1e31, July 4 2026. Migration file: Reference Files/civicmarket_schema_addendum_officials_reviews.sql. Run in Supabase SQL Editor before building officials or review summary UI. Tables not yet in production — deploy pending. No app code changed. No data seeded. lint passed, build passed (22 routes).
 
 ## Immediate priorities
 
