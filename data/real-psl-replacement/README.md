@@ -18,6 +18,27 @@ Use these templates to collect validated real Port St. Lucie beta data before re
 - Do not replace districts or elections as part of this candidate-specific replacement plan.
 - Do not invite beta users until fake candidate, voting record, funding, match score, and ballot data are gone or safely hidden.
 
+## Source-ready checklist
+
+Before adding a voting record row, confirm:
+- candidate name
+- office
+- issue title
+- issue description
+- vote date
+- vote cast
+- civic dimension
+- official source URL
+- the official source verifies candidate, item, date, description, and vote cast
+
+Before adding a ballot measure row, confirm:
+- measure title
+- measure type
+- election or date
+- plain-English summary
+- official full text or source URL
+- confirmation that the measure is actually on the relevant PSL ballot
+
 ## Preserved records for now
 
 - districts
