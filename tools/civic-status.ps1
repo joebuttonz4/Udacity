@@ -11,6 +11,13 @@ Write-Host "Repository:"
 git status --short
 Write-Host ""
 
+$untrackedRefFiles = git status --porcelain -- "Reference Files" | Where-Object { $_.StartsWith("??") }
+if ($untrackedRefFiles) {
+  Write-Host "WARN: Untracked Reference Files docs (not yet committed):" -ForegroundColor Yellow
+  $untrackedRefFiles
+  Write-Host ""
+}
+
 Write-Host "Latest commits:"
 git log --oneline -5
 Write-Host ""
