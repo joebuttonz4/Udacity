@@ -134,7 +134,7 @@ Source of truth:
 
 ## Deferred — requires separate approval
 
-- Database-backed report submission for /report — needs new inaccuracy_reports table, INSERT policy, and SQL/RLS risk check approved before building
+- None currently. Database-backed report submission for /report was the only item here; it is complete — see Hard beta blockers: Report Inaccuracy database-backed submission exists.
 
 ## Civic DNA source of truth
 
