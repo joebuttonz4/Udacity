@@ -63,6 +63,16 @@ Do not build:
 - Dimension scores are -2.0 to 2.0
 - source_url is required for every voting record
 
+## Current data limits
+
+- voting_records_real.csv is intentionally header-only.
+- Current 4 PSL District 1 candidates are non-incumbents.
+- Do not add voting records without an official item-specific source verifying candidate, item, date, description, and vote cast.
+- No real PSL ballot measures are currently confirmed in the database.
+- Do not add ballot measures without an official source confirming title, type, election/date, summary, and source URL.
+- Locked match rings are expected while candidate_positions and verified voting records are unavailable.
+- This is a data availability limit, not an app bug.
+
 ## Required workflow
 
 Before editing:
