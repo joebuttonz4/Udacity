@@ -64,20 +64,20 @@
 
 | Field | Required before seed? | Accepted source type | Collected value | Source URL | Verified by | Notes |
 |---|---|---|---|---|---|---|
-| name | Yes | Official government source | | | | |
+| name | Yes | Official government source | Debbie Hawley | https://www.stlucie.k12.fl.us/our-district/meet-the-board/ | | Source shows District #1 |
 | office | Yes | N/A (fixed value) | School Board Member, District 1 | | | |
 | district_id | Yes | N/A (internal) | `11111111-0000-0000-0000-000000000002` | | | Matches `districts.name = 'School Board District 1'` per onboarding code |
 | jurisdiction_level | Yes | N/A (fixed value) | school_board | | | |
 | photo_url | No | Official government source | | | | |
 | website | No | Official government source | | | | |
 | bio | No | Official government source | | | | |
-| term_start | No, if unverified | Official government source | | | | Leave blank if not verified |
-| term_end | No, if unverified | Official government source | | | | Leave blank if not verified |
-| next_election_date | No, if unverified | Official election source | | | | Leave blank if not verified |
-| source_url | Yes | Official government source | | | | Row cannot be seeded without this |
-| source_label | No | N/A | | | | |
-| candidate_id | No | N/A (internal match only) | Null | | | No School Board candidates currently exist in `candidates` table |
-| is_on_next_ballot | No, if unverified | Official election source | Unknown | | | Stays unknown/false unless verified |
+| term_start | No, if unverified | Official government source | | | | Leave blank — no exact official date verified in this batch |
+| term_end | No, if unverified | Official government source | | | | Leave blank — no exact official date verified in this batch |
+| next_election_date | No, if unverified | Official election source | | | | Leave blank — no exact official election date verified in this batch |
+| source_url | Yes | Official government source | https://www.stlucie.k12.fl.us/our-district/meet-the-board/ | https://www.stlucie.k12.fl.us/our-district/meet-the-board/ | | |
+| source_label | No | N/A | St. Lucie Public Schools Meet the Board | | | |
+| candidate_id | No | N/A (internal match only) | Null | | | No `candidates` row exists for Debbie Hawley |
+| is_on_next_ballot | No, if unverified | Official election source | Unknown | | | Stays unknown/false unless verified by an official election source |
 
 ### 3.4 St. Lucie County Commission At-Large
 
