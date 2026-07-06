@@ -110,20 +110,20 @@
 
 | Field | Required before seed? | Accepted source type | Collected value | Source URL | Verified by | Notes |
 |---|---|---|---|---|---|---|
-| name | Yes | Official government source | | | | |
+| name | Yes | Official government source | Tobin Rogers "Toby" Overdorf | https://housedocs.myfloridahouse.gov/Sections/Representatives/custom/biography.aspx?MemberId=4728 | | Official biography page lists District 85, covering parts of Martin and St. Lucie |
 | office | Yes | N/A (fixed value) | State Representative, District 85 | | | |
 | district_id | Yes | N/A (internal) | `11111111-0000-0000-0000-000000000004` | | | Matches `districts.name = 'FL House District 85'` per onboarding code |
 | jurisdiction_level | Yes | N/A (fixed value) | state | | | |
 | photo_url | No | Official government source | | | | |
 | website | No | Official government source | | | | |
 | bio | No | Official government source | | | | |
-| term_start | No, if unverified | Official government source | | | | Leave blank if not verified |
-| term_end | No, if unverified | Official government source | | | | Leave blank if not verified |
-| next_election_date | No, if unverified | Official election source | | | | Leave blank if not verified |
-| source_url | Yes | Official government source | | | | Row cannot be seeded without this |
-| source_label | No | N/A | | | | |
+| term_start | No, if unverified | Official government source | | | | Leave blank — official biography says elected in 2018 and reelected subsequently, but no exact term_start date is confirmed in this batch |
+| term_end | No, if unverified | Official government source | | | | Leave blank — no exact term_end date is confirmed in this batch |
+| next_election_date | No, if unverified | Official election source | | | | Leave blank — no exact official election date is confirmed in this batch |
+| source_url | Yes | Official government source | https://housedocs.myfloridahouse.gov/Sections/Representatives/custom/biography.aspx?MemberId=4728 | https://housedocs.myfloridahouse.gov/Sections/Representatives/custom/biography.aspx?MemberId=4728 | | |
+| source_label | No | N/A | Florida House of Representatives member profile | | | |
 | candidate_id | No | N/A (internal match only) | Null | | | No state house candidates currently exist in `candidates` table |
-| is_on_next_ballot | No, if unverified | Official election source | Unknown | | | Stays unknown/false unless verified |
+| is_on_next_ballot | No, if unverified | Official election source | Unknown | | | Stays unknown/false unless verified by an official election source |
 
 ### 3.6 Florida Senate District 27
 
