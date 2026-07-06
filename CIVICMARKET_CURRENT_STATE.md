@@ -168,6 +168,14 @@ These are intentional data gaps, not app bugs. Do not manufacture, guess, or "fi
 - Locked match rings are expected while candidate_positions and verified voting records are unavailable.
 - This is a data availability limit, not an app bug.
 
+### Current Officials — Mayor district gap
+
+- Mayor is a confirmed planned/known office for the PSL beta context.
+- There is currently no districts row for Port St. Lucie Mayor.
+- Because officials_for_user joins current_officials to user_districts through district_id, a Mayor current_officials row would not surface for users until a Mayor district row exists and users can be assigned to it.
+- No Mayor current_officials row is seedable yet because no official government source URL has been supplied for the current Mayor.
+- Do not guess the Mayor name, term dates, next election date, or source URL.
+
 ## Hard beta blockers
 
 No beta invitations until:
