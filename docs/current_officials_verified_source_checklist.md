@@ -129,20 +129,20 @@
 
 | Field | Required before seed? | Accepted source type | Collected value | Source URL | Verified by | Notes |
 |---|---|---|---|---|---|---|
-| name | Yes | Official government source | | | | |
+| name | Yes | Official government source | Ben Albritton | https://www.flsenate.gov/Senators/S27 | | Official Senate page lists District 27, covering Charlotte, DeSoto, Hardee, and parts of Lee and Polk counties |
 | office | Yes | N/A (fixed value) | State Senator, District 27 | | | |
 | district_id | Yes | N/A (internal) | `11111111-0000-0000-0000-000000000005` | | | Matches `districts.name = 'FL Senate District 27'` per onboarding code |
 | jurisdiction_level | Yes | N/A (fixed value) | state | | | |
 | photo_url | No | Official government source | | | | |
 | website | No | Official government source | | | | |
 | bio | No | Official government source | | | | |
-| term_start | No, if unverified | Official government source | | | | Leave blank if not verified |
-| term_end | No, if unverified | Official government source | | | | Leave blank if not verified |
-| next_election_date | No, if unverified | Official election source | | | | Leave blank if not verified |
-| source_url | Yes | Official government source | | | | Row cannot be seeded without this |
-| source_label | No | N/A | | | | |
+| term_start | No, if unverified | Official government source | | | | Leave blank — official Senate page shows current 2024-2026 term and Senate service history (2024-2026, 2022-2024, 2020-2022, 2018-2020), but no exact term_start date is confirmed in this batch |
+| term_end | No, if unverified | Official government source | | | | Leave blank — official Senate page shows current 2024-2026 term, but no exact term_end date is confirmed in this batch |
+| next_election_date | No, if unverified | Official election source | | | | Leave blank — no exact official election date is confirmed in this batch |
+| source_url | Yes | Official government source | https://www.flsenate.gov/Senators/S27 | https://www.flsenate.gov/Senators/S27 | | |
+| source_label | No | N/A | Florida Senate Senator District 27 profile | | | |
 | candidate_id | No | N/A (internal match only) | Null | | | No state senate candidates currently exist in `candidates` table |
-| is_on_next_ballot | No, if unverified | Official election source | Unknown | | | Stays unknown/false unless verified |
+| is_on_next_ballot | No, if unverified | Official election source | Unknown | | | Stays unknown/false unless verified by an official election source; no ballot status confirmed in this batch |
 
 ---
 
