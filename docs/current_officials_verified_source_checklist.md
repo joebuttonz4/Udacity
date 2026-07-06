@@ -33,13 +33,13 @@
 | photo_url | No | Official government source | | | | |
 | website | No | Official government source | | | | |
 | bio | No | Official government source | | | | |
-| term_start | No, if unverified | Official government source | | | | Leave blank — official page content not confirmed to give an exact date in this batch |
-| term_end | No, if unverified | Official government source | | | | Leave blank — official page content not confirmed to give an exact date in this batch |
-| next_election_date | No, if unverified | Official election source | | | | Leave blank — official page content not confirmed to give an exact date in this batch |
+| term_start | No, if unverified | Official government source | | | | Leave blank — official Mayor profile says she was elected Mayor following a 2021 Special Election and re-elected in 2022 to a full four-year term, but no exact term_start date is confirmed in this batch |
+| term_end | No, if unverified | Official government source | | | | Leave blank — City elections page says the Mayor term is expiring in 2026, but no exact term_end date is confirmed in this batch |
+| next_election_date | No, if unverified | Official election source | 2026-08-18 primary; 2026-11-03 general | https://www.cityofpsl.com/Government/Your-City-Government/Departments/City-Clerk/Elections | | City elections page lists "Shannon Martin for Mayor" and identifies Mayor as a 2026 expiring term |
 | source_url | Yes | Official government source | https://www.cityofpsl.com/Government/Your-City-Government/Mayor-City-Council/Mayor-Shannon-Martin | https://www.cityofpsl.com/Government/Your-City-Government/Mayor-City-Council/Mayor-Shannon-Martin | | |
 | source_label | No | N/A | City of Port St. Lucie Mayor profile | | | |
 | candidate_id | No | N/A (internal match only) | Null | | | No `candidates` row exists for Shannon Martin |
-| is_on_next_ballot | No, if unverified | Official election source | Unknown | | | Leave blank — not confirmed against City elections page content in this batch |
+| is_on_next_ballot | No, if unverified | Official election source | true | https://www.cityofpsl.com/Government/Your-City-Government/Departments/City-Clerk/Elections | | City elections page lists "Shannon Martin for Mayor" and identifies Mayor as a 2026 expiring term |
 
 ### 3.2 Port St. Lucie City Council District 1
 
@@ -52,13 +52,13 @@
 | photo_url | No | Official government source | | | | |
 | website | No | Official government source | | | | |
 | bio | No | Official government source | | | | |
-| term_start | No, if unverified | Official government source | | | | Leave blank — official page content not confirmed to give an exact date in this batch |
-| term_end | No, if unverified | Official government source | | | | Leave blank — official page content not confirmed to give an exact date in this batch |
-| next_election_date | No, if unverified | Official election source | | | | Leave blank — official page content not confirmed to give an exact date in this batch |
+| term_start | No, if unverified | Official government source | | | | Leave blank — no exact term_start date confirmed in this batch |
+| term_end | No, if unverified | Official government source | | | | Leave blank — City elections page says District 1 term is expiring in 2026, but no exact term_end date is confirmed in this batch |
+| next_election_date | No, if unverified | Official election source | 2026-08-18 primary; 2026-11-03 general | https://www.cityofpsl.com/Government/Your-City-Government/Departments/City-Clerk/Elections | | City elections page identifies District 1 as a 2026 expiring term, but does not list Stephanie Morgan as a 2026 District 1 candidate |
 | source_url | Yes | Official government source | https://www.cityofpsl.com/Government/Your-City-Government/Mayor-City-Council/District-1-Stephanie-Morgan | https://www.cityofpsl.com/Government/Your-City-Government/Mayor-City-Council/District-1-Stephanie-Morgan | | |
 | source_label | No | N/A | City of Port St. Lucie District 1 Council profile | | | |
 | candidate_id | No | N/A (internal match only) | Null | | | No `candidates` row exists for Stephanie Morgan; all 4 known District 1 candidates in `candidates` are logged `is_incumbent = false` and are distinct names |
-| is_on_next_ballot | No, if unverified | Official election source | Unknown | | | Leave blank — not confirmed against City elections page content in this batch |
+| is_on_next_ballot | No, if unverified | Official election source | Unknown | https://www.cityofpsl.com/Government/Your-City-Government/Departments/City-Clerk/Elections | | City elections page identifies District 1 as a 2026 expiring term, but does not list Stephanie Morgan as a 2026 District 1 candidate |
 
 ### 3.3 St. Lucie School Board District 1
 
