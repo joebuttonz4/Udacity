@@ -1,6 +1,6 @@
 # CivicMarket Current State
 
-Last updated: July 4, 2026
+Last updated: July 5, 2026
 
 ## Authoritative order
 
@@ -103,6 +103,7 @@ Confirmed complete:
 - /onboarding/zip Enter-submit regression fix — Back button missing type="button" defaulted to type="submit" inside the form; pressing Enter caused browser to fire router.back() before the form onSubmit could run, making unsupported ZIP notice flash then navigate away; fixed by adding type="button" to Back button; commit 1d0df4f, May 25 2026.
 - Automatic match score generation after Civic DNA completion — complete, commits 4c4479d and f4e5786, May 25 2026. POST /api/compute-match-scores validates user session via service-role client, fetches latest civic_dna and candidate_positions, computes alignment scores (average of non-null dimensions, 0–100 integer, using computed_at), deletes only candidate match_scores rows being recomputed (measure rows untouched), inserts fresh rows. sessionStorage lock key scoped to user ID prevents React Strict Mode double-mount from firing two concurrent API calls. New files: src/lib/supabase-server.ts (server-only service-role client), src/app/api/compute-match-scores/route.ts (POST handler). Acceptance test passed May 25 2026: civicmarket.test.04@example.com retook Civic DNA quiz, /onboarding/calculating generated 5 match_scores rows automatically (Maria Santos 70, Patricia Nguyen 63, Angela Torres 42, James Whitfield 38, Linda Marsh 38), single computed_at = 2026-05-25 23:12:00.986+00, no manual SQL. No schema changes. No RLS changes. No grant or policy changes. No measure score computation. lint passed, build passed (19 routes).
 - Schema addendum — current_officials and review_summaries tables added, officials_for_user view added, commit f1b1e31, July 4 2026. Migration file: Reference Files/civicmarket_schema_addendum_officials_reviews.sql. Run in Supabase SQL Editor before building officials or review summary UI. Tables not yet in production — deploy pending. No app code changed. No data seeded. lint passed, build passed (22 routes).
+- Current Officials UI shell (read-only) — commit bb8995a, July 5 2026. CurrentOfficialsSection component added; src/lib/officials.ts read-only helper added; Home page integration complete; Profile page integration complete; reads from officials_for_user view only. Empty state shown when no verified official data exists. No current_officials data seeded. No fake officials added. No AI review summaries built yet. No Edge Functions built. No candidate or measure pages changed. npm run build passed. npm run lint still fails only on known pre-existing scripts/*.cjs require-import rule errors.
 
 ## Immediate priorities
 
