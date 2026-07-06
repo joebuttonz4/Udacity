@@ -83,7 +83,7 @@
 
 | Field | Required before seed? | Accepted source type | Collected value | Source URL | Verified by | Notes |
 |---|---|---|---|---|---|---|
-| name | Yes | Official government source | | | | |
+| name | Yes | Official government source | | | | Blocked pending district model review — see "County Commission district model gap" below |
 | office | Yes | N/A (fixed value) | County Commissioner, At-Large | | | |
 | district_id | Yes | N/A (internal) | `11111111-0000-0000-0000-000000000003` | | | Matches `districts.name = 'St. Lucie County Commission At-Large'` per onboarding code |
 | jurisdiction_level | Yes | N/A (fixed value) | county | | | |
@@ -93,10 +93,18 @@
 | term_start | No, if unverified | Official government source | | | | Leave blank if not verified |
 | term_end | No, if unverified | Official government source | | | | Leave blank if not verified |
 | next_election_date | No, if unverified | Official election source | | | | Leave blank if not verified |
-| source_url | Yes | Official government source | | | | Row cannot be seeded without this |
+| source_url | Yes | Official government source | | | | Row cannot be seeded without this — blocked pending district model review, see below. The county BOCC page (https://www.stlucieco.gov/government/county-commissioners/st-lucie-county-board-of-county-commissioners-bocc) is recorded in Notes only, as a review/source reference, not as the seedable row source_url |
 | source_label | No | N/A | | | | |
 | candidate_id | No | N/A (internal match only) | Null | | | No County Commission candidates currently exist in `candidates` table |
 | is_on_next_ballot | No, if unverified | Official election source | Unknown | | | Stays unknown/false unless verified |
+
+#### County Commission district model gap
+
+- Official county source identifies five commissioner districts, not one At-Large office: https://www.stlucieco.gov/government/county-commissioners/st-lucie-county-board-of-county-commissioners-bocc lists commissioners by District 1 through District 5. Individual official pages exist for District 1 James Clasby (https://www.stlucieco.gov/departments-and-services/board-of-county-commissioners/district-1-james-clasby), District 4 Jamie Fowler (https://www.stlucieco.gov/departments-and-services/board-of-county-commissioners/district-4-jamie-fowler-chair), and District 5 Cathy Townsend (https://www.stlucieco.gov/departments-and-services/board-of-county-commissioners/district-5-cathy-townsend). The BOCC navigation also lists District 2 and District 3, but those individual pages have not been inspected in this batch, so no name is recorded here for them.
+- Existing app district row is "St. Lucie County Commission At-Large".
+- Do not map a specific district commissioner into the At-Large row without a product/data decision.
+- Future decision needed: keep one countywide At-Large row, or add separate County Commission District 1 through District 5 rows.
+- No SQL, schema, seed, or UI change approved by this checklist.
 
 ### 3.5 Florida House District 85
 
