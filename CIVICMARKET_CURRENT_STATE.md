@@ -175,6 +175,7 @@ These are intentional data gaps, not app bugs. Do not manufacture, guess, or "fi
 - Because officials_for_user joins current_officials to user_districts through district_id, a Mayor current_officials row would not surface for users until a Mayor district row exists and users can be assigned to it.
 - No Mayor current_officials row is seedable yet because no official government source URL has been supplied for the current Mayor.
 - Do not guess the Mayor name, term dates, next election date, or source URL.
+- Verified source collection checklist: docs/current_officials_verified_source_checklist.md
 
 ## Hard beta blockers
 
