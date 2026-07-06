@@ -341,3 +341,16 @@ FROM public.current_officials;
 - Current row count (check 7) **may legitimately be 0** — no rows have been seeded yet, and 0 is an acceptable, expected result, not a failure.
 
 If check 1 returns 0 rows, the migration has not been deployed yet — stop and do not proceed to any seeding step until it is run in Supabase SQL Editor.
+
+## Manual Supabase verification result
+
+- **Date:** 2026-07-06
+- **Method:** manual read-only query in Supabase SQL Editor
+- **Result:** schema/view deployment confirmed
+  - `current_officials` table exists: PASS
+  - `current_officials` column count: PASS, 17
+  - `current_officials` RLS enabled: PASS
+  - `current_officials` policy count: PASS, 4
+  - `officials_for_user` view exists: PASS
+- **Row count:** 0 `current_officials` rows before seed
+- **Note:** no write SQL was run
