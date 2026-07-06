@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import CoastalHero from '@/components/CoastalHero'
+import CurrentOfficialsSection from '@/components/CurrentOfficialsSection'
 
 const DIMENSIONS = [
   'growth_development',
@@ -112,6 +113,7 @@ function SettingsRow({
 export default function ProfilePage() {
   const router = useRouter()
   const [email, setEmail] = useState<string | null>(null)
+  const [userId, setUserId] = useState<string | null>(null)
   const [profile, setProfile] = useState<ProfileRow | null>(null)
   const [dna, setDna] = useState<DnaRow | null>(null)
   const [loading, setLoading] = useState(true)
@@ -131,6 +133,7 @@ export default function ProfilePage() {
         }
 
         setEmail(session.user.email ?? null)
+        setUserId(session.user.id)
 
         const [profileResult, dnaResult] = await Promise.all([
           supabase
@@ -335,6 +338,9 @@ export default function ProfilePage() {
                 </Link>
               </section>
             )}
+
+            {/* My current officials */}
+            {userId && <CurrentOfficialsSection userId={userId} />}
 
             {/* Beta disclaimer */}
             <div className="bg-[#FFFBEB] border border-[#FDE68A] rounded-[24px] p-4">

@@ -11,6 +11,7 @@ import {
 } from '@/lib/candidates'
 import MatchScoreRing from '@/components/ui/MatchScoreRing'
 import CoastalHero from '@/components/CoastalHero'
+import CurrentOfficialsSection from '@/components/CurrentOfficialsSection'
 
 const CIVIC_FEED = [
   { id: 1, title: 'Candidate profiles loaded from verified source records', meta: 'Port St. Lucie District 1' },
@@ -37,6 +38,7 @@ export default function HomePage() {
   const router = useRouter()
   const [candidates, setCandidates] = useState<CandidateWithContext[]>([])
   const [districts, setDistricts] = useState<string[]>([])
+  const [userId, setUserId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [countdown, setCountdown] = useState<Countdown | null>(null)
@@ -66,6 +68,7 @@ export default function HomePage() {
         ]
         setCandidates(allCandidates)
         setDistricts(uniqueDistricts)
+        setUserId(session.user.id)
       } catch (err: unknown) {
         const message =
           err instanceof Error ? err.message : 'Something went wrong loading your home screen.'
@@ -234,6 +237,9 @@ export default function HomePage() {
                 </div>
               </section>
             )}
+
+            {/* My current officials */}
+            {userId && <CurrentOfficialsSection userId={userId} />}
 
             {/* Civic feed */}
             <section className="bg-white rounded-[24px] shadow-sm p-4">
