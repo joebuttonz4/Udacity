@@ -129,7 +129,7 @@
 
 | Field | Required before seed? | Accepted source type | Collected value | Source URL | Verified by | Notes |
 |---|---|---|---|---|---|---|
-| name | Yes | Official government source | Ben Albritton | https://www.flsenate.gov/Senators/S27 | | Official Senate page lists District 27, covering Charlotte, DeSoto, Hardee, and parts of Lee and Polk counties |
+| name | Yes | Official government source | Ben Albritton | https://www.flsenate.gov/Senators/S27 | | Official Senate page lists District 27, covering Charlotte, DeSoto, Hardee, and parts of Lee and Polk counties. The official district-area description does not list St. Lucie County or Martin County — see "Florida Senate District geography mapping gap" below |
 | office | Yes | N/A (fixed value) | State Senator, District 27 | | | |
 | district_id | Yes | N/A (internal) | `11111111-0000-0000-0000-000000000005` | | | Matches `districts.name = 'FL Senate District 27'` per onboarding code |
 | jurisdiction_level | Yes | N/A (fixed value) | state | | | |
@@ -143,6 +143,14 @@
 | source_label | No | N/A | Florida Senate Senator District 27 profile | | | |
 | candidate_id | No | N/A (internal match only) | Null | | | No state senate candidates currently exist in `candidates` table |
 | is_on_next_ballot | No, if unverified | Official election source | Unknown | | | Stays unknown/false unless verified by an official election source; no ballot status confirmed in this batch |
+
+#### Florida Senate District geography mapping gap
+
+- Official Senate page for District 27 (https://www.flsenate.gov/Senators/S27) lists Charlotte, DeSoto, Hardee, and parts of Lee and Polk counties as the district area. It does not list St. Lucie County or Martin County.
+- Current CivicMarket beta context uses FL Senate District 27 as a PSL beta district.
+- Do not seed this row until the district mapping is verified against an official source for the user's address or the app's district model is corrected.
+- Future decision needed: verify whether PSL users should map to a different Florida Senate district, or whether the app's current District 27 row is intentionally scoped differently.
+- No SQL, schema, seed, or UI change approved by this checklist.
 
 ---
 
