@@ -26,39 +26,39 @@
 
 | Field | Required before seed? | Accepted source type | Collected value | Source URL | Verified by | Notes |
 |---|---|---|---|---|---|---|
-| name | Yes | Official government source | | | | Blocked — Mayor district row does not exist yet (see Section 4) |
+| name | Yes | Official government source | Shannon Martin | https://www.cityofpsl.com/Government/Your-City-Government/Mayor-City-Council/Mayor-Shannon-Martin | | |
 | office | Yes | N/A (fixed value) | Mayor | | | |
 | district_id | Yes | N/A (internal) | Not assigned — no districts row exists | | | Prerequisite: see Section 4 |
 | jurisdiction_level | Yes | N/A (fixed value) | city | | | |
 | photo_url | No | Official government source | | | | |
 | website | No | Official government source | | | | |
 | bio | No | Official government source | | | | |
-| term_start | No, if unverified | Official government source | | | | Leave blank if not verified |
-| term_end | No, if unverified | Official government source | | | | Leave blank if not verified |
-| next_election_date | No, if unverified | Official election source | | | | Leave blank if not verified |
-| source_url | Yes | Official government source | | | | Row cannot be seeded without this |
-| source_label | No | N/A | | | | |
-| candidate_id | No | N/A (internal match only) | Null | | | Stays null unless verified match to a `candidates` row |
-| is_on_next_ballot | No, if unverified | Official election source | Unknown | | | Stays unknown/false unless verified |
+| term_start | No, if unverified | Official government source | | | | Leave blank — official page content not confirmed to give an exact date in this batch |
+| term_end | No, if unverified | Official government source | | | | Leave blank — official page content not confirmed to give an exact date in this batch |
+| next_election_date | No, if unverified | Official election source | | | | Leave blank — official page content not confirmed to give an exact date in this batch |
+| source_url | Yes | Official government source | https://www.cityofpsl.com/Government/Your-City-Government/Mayor-City-Council/Mayor-Shannon-Martin | https://www.cityofpsl.com/Government/Your-City-Government/Mayor-City-Council/Mayor-Shannon-Martin | | |
+| source_label | No | N/A | City of Port St. Lucie Mayor profile | | | |
+| candidate_id | No | N/A (internal match only) | Null | | | No `candidates` row exists for Shannon Martin |
+| is_on_next_ballot | No, if unverified | Official election source | Unknown | | | Leave blank — not confirmed against City elections page content in this batch |
 
 ### 3.2 Port St. Lucie City Council District 1
 
 | Field | Required before seed? | Accepted source type | Collected value | Source URL | Verified by | Notes |
 |---|---|---|---|---|---|---|
-| name | Yes | Official government source | | | | |
+| name | Yes | Official government source | Stephanie Morgan | https://www.cityofpsl.com/Government/Your-City-Government/Mayor-City-Council/District-1-Stephanie-Morgan | | |
 | office | Yes | N/A (fixed value) | City Council Member, District 1 | | | |
 | district_id | Yes | N/A (internal) | `11111111-0000-0000-0000-000000000001` | | | Matches `districts.name = 'City Council District 1'` per onboarding code |
 | jurisdiction_level | Yes | N/A (fixed value) | city | | | |
 | photo_url | No | Official government source | | | | |
 | website | No | Official government source | | | | |
 | bio | No | Official government source | | | | |
-| term_start | No, if unverified | Official government source | | | | Leave blank if not verified |
-| term_end | No, if unverified | Official government source | | | | Leave blank if not verified |
-| next_election_date | No, if unverified | Official election source | | | | Leave blank if not verified |
-| source_url | Yes | Official government source | | | | Row cannot be seeded without this |
-| source_label | No | N/A | | | | |
-| candidate_id | No | N/A (internal match only) | Null | | | All 4 known District 1 candidates are logged `is_incumbent = false`; none can be linked as current officeholder without new verification |
-| is_on_next_ballot | No, if unverified | Official election source | Unknown | | | Stays unknown/false unless verified |
+| term_start | No, if unverified | Official government source | | | | Leave blank — official page content not confirmed to give an exact date in this batch |
+| term_end | No, if unverified | Official government source | | | | Leave blank — official page content not confirmed to give an exact date in this batch |
+| next_election_date | No, if unverified | Official election source | | | | Leave blank — official page content not confirmed to give an exact date in this batch |
+| source_url | Yes | Official government source | https://www.cityofpsl.com/Government/Your-City-Government/Mayor-City-Council/District-1-Stephanie-Morgan | https://www.cityofpsl.com/Government/Your-City-Government/Mayor-City-Council/District-1-Stephanie-Morgan | | |
+| source_label | No | N/A | City of Port St. Lucie District 1 Council profile | | | |
+| candidate_id | No | N/A (internal match only) | Null | | | No `candidates` row exists for Stephanie Morgan; all 4 known District 1 candidates in `candidates` are logged `is_incumbent = false` and are distinct names |
+| is_on_next_ballot | No, if unverified | Official election source | Unknown | | | Leave blank — not confirmed against City elections page content in this batch |
 
 ### 3.3 St. Lucie School Board District 1
 
