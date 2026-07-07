@@ -306,6 +306,114 @@ Do not add District 1-5 rows to `user_districts` (onboarding, `ALL_PSL_DISTRICTS
 Gate 3 behavior decision recommendation result:
 B2 selected and documented. Implementation remains blocked until Gate 4 SQL draft and explicit Gate 5 approval.
 
+## Gate 4 district row SQL draft
+
+Status:
+DRAFT ONLY. NOT APPROVED FOR EXECUTION.
+
+Purpose:
+Draft the SQL that would insert the five St. Lucie County Commission District 1-5 rows into `districts` only, for review before any Gate 5 approval. This draft covers `districts` insertion only — it intentionally does not include `current_officials` inserts, `user_districts` inserts, or any At-Large row change, per the Gate 3 B2 decision and the hard stops below.
+
+Scope of this draft:
+
+- `districts` table insert for the five rows proposed in the Gate 2 design worksheet.
+- Preflight check for existing ids or names.
+- Post-insert verification.
+
+Explicitly out of scope for this draft (deferred to a later Gate 4 draft, after B2's `getOfficialsForUser` design is finalized):
+
+- `current_officials` inserts for James Clasby, Larry Leet, Erin Lowry, Jamie Fowler, Cathy Townsend.
+- Any `user_districts` change.
+- Any At-Large row change.
+
+### Preflight check (run first, read-only)
+
+```sql
+-- Gate 4 preflight — DRAFT ONLY, NOT APPROVED FOR EXECUTION
+-- Confirms none of the five proposed ids or names already exist in districts.
+-- Expect 0 rows back. If any row is returned, STOP and do not run the insert below.
+
+SELECT id, name, type, city, state
+FROM districts
+WHERE id IN (
+  '11111111-0000-0000-0000-000000000031',
+  '11111111-0000-0000-0000-000000000032',
+  '11111111-0000-0000-0000-000000000033',
+  '11111111-0000-0000-0000-000000000034',
+  '11111111-0000-0000-0000-000000000035'
+)
+OR name IN (
+  'St. Lucie County Commission District 1',
+  'St. Lucie County Commission District 2',
+  'St. Lucie County Commission District 3',
+  'St. Lucie County Commission District 4',
+  'St. Lucie County Commission District 5'
+);
+```
+
+### Districts insert (districts only — no current_officials, no user_districts, no At-Large change)
+
+```sql
+-- Gate 4 districts insert — DRAFT ONLY, NOT APPROVED FOR EXECUTION
+-- Requires explicit Gate 5 approval before this is run in Supabase.
+-- Inserts the five County Commission District 1-5 rows into districts only.
+-- Does not touch current_officials, user_districts, or the At-Large row
+-- (11111111-0000-0000-0000-000000000003, unchanged and not referenced here).
+
+INSERT INTO districts (id, name, type, city, state) VALUES
+  ('11111111-0000-0000-0000-000000000031', 'St. Lucie County Commission District 1', 'county', 'Port St. Lucie', 'FL'),
+  ('11111111-0000-0000-0000-000000000032', 'St. Lucie County Commission District 2', 'county', 'Port St. Lucie', 'FL'),
+  ('11111111-0000-0000-0000-000000000033', 'St. Lucie County Commission District 3', 'county', 'Port St. Lucie', 'FL'),
+  ('11111111-0000-0000-0000-000000000034', 'St. Lucie County Commission District 4', 'county', 'Port St. Lucie', 'FL'),
+  ('11111111-0000-0000-0000-000000000035', 'St. Lucie County Commission District 5', 'county', 'Port St. Lucie', 'FL');
+```
+
+### Post-insert verification (run only after the insert above is separately approved and executed)
+
+```sql
+-- Gate 4 post-insert verification — DRAFT ONLY, NOT APPROVED FOR EXECUTION
+-- Expect exactly 5 rows, matching the ids/names/type/city/state above.
+
+SELECT id, name, type, city, state
+FROM districts
+WHERE id IN (
+  '11111111-0000-0000-0000-000000000031',
+  '11111111-0000-0000-0000-000000000032',
+  '11111111-0000-0000-0000-000000000033',
+  '11111111-0000-0000-0000-000000000034',
+  '11111111-0000-0000-0000-000000000035'
+)
+ORDER BY name;
+
+-- Also confirm the At-Large row is unchanged (expect exactly 1 row, unaltered).
+SELECT id, name, type, city, state
+FROM districts
+WHERE id = '11111111-0000-0000-0000-000000000003';
+```
+
+### Rollback note
+
+If a rollback is ever needed after this draft is approved and run, the only reversible action documented here is deleting the five rows above by exact id:
+
+```sql
+-- Rollback (only if Gate 5-approved insert above was run and needs reversal) — DRAFT ONLY
+DELETE FROM districts
+WHERE id IN (
+  '11111111-0000-0000-0000-000000000031',
+  '11111111-0000-0000-0000-000000000032',
+  '11111111-0000-0000-0000-000000000033',
+  '11111111-0000-0000-0000-000000000034',
+  '11111111-0000-0000-0000-000000000035'
+);
+```
+This rollback is safe only as long as no `current_officials`, `user_districts`, or other row has been created referencing these five ids. If any such row exists by the time a rollback is considered, that dependency must be resolved first.
+
+### Gate 4 district row SQL draft — status and approval requirement
+
+**This SQL is DRAFT ONLY and NOT APPROVED FOR EXECUTION.**
+
+Explicit Gate 5 approval from Mike is required — stating the approved district row names, approved district IDs, and approved SQL draft — before any statement in this section is run in Supabase. No SQL in this section has been executed. No Supabase data has been modified by this documentation update.
+
 ### Gate 4: Draft SQL only
 
 After Gates 1 through 3 pass, draft SQL for review only.
