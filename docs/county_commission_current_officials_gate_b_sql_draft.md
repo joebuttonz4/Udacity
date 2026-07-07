@@ -62,7 +62,7 @@ At-Large row, unchanged and not referenced by this draft's INSERT:
 |---|---|---|
 | `id` | PK, default `gen_random_uuid()` | auto-generated, not supplied |
 | `name` | `NOT NULL` | official name (Section 4 mapping) |
-| `office` | `NOT NULL` | `County Commissioner District N` (per this request) |
+| `office` | `NOT NULL` | `County Commissioner District N`, with Chair/Vice Chair included where applicable (per this request) |
 | `district_id` | FK → `districts(id)`, nullable | one of the five ids in Section 4 |
 | `jurisdiction_level` | `NOT NULL` | `county` — see reasoning below |
 | `photo_url` | nullable | NULL — not sourced |
@@ -88,12 +88,12 @@ At-Large row, unchanged and not referenced by this draft's INSERT:
 | District | name | office | district_id | jurisdiction_level | source_url | source_label | candidate_id | is_on_next_ballot |
 |---|---|---|---|---|---|---|---|---|
 | 1 | James Clasby | County Commissioner District 1 | `...031` | county | stlucieco.gov BOCC page | St. Lucie County Board of County Commissioners official page | NULL | false |
-| 2 | Larry Leet | County Commissioner District 2 | `...032` | county | stlucieco.gov BOCC page | St. Lucie County Board of County Commissioners official page | NULL | false |
+| 2 | Larry Leet | County Commissioner District 2, Vice Chair | `...032` | county | stlucieco.gov BOCC page | St. Lucie County Board of County Commissioners official page | NULL | false |
 | 3 | Erin Lowry | County Commissioner District 3 | `...033` | county | stlucieco.gov BOCC page | St. Lucie County Board of County Commissioners official page | NULL | false |
-| 4 | Jamie Fowler | County Commissioner District 4 | `...034` | county | stlucieco.gov BOCC page | St. Lucie County Board of County Commissioners official page | NULL | false |
+| 4 | Jamie Fowler | County Commissioner District 4, Chair | `...034` | county | stlucieco.gov BOCC page | St. Lucie County Board of County Commissioners official page | NULL | false |
 | 5 | Cathy Townsend | County Commissioner District 5 | `...035` | county | stlucieco.gov BOCC page | St. Lucie County Board of County Commissioners official page | NULL | false |
 
-Note: Gate A verified Vice Chair (District 2) and Chair (District 4) as additional titles on the official page. Per this request's specified office wording (`County Commissioner District N` for all five, uniformly), the Vice Chair/Chair distinction is not included in the `office` value. This is a wording choice, not a source conflict — flag to Mike at Gate C if the Vice Chair/Chair distinction should instead be reflected in `office` (e.g. `County Commissioner District 2, Vice Chair`).
+Note: Chair and Vice Chair are included in the drafted office wording because they were visible in the Gate A official source verification and Mike explicitly requested that the Gate B draft preserve those role labels.
 
 ## 6. Preflight SELECT queries (read-only — review only, not executed)
 
@@ -173,6 +173,9 @@ ORDER BY ordinal_position;
 -- https://www.stlucieco.gov/departments-and-services/board-of-county-commissioners
 --
 -- jurisdiction_level = 'county' follows existing repo convention (see Section 5).
+-- office includes Chair (District 4) and Vice Chair (District 2), visible in the
+-- Gate A official source verification and preserved at Mike's explicit request
+-- (see Section 5).
 -- is_on_next_ballot = false for all 5 rows — no official election-date source
 -- has verified next-ballot status for any District 1-5 seat (see Section 5).
 -- term_start, term_end, next_election_date, photo_url, website, bio, and
@@ -211,7 +214,7 @@ INSERT INTO current_officials (
   ),
   (
     'Larry Leet',
-    'County Commissioner District 2',
+    'County Commissioner District 2, Vice Chair',
     '11111111-0000-0000-0000-000000000032',
     'county',
     NULL, NULL, NULL, NULL, NULL, NULL,
@@ -233,7 +236,7 @@ INSERT INTO current_officials (
   ),
   (
     'Jamie Fowler',
-    'County Commissioner District 4',
+    'County Commissioner District 4, Chair',
     '11111111-0000-0000-0000-000000000034',
     'county',
     NULL, NULL, NULL, NULL, NULL, NULL,
@@ -374,7 +377,7 @@ No-change risk: County Commission District 1-5 officials remain absent from `cur
 Change risk (if this draft is later approved and executed):
 
 - `jurisdiction_level = 'county'` and `is_on_next_ballot = false` are this draft's proposed values, reasoned from existing repo convention and the project's non-negotiable sourcing rule respectively — not independently confirmed by an official source the way name/office/district were. Mike should explicitly confirm or correct both at Gate C.
-- The Vice Chair (District 2) / Chair (District 4) titles Gate A confirmed are not reflected in the `office` value under this request's specified uniform wording. If that distinction matters for display, it should be corrected before Gate C approval, not after Gate D execution.
+- The Vice Chair (District 2) / Chair (District 4) titles Gate A confirmed are included in the `office` value at Mike's explicit request. Mike should re-confirm this wording at Gate C along with the other proposed values.
 - Seeding these five rows alone does not make them visible to any user yet — Current Officials display for District 1-5 still requires the separate, not-yet-drafted `getOfficialsForUser` code change (Gate E/F/G in docs/county_commission_current_officials_b2_implementation_plan.md). This draft's execution and the B2 code change are independent future approvals.
 - As with the three already-seeded officials, no unique constraint exists on `current_officials.district_id`, so the preflight duplicate check (Section 6, query 3) is the only protection against accidentally double-inserting rows for the same district; it must be run and must return 0 rows before any INSERT is considered.
 
@@ -394,7 +397,7 @@ Before Gate D execution (if ever approved):
 
 Before any statement in Section 7 is run in Supabase, Mike must explicitly approve, per Gate C of docs/county_commission_current_officials_b2_implementation_plan.md, stating:
 
-- approved official names, district assignments, and office wording (including whether Vice Chair/Chair should be reflected in `office`);
+- approved official names, district assignments, and office wording (including the Chair/Vice Chair labels now included in `office` for District 4 and District 2, per Mike's explicit request);
 - approved `source_url` and `source_label`;
 - approved `jurisdiction_level` value (`county`, as proposed in Section 5);
 - approved `is_on_next_ballot` value (`false`, as proposed in Section 5) for all five rows, or a corrected value backed by an official election-date source;
