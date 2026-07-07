@@ -364,3 +364,198 @@ If check 1 returns 0 rows, the migration has not been deployed yet — stop and 
   - `officials_for_user` view exists: PASS
 - **Row count:** 0 `current_officials` rows before seed
 - **Note:** no write SQL was run
+
+## Final seed SQL draft for review
+
+This section assembles a single, self-contained review package for the three rows classified **Seedable now** in `docs/current_officials_verified_source_checklist.md` Section 7: **Stephanie Morgan** (Port St. Lucie City Council District 1), **Debbie Hawley** (St. Lucie School Board District 1), and **Tobin Rogers "Toby" Overdorf** (Florida House District 85). It restates Sections 7–9 in one place so it can be reviewed and copied as one unit.
+
+**Rows excluded from this draft** (per Section 11 — not seedable, not included anywhere below):
+- Shannon Martin / Port St. Lucie Mayor — blocked: no Mayor `districts` row exists yet, so `district_id` and a user-assignment model are unresolved.
+- St. Lucie County Commission At-Large — blocked: official county source models District 1–5 commissioners, not one countywide At-Large office (district model gap).
+- Ben Albritton / Florida Senate District 27 — blocked: official Senate district-27 page does not list St. Lucie or Martin County (geography mapping gap).
+
+**This is a draft only.** It has not passed Gate 5 (`Seed SQL reviewed before run`) — the checklist's `Verified by` column is still blank for all 3 rows (see Section 12, Risk check). **This SQL must be manually reviewed and Gate 5 sign-off recorded before it is copied into Supabase SQL Editor and run.** No statement in this section has been executed.
+
+### Pre-run SELECT checks (run immediately before the INSERT, in the same Supabase SQL Editor session)
+
+```sql
+-- DRAFT ONLY - DO NOT RUN
+
+-- 1. Reconfirm current_officials is deployed (see "Manual Supabase verification result" above — last confirmed 2026-07-06).
+SELECT table_name
+FROM information_schema.tables
+WHERE table_schema = 'public'
+  AND table_name = 'current_officials';
+-- Expect: 1 row. If 0 rows, stop — do not proceed to the INSERT below.
+
+-- 2. Confirm the 3 target districts rows exist with the expected ids.
+SELECT id, name
+FROM districts
+WHERE id IN (
+  '11111111-0000-0000-0000-000000000001',
+  '11111111-0000-0000-0000-000000000002',
+  '11111111-0000-0000-0000-000000000004'
+)
+ORDER BY name;
+-- Expect: 3 rows, names 'City Council District 1', 'School Board District 1', 'FL House District 85'.
+
+-- 3. Confirm no current_officials row already exists for these districts
+-- (avoid accidental duplicates — this is why INSERT is used below, not upsert:
+-- there is no existing row to merge into, and no natural unique key on
+-- current_officials other than id, so ON CONFLICT has nothing safe to target).
+SELECT id, name, district_id
+FROM current_officials
+WHERE district_id IN (
+  '11111111-0000-0000-0000-000000000001',
+  '11111111-0000-0000-0000-000000000002',
+  '11111111-0000-0000-0000-000000000004'
+);
+-- Expect: 0 rows before first seed. If any row is returned, stop — do not insert a duplicate.
+
+-- 4. Confirm no existing candidates row matches these names
+-- (candidate_id must stay NULL if this returns 0 rows).
+SELECT id, name
+FROM candidates
+WHERE name IN ('Stephanie Morgan', 'Debbie Hawley', 'Tobin Rogers "Toby" Overdorf');
+-- Expect: 0 rows, consistent with checklist notes.
+
+-- 5. Confirm the admin INSERT policy exists on current_officials.
+SELECT policyname, cmd
+FROM pg_policies
+WHERE tablename = 'current_officials'
+ORDER BY policyname;
+-- Expect: 4 policies (SELECT/INSERT/UPDATE/DELETE), per the schema addendum file.
+```
+
+### Final draft INSERT
+
+Columns included are limited to those confirmed in `Reference Files/civicmarket_schema_addendum_officials_reviews.sql` (excluding `id`, `created_at`, `updated_at`, which all have column defaults and are omitted here). Plain `INSERT` is used, not `upsert` — per check 3 above, no matching row exists yet for any of the 3 target districts, and `current_officials` has no natural unique key besides `id` for an `ON CONFLICT` target, so there is nothing safe to upsert against.
+
+```sql
+-- DRAFT ONLY - DO NOT RUN
+-- Final draft for Gate 5 review. Not approved to run until the checklist's
+-- "Verified by" sign-off is recorded for these 3 rows (see Section 12, Risk check).
+-- is_on_next_ballot = false for all 3 rows per the Section 6 decision: no
+-- official election source has verified next-ballot status for any of them.
+-- term_start, term_end, next_election_date, candidate_id, photo_url, website,
+-- and bio are NULL for all 3 rows — none of these were verified in the checklist.
+
+INSERT INTO current_officials (
+  name,
+  office,
+  district_id,
+  jurisdiction_level,
+  photo_url,
+  website,
+  bio,
+  term_start,
+  term_end,
+  next_election_date,
+  source_url,
+  source_label,
+  candidate_id,
+  is_on_next_ballot
+) VALUES
+(
+  'Stephanie Morgan',
+  'City Council Member, District 1',
+  '11111111-0000-0000-0000-000000000001',
+  'city',
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  'https://www.cityofpsl.com/Government/Your-City-Government/Mayor-City-Council/District-1-Stephanie-Morgan',
+  'City of Port St. Lucie District 1 Council profile',
+  NULL,
+  false
+),
+(
+  'Debbie Hawley',
+  'School Board Member, District 1',
+  '11111111-0000-0000-0000-000000000002',
+  'school_board',
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  'https://www.stlucie.k12.fl.us/our-district/meet-the-board/',
+  'St. Lucie Public Schools Meet the Board',
+  NULL,
+  false
+),
+(
+  'Tobin Rogers "Toby" Overdorf',
+  'State Representative, District 85',
+  '11111111-0000-0000-0000-000000000004',
+  'state',
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  'https://housedocs.myfloridahouse.gov/Sections/Representatives/custom/biography.aspx?MemberId=4728',
+  'Florida House of Representatives member profile',
+  NULL,
+  false
+);
+```
+
+### Post-run SELECT checks (run immediately after the INSERT, in the same session)
+
+```sql
+-- DRAFT ONLY - DO NOT RUN
+
+-- 1. Confirm exactly 3 new rows exist with the expected district_id values.
+SELECT id, name, office, district_id, jurisdiction_level, source_url, candidate_id, is_on_next_ballot
+FROM current_officials
+WHERE district_id IN (
+  '11111111-0000-0000-0000-000000000001',
+  '11111111-0000-0000-0000-000000000002',
+  '11111111-0000-0000-0000-000000000004'
+)
+ORDER BY district_id;
+-- Expect: exactly 3 rows, values matching the INSERT above.
+
+-- 2. Confirm no unintended NULL in a NOT NULL column (name/office/jurisdiction_level/source_url).
+SELECT id, name, office, jurisdiction_level, source_url
+FROM current_officials
+WHERE district_id IN (
+  '11111111-0000-0000-0000-000000000001',
+  '11111111-0000-0000-0000-000000000002',
+  '11111111-0000-0000-0000-000000000004'
+)
+AND (name IS NULL OR office IS NULL OR jurisdiction_level IS NULL OR source_url IS NULL);
+-- Expect: 0 rows.
+
+-- 3. Confirm is_on_next_ballot is false for all 3 new rows (no row was accidentally marked true).
+SELECT id, name, is_on_next_ballot
+FROM current_officials
+WHERE district_id IN (
+  '11111111-0000-0000-0000-000000000001',
+  '11111111-0000-0000-0000-000000000002',
+  '11111111-0000-0000-0000-000000000004'
+)
+AND is_on_next_ballot IS DISTINCT FROM false;
+-- Expect: 0 rows.
+
+-- 4. Confirm officials_for_user surfaces each new row for a test user assigned
+-- to the matching district (run once a test user_districts row exists for each district).
+SELECT user_id, name, office, district_name
+FROM officials_for_user
+WHERE district_id IN (
+  '11111111-0000-0000-0000-000000000001',
+  '11111111-0000-0000-0000-000000000002',
+  '11111111-0000-0000-0000-000000000004'
+);
+-- Expect: 1 row per test user per matching district.
+```
+
+### Reminder
+
+This entire section is a draft for manual review only. No SQL in this section has been run. Copying any statement above into Supabase SQL Editor requires a separate, explicit approval step and a recorded Gate 5 sign-off — not just the existence of this document.
