@@ -235,6 +235,77 @@ Before adding rows, inspect whether adding District 1 through District 5 rows wi
 
 Stop if adding five county district rows would make users see confusing duplicate county assignments.
 
+## Gate 3 behavior decision recommendation
+
+Status:
+B2 selected as the approved Gate 3 behavior model recommendation. Documentation only — implementation is not authorized by this decision.
+
+Scope of this recommendation:
+Evaluates the safest behavior model for showing County Commission District 1-5 officials in Current Officials while preserving the St. Lucie County Commission At-Large row unchanged for onboarding, ballot grouping, and county election context. Focuses on Option B first, per explicit request.
+
+### Decision
+
+**B2 is the selected Gate 3 behavior model.** Later, Current Officials display behavior should be adjusted only in `src/lib/officials.ts` (`getOfficialsForUser`) so that users holding the St. Lucie County Commission At-Large row can also see approved County Commission District 1-5 current officials. The global `officials_for_user` database view is not changed under B2, and no rows are added to `user_districts` under B2.
+
+Why B2 is preferred over B1:
+
+- B2 confines the special-case logic to one function (`getOfficialsForUser`), while B1 would rewrite the one `officials_for_user` view that every jurisdiction (city, school_board, state) currently depends on.
+- B2 cannot regress the view's existing behavior for the three already-seeded officials (Stephanie Morgan/city, Debbie Hawley/school_board, Toby Overdorf/state) — those reads never change. B1's OR-condition rewrite could not make the same guarantee without careful re-verification of every jurisdiction, not just county.
+- B2 matches the existing precedent already in this codebase of keeping fixed district lists in app code (`ALL_PSL_DISTRICTS` in `src/app/onboarding/zip/page.tsx`) rather than in SQL, so the pattern is consistent with how the team already manages this kind of fixed mapping.
+- B2 is more easily reversible: removing the widening logic from one TypeScript function fully restores prior behavior, with no view or migration to roll back.
+
+B2 preserves the At-Large row's existing role unchanged: onboarding continues to assign every PSL user to the same At-Large row via `ALL_PSL_DISTRICTS`, `user_districts` continues to hold only the current 5 fixed rows per user, and ballot grouping and county election context via `ballot_for_user` continue to key off the At-Large row exactly as they do today. B2 avoids changing the global `officials_for_user` view — that view's join condition (`co.district_id = ud.district_id` in Reference Files/civicmarket_schema_addendum_officials_reviews.sql:132) stays as-is. B2 avoids adding District 1-5 rows to `user_districts` — no new district assignment is written for any user under this model.
+
+### 1. Current blocker summary
+
+`officials_for_user` (Reference Files/civicmarket_schema_addendum_officials_reviews.sql) joins `user_districts.district_id = current_officials.district_id` on exact equality only. There is no grouping, parent, or "represents" concept on `districts` linking the At-Large row to future District 1-5 rows. Onboarding (`src/app/onboarding/zip/page.tsx`) hardcodes a fixed 5-row `ALL_PSL_DISTRICTS` list that assigns every PSL user the same At-Large row (id `11111111-0000-0000-0000-000000000003`) and never touches District 1-5. Result: even after District 1-5 rows and their `current_officials` rows are seeded, no user would see them, because no user's `user_districts` rows would ever exact-match a District 1-5 `district_id`.
+
+### 2. Option B expected behavior
+
+Do not add District 1-5 rows to `user_districts` (onboarding, `ALL_PSL_DISTRICTS`, and existing user assignments stay exactly as they are today). Instead, widen the read path so that a user holding the At-Large county row also sees the five District 1-5 `current_officials` rows. Two sub-approaches were evaluated; **B2 is selected** (see Decision above):
+
+- **B1 — view-level widening (not selected).** Rewrite `officials_for_user` so the join is `co.district_id = ud.district_id OR (ud.district_id = '<At-Large id>' AND co.district_id IN (<District 1-5 ids>))`. Narrowest data-layer change, but it is a `CREATE OR REPLACE VIEW` touching the one view every jurisdiction (city, school_board, state) currently depends on — any error in the OR condition risks a regression across all three already-seeded officials (Stephanie Morgan, Debbie Hawley, Toby Overdorf), not just county.
+- **B2 — app-level widening (selected).** Leave the view untouched. In `src/lib/officials.ts` (`getOfficialsForUser`), after the normal query, detect that the result set (or the user's `user_districts`) includes the At-Large id and issue a second read for `current_officials` rows with `district_id IN (<District 1-5 ids>)`, merging results before returning. Confines the special case to one function, matches the existing precedent of hardcoded district lists living in app code (`ALL_PSL_DISTRICTS`), and cannot regress the view's behavior for other jurisdiction levels. Tradeoff: District 1-5 ids get hardcoded in a second place (already hardcoded once in the Gate 2 worksheet's proposed UUIDs), so the two lists must be kept in sync manually.
+
+### 3. Files, views, or functions that would likely need review later
+
+- `src/lib/officials.ts` — `getOfficialsForUser`; this is the only function expected to change under B2
+- `Reference Files/civicmarket_schema_addendum_officials_reviews.sql` — `officials_for_user` view; reviewed and confirmed it stays unchanged under B2, kept here as reference only
+- `src/components/CurrentOfficialsSection.tsx` — rendering/sort order only; `jurisdiction_level`/`district_name` fields already exist and already render, so no code change is expected here, but visual review is warranted once 5 extra county cards can appear (see Risks)
+- `src/app/onboarding/zip/page.tsx` (`ALL_PSL_DISTRICTS`) — confirm it is NOT modified; B2 does not touch onboarding
+- `src/lib/candidates.ts` (`getUserDistrictIds`, `getCandidatesForDistricts`) — confirm NOT affected; B2 does not touch `user_districts`
+- `ballot_for_user` view in `Reference Files/civicmarket_schema_v4.sql` — confirm NOT affected; no candidates/elections rows would reference District 1-5 ids under this plan
+- `docs/current_officials_sql_plan.md` and `docs/current_officials_verified_source_checklist.md` — reuse the same gated SQL-drafting pattern already used for the 3 seeded officials when District 1-5 rows eventually reach Gate 4
+
+### 4. Risks
+
+1. B2 hardcodes District 1-5 ids a second time (alongside the Gate 2 worksheet's proposed UUIDs); the two lists can drift if one is edited without the other.
+2. Five county commissioner cards surfacing for every At-Large-holding user is a UI density change — Gate 3's own stop condition warns against "confusing duplicate county assignments." `district_name` already differentiates cards, but this should be visually re-verified once real rows exist, not assumed safe from code reading alone.
+3. `is_on_next_ballot` accuracy per District 1-5 seat is a separate data-correctness question, independent of the widening mechanism, and still requires an official source per the project's non-negotiable `source_url` rule.
+4. B2 is necessarily sequenced after Gate 2's district UUIDs and Gate 4/5/6 SQL approval for both the district rows and their `current_officials` rows — there is nothing to query until those exist.
+
+### 5. Test plan (for whenever Gate 4-7 execution eventually happens)
+
+- Regression: existing seeded officials (Stephanie Morgan/city, Debbie Hawley/school_board, Toby Overdorf/state) still appear correctly for their test users after the `getOfficialsForUser` change — no city/school_board/state regression, and no change at all to `officials_for_user`.
+- New behavior: a user whose only county `user_districts` row is At-Large sees exactly the 5 District 1-5 officials (once seeded) in Current Officials.
+- Isolation: `/onboarding/zip` behavior, `ALL_PSL_DISTRICTS`, `user_districts` row count for a test user, and `ballot_for_user` output are diffed before/after — expect zero change in all four.
+- Duplicate/confusion check: manually verify the 5 commissioner cards render distinctly (name + "District N" via `district_name`) and do not read as unexplained duplicates of the At-Large assignment.
+- Negative check: a user with no county row at all still sees zero county officials.
+- Rollback check: reverting the `getOfficialsForUser` change cleanly restores pre-District-1-5 behavior with no data loss, since `current_officials` rows are additive-only and the view was never touched.
+
+### 6. Explicit hard stops before implementation
+
+- Do not implement the B2 `getOfficialsForUser` change until Gate 2's exact district UUIDs and a Gate 4 SQL draft are explicitly approved.
+- Do not change the global `officials_for_user` view — B2 explicitly avoids this.
+- Do not assign District 1-5 rows to `user_districts` — B2 explicitly avoids this, and doing so would silently become a different option and reopen the ballot/candidate-filtering risk this option is designed to avoid.
+- Do not touch `ballot_for_user`, `src/lib/candidates.ts`, or `src/app/onboarding/zip/page.tsx` as part of this work.
+- Do not seed District 1-5 `current_officials` rows before Gate 4/5/6 approval.
+- Do not rename, delete, or replace the At-Large row.
+- No schema, app code, seed, SQL migration, Supabase data, `current_officials` inserts, `user_districts` changes, or At-Large changes are authorized by this documentation update — this is a decision record only.
+
+Gate 3 behavior decision recommendation result:
+B2 selected and documented. Implementation remains blocked until Gate 4 SQL draft and explicit Gate 5 approval.
+
 ### Gate 4: Draft SQL only
 
 After Gates 1 through 3 pass, draft SQL for review only.
