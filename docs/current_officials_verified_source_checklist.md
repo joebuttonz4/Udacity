@@ -207,6 +207,8 @@ A row is seedable only if it has verified `name`, `office`, `district_id`, `juri
 
 **Gate 2 note:** Gate 2 source sign-off completed for City Council District 1, School Board District 1, and Florida House District 85 on 2026-07-06.
 
+**Gate 5 note:** Gate 5 SQL review completed for the three draft seed rows only: City Council District 1, School Board District 1, and Florida House District 85 (Mike - SQL draft review - 2026-07-06). Blocked rows remain excluded: Mayor, County Commission At-Large, Florida Senate District 27. SQL has not been run.
+
 Summary:
 - **Seedable now:** Port St. Lucie City Council District 1, St. Lucie School Board District 1, Florida House District 85
 - **Blocked:** Port St. Lucie Mayor, St. Lucie County Commission At-Large, Florida Senate District 27

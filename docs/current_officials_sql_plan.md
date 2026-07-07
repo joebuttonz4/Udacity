@@ -378,6 +378,8 @@ This section assembles a single, self-contained review package for the three row
 
 Gate 2 source sign-off is now closed for these three draft seed rows (`docs/current_officials_verified_source_checklist.md`, Mike - manual source review - 2026-07-06); Gate 5 review remains open.
 
+Gate 5 SQL review sign-off: Mike - SQL draft review - 2026-07-06. The final draft below still requires manual copy/paste into Supabase SQL Editor before any database change happens — this documentation update does not execute SQL.
+
 ### Pre-run SELECT checks (run immediately before the INSERT, in the same Supabase SQL Editor session)
 
 ```sql
