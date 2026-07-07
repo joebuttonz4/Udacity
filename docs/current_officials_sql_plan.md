@@ -14,8 +14,8 @@ It exists to make the next SQL-writing step faster and safer by pre-organizing v
 
 - Nothing in this document authorizes running SQL against Supabase.
 - Nothing in this document authorizes schema changes, seeding, code changes, or UI changes.
-- The SQL shown in Section 7 is a **draft shape only** — it has not been reviewed against Gate 5 (`Seed SQL reviewed before run`) and must not be run as-is.
-- Actually running any insert requires a separate, explicit approval step outside this document.
+- Gate 5 SQL review has been documented for the final draft section ("Final seed SQL draft for review").
+- Running SQL still requires a separate, explicit user approval and manual copy/paste into Supabase SQL Editor — documenting Gate 5 review does not itself run anything.
 
 ## 3. Source checklist summary (per row)
 
@@ -374,11 +374,11 @@ This section assembles a single, self-contained review package for the three row
 - St. Lucie County Commission At-Large — blocked: official county source models District 1–5 commissioners, not one countywide At-Large office (district model gap).
 - Ben Albritton / Florida Senate District 27 — blocked: official Senate district-27 page does not list St. Lucie or Martin County (geography mapping gap).
 
-**This is a draft only.** It has not passed Gate 5 (`Seed SQL reviewed before run`). **This SQL must be manually reviewed and Gate 5 sign-off recorded before it is copied into Supabase SQL Editor and run.** No statement in this section has been executed.
+**Gate 2 source sign-off is closed** for these three draft seed rows (`docs/current_officials_verified_source_checklist.md`, Mike - manual source review - 2026-07-06).
 
-Gate 2 source sign-off is now closed for these three draft seed rows (`docs/current_officials_verified_source_checklist.md`, Mike - manual source review - 2026-07-06); Gate 5 review remains open.
+**Gate 5 SQL review sign-off is recorded:** Mike - SQL draft review - 2026-07-06.
 
-Gate 5 SQL review sign-off: Mike - SQL draft review - 2026-07-06. The final draft below still requires manual copy/paste into Supabase SQL Editor before any database change happens — this documentation update does not execute SQL.
+**SQL has not been run.** No statement in this section has been executed. A manual Supabase run still requires a separate, explicit user approval and manual copy/paste into Supabase SQL Editor — recording these sign-offs does not itself run anything.
 
 ### Pre-run SELECT checks (run immediately before the INSERT, in the same Supabase SQL Editor session)
 
@@ -437,8 +437,8 @@ Columns included are limited to those confirmed in `Reference Files/civicmarket_
 
 ```sql
 -- DRAFT ONLY - DO NOT RUN
--- Final draft for Gate 5 review. Not approved to run until the checklist's
--- "Verified by" sign-off is recorded for these 3 rows (see Section 12, Risk check).
+-- Gate 2 source sign-off and Gate 5 SQL review are documented, but this
+-- block still requires explicit user approval before copy/paste/run.
 -- is_on_next_ballot = false for all 3 rows per the Section 6 decision: no
 -- official election source has verified next-ballot status for any of them.
 -- term_start, term_end, next_election_date, candidate_id, photo_url, website,
