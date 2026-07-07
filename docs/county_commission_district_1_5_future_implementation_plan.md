@@ -429,6 +429,31 @@ The SQL draft should include:
 
 Do not run SQL during draft review.
 
+## Gate 5 approval checklist
+
+Status:
+Pending explicit approval. Not approved by this documentation update.
+
+Purpose:
+Record the checklist that must be satisfied, item by item, before the Gate 4 districts-only SQL draft (see "Gate 4 district row SQL draft" above) may be run in Supabase. This checklist covers approval only — no item on it authorizes running SQL by itself.
+
+Checklist:
+
+1. Gate 4 SQL draft reviewed — the preflight SELECT, the `districts` INSERT, the post-insert verification, and the rollback note in "Gate 4 district row SQL draft" have been read and reviewed as drafted.
+2. Preflight SELECT must be run first in Supabase SQL Editor — the Gate 4 preflight check (matching on the five ids or the five names) must be executed before the INSERT is considered.
+3. Preflight must return zero conflicts for the five IDs and names — if the preflight returns any row, execution stops and does not proceed to the INSERT.
+4. SQL execution is limited to `districts` INSERT only — no other statement from this plan (current_officials, user_districts, or any At-Large statement) is approved for execution alongside it.
+5. No `current_officials` inserts approved — District 1-5 current officials (James Clasby, Larry Leet, Erin Lowry, Jamie Fowler, Cathy Townsend) remain unseeded; this checklist does not approve them.
+6. No `user_districts` changes approved — no user is assigned to any District 1-5 row by this checklist, consistent with the Gate 3 B2 decision.
+7. No At-Large rename, delete, replace, or repurpose approved — the St. Lucie County Commission At-Large row (`11111111-0000-0000-0000-000000000003`) is untouched by this checklist.
+8. No schema/app/seed/migration changes approved — this checklist covers a one-time `districts` data INSERT only, not a schema or code change.
+9. Post-insert verification must return exactly five District 1-5 rows — the Gate 4 post-insert verification SELECT must confirm exactly 5 matching rows before Gate 5 can be considered satisfied.
+10. At-Large row must remain unchanged — the Gate 4 post-insert verification's At-Large check must return the same single row, unaltered.
+11. Gate 6 Supabase execution requires Mike's explicit approval after this checklist is reviewed — satisfying items 1-10 documents readiness only; it does not itself constitute approval to run SQL.
+
+Gate 5 approval checklist result:
+Pending explicit approval. Not approved by this documentation update.
+
 ### Gate 5: Manual approval
 
 Implementation requires explicit approval from Mike before any SQL is run.
