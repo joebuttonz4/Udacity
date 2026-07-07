@@ -509,6 +509,87 @@ Only after explicit approval:
 - verify no At-Large row was changed
 - verify no existing current_officials rows were altered
 
+## Gate 7 verification plan
+
+Status:
+Limited verification pending. Full UI verification is not applicable yet.
+
+Purpose:
+Define what can be verified right now, after the Gate 6 `districts`-only insert, and separate it clearly from the UI verification that only becomes possible once the approved B2 `getOfficialsForUser` work and District 1-5 `current_officials` rows exist (a later, separately approved step).
+
+Why this is "limited verification pending" and not a full Gate 7 pass:
+There is no Current Officials UI to check yet for County Commission District 1-5. `officials_for_user` still joins on exact `district_id` equality, no `current_officials` rows exist for District 1-5, and no `user_districts` row points at a District 1-5 id. Under the approved Gate 3 B2 model this is expected, not a bug — Home and Profile should look exactly as they did before Gate 6, with zero County Commission District 1-5 cards, for every user.
+
+### What can be verified now (data-layer only)
+
+1. Supabase `districts` table contains exactly the five District 1-5 rows.
+2. The At-Large row still exists and remains unchanged (id, name, type, city, state identical to before Gate 6).
+3. No County Commission `current_officials` rows exist as a result of Gate 6.
+4. No `user_districts` rows were added for any of the five District 1-5 ids.
+5. Current Officials UI (Home and Profile) should not be expected to show any County Commission District 1-5 officials yet, for any user — this is the correct, expected state, not something to fix.
+
+### Verification SQL (read-only — for reference; not executed by this documentation update)
+
+```sql
+-- 1. Confirm five District 1-5 rows exist. Expect exactly 5 rows.
+SELECT id, name, type, city, state
+FROM districts
+WHERE id IN (
+  '11111111-0000-0000-0000-000000000031',
+  '11111111-0000-0000-0000-000000000032',
+  '11111111-0000-0000-0000-000000000033',
+  '11111111-0000-0000-0000-000000000034',
+  '11111111-0000-0000-0000-000000000035'
+)
+ORDER BY name;
+```
+
+```sql
+-- 2. Confirm At-Large row exists and is unchanged. Expect exactly 1 row:
+-- St. Lucie County Commission At-Large | county | Port St. Lucie | FL
+SELECT id, name, type, city, state
+FROM districts
+WHERE id = '11111111-0000-0000-0000-000000000003';
+```
+
+```sql
+-- 3. Confirm no current_officials rows exist for the five District 1-5 ids.
+-- Expect 0 rows, unless a future gate has explicitly approved and seeded them.
+SELECT id, name, office, district_id
+FROM current_officials
+WHERE district_id IN (
+  '11111111-0000-0000-0000-000000000031',
+  '11111111-0000-0000-0000-000000000032',
+  '11111111-0000-0000-0000-000000000033',
+  '11111111-0000-0000-0000-000000000034',
+  '11111111-0000-0000-0000-000000000035'
+);
+```
+
+```sql
+-- 4. Confirm no user_districts rows exist for the five District 1-5 ids.
+-- Expect 0 rows. Any row here would indicate an unapproved deviation from Gate 3 B2.
+SELECT user_id, district_id, scope
+FROM user_districts
+WHERE district_id IN (
+  '11111111-0000-0000-0000-000000000031',
+  '11111111-0000-0000-0000-000000000032',
+  '11111111-0000-0000-0000-000000000033',
+  '11111111-0000-0000-0000-000000000034',
+  '11111111-0000-0000-0000-000000000035'
+);
+```
+
+### What cannot be verified yet (deferred to a later, separately approved Gate 7 pass)
+
+- Home page Current Officials section showing District 1-5 officials — not applicable; no `current_officials` rows exist for them yet.
+- Profile page Current Officials section showing District 1-5 officials — not applicable, same reason.
+- At-Large not showing as an individual commissioner — not testable in isolation yet, since no District 1-5 officials exist to compare against.
+- District 1-5 officials displaying clearly and without duplicate/confusing entries — depends on the B2 `getOfficialsForUser` widening being implemented first, which is not yet approved or built.
+
+Gate 7 verification plan result:
+Limited verification pending. Items 1-4 above (data-layer checks) can be run now, read-only, against Supabase. Full UI verification remains blocked until the B2 app behavior work and District 1-5 `current_officials` rows are implemented and approved through their own future gate sequence.
+
 ### Gate 7: UI verification
 
 Status:
