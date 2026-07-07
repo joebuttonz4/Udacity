@@ -47,6 +47,48 @@ Do not seed these yet. Mapping must be verified again before SQL is drafted:
 - District 4: Jamie Fowler
 - District 5: Cathy Townsend
 
+
+## Gate 1 re-verification worksheet
+
+Status:
+Not completed.
+
+Purpose:
+Record fresh official-source verification before any County Commission District 1 through District 5 implementation work.
+
+Required source checks:
+
+| District / page | Expected official name or purpose | Official source URL | Resolves? | Name still matches? | Verified by | Verified date | Notes |
+|---|---|---|---|---|---|---|---|
+| District 1 official page | James Clasby | https://www.stlucieco.gov/departments-and-services/board-of-county-commissioners/district-1-james-clasby | Pending | Pending | | | |
+| District 2 official page | Larry Leet | https://www.stlucieco.gov/departments-and-services/board-of-county-commissioners/district-2-larry-leet | Pending | Pending | | | |
+| District 3 official page | Erin Lowry | https://www.stlucieco.gov/departments-and-services/board-of-county-commissioners/district-3-erin-lowry | Pending | Pending | | | |
+| District 4 official page | Jamie Fowler | https://www.stlucieco.gov/departments-and-services/board-of-county-commissioners/district-4-jamie-fowler-chair | Pending | Pending | | | |
+| District 5 official page | Cathy Townsend | https://www.stlucieco.gov/departments-and-services/board-of-county-commissioners/district-5-cathy-townsend | Pending | Pending | | | |
+| BOCC overview page | Lists Board of County Commissioners by District 1 through District 5 | https://www.stlucieco.gov/government/county-commissioners/st-lucie-county-board-of-county-commissioners-bocc | Pending | Pending | | | |
+
+Gate 1 pass criteria:
+
+- All six official source URLs resolve.
+- District 1 through District 5 pages still show the expected commissioner names.
+- BOCC overview page still supports the District 1 through District 5 model.
+- No source redirects unexpectedly.
+- No source conflicts with the proposed Current Officials mapping.
+
+Gate 1 fail / stop criteria:
+
+- Any page is missing.
+- Any page redirects unexpectedly.
+- Any commissioner name differs from the proposed mapping.
+- BOCC overview no longer supports the District 1 through District 5 model.
+- Any source cannot be verified from an official St. Lucie County government page.
+
+Gate 1 result:
+Pending.
+
+No implementation authorization:
+This worksheet does not approve SQL, schema changes, app code changes, seed changes, migration changes, Supabase data changes, current_officials inserts, or At-Large rename/delete.
+
 ## Required approval gates before implementation
 
 ### Gate 1: Confirm official source references
