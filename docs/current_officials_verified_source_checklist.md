@@ -106,7 +106,7 @@
 - Existing app district row is "St. Lucie County Commission At-Large".
 - Do not map Larry Leet, Erin Lowry, James Clasby, Jamie Fowler, or Cathy Townsend into the At-Large row without a product/data decision.
 - Do not create separate County Commission District 1 through District 5 rows yet.
-- Future decision needed: keep one countywide At-Large row, or add separate County Commission District 1 through District 5 rows.
+- Option C review documented in docs/county_commission_district_model_review.md: keep the countywide At-Large row for onboarding, ballot grouping, and county election context, and add separate County Commission District 1 through District 5 rows later for Current Officials only after explicit approval.
 - No SQL, schema, seed, or UI change approved by this checklist.
 
 ### 3.5 Florida House District 85
@@ -219,3 +219,4 @@ A row is seedable only if it has verified `name`, `office`, `district_id`, `juri
 Summary:
 - **Seedable now:** Port St. Lucie City Council District 1, St. Lucie School Board District 1, Florida House District 85
 - **Blocked:** Port St. Lucie Mayor, St. Lucie County Commission At-Large, Florida Senate District 27
+

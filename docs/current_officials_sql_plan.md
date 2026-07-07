@@ -259,7 +259,7 @@ WHERE source_url IN (
 The following rows remain blocked per the checklist Seedability Review and are intentionally **not** included anywhere in this plan (no insert values, no draft SQL):
 
 - **Port St. Lucie Mayor** — blocked: `district_id` missing, no Mayor `districts` row exists yet (Section 4 prerequisite unresolved).
-- **St. Lucie County Commission At-Large** — blocked: district model gap (official county source models District 1–5 commissioners, app row is one countywide At-Large office).
+- **St. Lucie County Commission At-Large** - blocked: district model gap. Option C review is documented in docs/county_commission_district_model_review.md: retain the At-Large row for countywide onboarding, ballot grouping, and county election context, and add separate County Commission District 1-5 rows later for Current Officials only after explicit approval.
 - **Florida Senate District 27** — blocked: geography mapping gap (official Senate page district area does not mention St. Lucie or Martin County).
 
 ## 12. Risk check
@@ -371,7 +371,7 @@ This section assembles a single, self-contained review package for the three row
 
 **Rows excluded from this draft** (per Section 11 — not seedable, not included anywhere below):
 - Shannon Martin / Port St. Lucie Mayor — blocked: no Mayor `districts` row exists yet, so `district_id` and a user-assignment model are unresolved.
-- St. Lucie County Commission At-Large — blocked: official county source models District 1–5 commissioners, not one countywide At-Large office (district model gap).
+- St. Lucie County Commission At-Large - blocked: district model gap. Option C review is documented in docs/county_commission_district_model_review.md: retain the At-Large row for countywide onboarding, ballot grouping, and county election context, and add separate County Commission District 1-5 rows later for Current Officials only after explicit approval.
 - Ben Albritton / Florida Senate District 27 — blocked: official Senate district-27 page does not list St. Lucie or Martin County (geography mapping gap).
 
 **Gate 2 source sign-off is closed** for these three draft seed rows (`docs/current_officials_verified_source_checklist.md`, Mike - manual source review - 2026-07-06).
@@ -603,3 +603,4 @@ This section was originally a draft for manual review only. The INSERT above has
   - St. Lucie County Commission At-Large
   - Ben Albritton / Florida Senate District 27
 - **Scope note:** This was a read-only UI verification pass only. No SQL was run during Gate 7. No schema, seed file, app code, SQL migration, or data changes were made during Gate 7.
+
