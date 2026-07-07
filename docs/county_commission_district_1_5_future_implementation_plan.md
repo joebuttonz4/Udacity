@@ -105,6 +105,54 @@ Required source checks:
 
 Stop if any source is missing, redirected unexpectedly, or inconsistent.
 
+
+## Gate 2 district row design worksheet
+
+Status:
+Proposed only. Not approved for implementation.
+
+Purpose:
+Record the proposed district row design for future County Commission District 1 through District 5 rows before any SQL is drafted.
+
+Repo pattern reviewed:
+
+- Existing district table pattern uses `districts.name`, `districts.type`, `districts.city`, and `districts.state`.
+- Existing app-facing county row is `St. Lucie County Commission At-Large`.
+- Existing app-facing county row uses `type = county`.
+- Existing app-facing county row uses `city = Port St. Lucie` and `state = FL`.
+- Existing app-facing district rows use fixed UUIDs.
+- The At-Large row remains retained and unchanged.
+
+Proposed future district rows:
+
+| Proposed name | Proposed type | Proposed city | Proposed state | Proposed fixed UUID | Status |
+|---|---|---|---|---|---|
+| St. Lucie County Commission District 1 | county | Port St. Lucie | FL | 11111111-0000-0000-0000-000000000031 | Proposed only |
+| St. Lucie County Commission District 2 | county | Port St. Lucie | FL | 11111111-0000-0000-0000-000000000032 | Proposed only |
+| St. Lucie County Commission District 3 | county | Port St. Lucie | FL | 11111111-0000-0000-0000-000000000033 | Proposed only |
+| St. Lucie County Commission District 4 | county | Port St. Lucie | FL | 11111111-0000-0000-0000-000000000034 | Proposed only |
+| St. Lucie County Commission District 5 | county | Port St. Lucie | FL | 11111111-0000-0000-0000-000000000035 | Proposed only |
+
+Proposed storage path:
+One-time Supabase SQL only, after Gate 3 app behavior review and explicit approval.
+
+Do not modify:
+
+- seed docs
+- SQL migration files
+- schema files
+- app code
+- existing At-Large row
+
+Gate 2 open decision:
+Mike must explicitly approve the proposed names, type, city/state values, fixed UUIDs, and one-time Supabase SQL path before Gate 4 SQL is drafted.
+
+Gate 2 result:
+Pending explicit approval.
+
+No implementation authorization:
+This worksheet does not approve SQL, schema changes, app code changes, seed changes, migration changes, Supabase data changes, current_officials inserts, or At-Large rename/delete.
+
 ### Gate 2: Confirm district row design
 
 Before adding rows, explicitly approve:
