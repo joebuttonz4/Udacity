@@ -2,6 +2,12 @@
 
 Date: July 7, 2026
 
+## Gate A result
+
+**Status: Passed by manual browser verification, July 7, 2026.**
+
+Passing Gate A does not authorize Gate B. No `current_officials` SQL has been drafted. No Supabase write, schema change, seed change, migration change, `user_districts` change, `officials_for_user` change, app code change, or At-Large row change has been made or is authorized by this update. Gate B drafting requires its own separate future step and its own explicit approval — see Section 7.
+
 ## 1. Scope
 
 Documentation and source verification only, for Gate A of docs/county_commission_current_officials_b2_implementation_plan.md.
@@ -33,33 +39,38 @@ Not acceptable, per hard sourcing rule: campaign sites, news sites, Wikipedia, s
 
 ## 4. Verification table for District 1-5
 
-Attempted method: direct fetch of each official source URL carried forward from the prior plan's Gate 1 worksheet (docs/county_commission_district_1_5_future_implementation_plan.md), using this session's web-fetch tool.
+Two verification attempts were made in sequence:
 
-| District | Proposed official (carried forward, unverified this session) | Proposed office title | Official source URL attempted | Source date / access attempted | Sufficient for Gate B seeding? | Ambiguity / blocker |
+1. **Claude Code direct fetch (blocked).** Direct fetch of each official source URL carried forward from the prior plan's Gate 1 worksheet (docs/county_commission_district_1_5_future_implementation_plan.md), using this session's web-fetch tool. All attempts, including the domain root, returned HTTP 403 Forbidden — see Section 6.
+2. **Manual browser verification by the project owner (passed).** The project owner manually opened the official St. Lucie County Board of County Commissioners page directly in a browser and confirmed the commissioner list shown there.
+
+Manually verified official source page: https://www.stlucieco.gov/departments-and-services/board-of-county-commissioners
+Verified by: project owner (Mike)
+Verified on: July 7, 2026
+Method: direct manual browser access (not this session's fetch tool)
+
+| District | Confirmed official (manual browser verification) | Confirmed office title | Official source URL (manually verified) | Verified on | Sufficient for Gate B seeding? | Ambiguity / blocker |
 |---|---|---|---|---|---|---|
-| District 1 | James Clasby | Commissioner | https://www.stlucieco.gov/departments-and-services/board-of-county-commissioners/district-1-james-clasby | 2026-07-07 (fetch attempted, not retrieved) | **No — not verified this session** | HTTP 403 Forbidden on fetch; see Section 6 |
-| District 2 | Larry Leet | Commissioner, Vice Chair (per prior worksheet, unverified) | https://www.stlucieco.gov/departments-and-services/board-of-county-commissioners/district-2-larry-leet | 2026-07-07 (fetch attempted, not retrieved) | **No — not verified this session** | HTTP 403 Forbidden on fetch; see Section 6 |
-| District 3 | Erin Lowry | Commissioner | https://www.stlucieco.gov/departments-and-services/board-of-county-commissioners/district-3-erin-lowry | 2026-07-07 (fetch attempted, not retrieved) | **No — not verified this session** | HTTP 403 Forbidden on fetch; see Section 6 |
-| District 4 | Jamie Fowler | Commissioner, Chair (per prior worksheet, unverified) | https://www.stlucieco.gov/departments-and-services/board-of-county-commissioners/district-4-jamie-fowler-chair | 2026-07-07 (fetch attempted, not retrieved) | **No — not verified this session** | HTTP 403 Forbidden on fetch; see Section 6 |
-| District 5 | Cathy Townsend | Commissioner | https://www.stlucieco.gov/departments-and-services/board-of-county-commissioners/district-5-cathy-townsend | 2026-07-07 (fetch attempted, not retrieved) | **No — not verified this session** | HTTP 403 Forbidden on fetch; see Section 6 |
-| BOCC overview | — | — | https://www.stlucieco.gov/government/county-commissioners/st-lucie-county-board-of-county-commissioners-bocc | 2026-07-07 (fetch attempted, not retrieved) | **No — not verified this session** | HTTP 403 Forbidden on fetch; see Section 6 |
+| District 1 | James Clasby | Commissioner | https://www.stlucieco.gov/departments-and-services/board-of-county-commissioners | 2026-07-07 | Yes — manually verified | None remaining; Claude Code direct fetch to this domain still returns HTTP 403 (see Section 6), but does not block this manual result |
+| District 2 | Larry Leet | Commissioner, Vice Chair | https://www.stlucieco.gov/departments-and-services/board-of-county-commissioners | 2026-07-07 | Yes — manually verified | Same as above |
+| District 3 | Erin Lowry | Commissioner | https://www.stlucieco.gov/departments-and-services/board-of-county-commissioners | 2026-07-07 | Yes — manually verified | Same as above |
+| District 4 | Jamie Fowler | Commissioner, Chair | https://www.stlucieco.gov/departments-and-services/board-of-county-commissioners | 2026-07-07 | Yes — manually verified | Same as above |
+| District 5 | Cathy Townsend | Commissioner | https://www.stlucieco.gov/departments-and-services/board-of-county-commissioners | 2026-07-07 | Yes — manually verified | Same as above |
 
-No row in this table is marked verified. Every name, office title, and page date above is carried forward unchanged from the prior plan's Gate 1 worksheet — it is not independently confirmed by this Gate A pass.
+All five rows above are confirmed by manual browser verification performed by the project owner, not by this session's automated fetch tool. The five original per-district URLs from the prior plan's Gate 1 worksheet (`district-1-james-clasby`, etc.) were not individually re-opened during this manual pass — the consolidated Board of County Commissioners page above was used instead and is treated as sufficient, since it is on the official `stlucieco.gov` domain and was opened and read directly by a person, per the source standards in Section 3.
 
 ## 5. Findings
 
-- The `stlucieco.gov` domain blocked every fetch attempt made in this session, including the site root (`https://www.stlucieco.gov/`), with HTTP 403 Forbidden. This indicates a site-wide block on this session's automated fetch tool, not a page-specific issue.
-- A domain-restricted web search (`allowed_domains: ["stlucieco.gov"]`) confirmed that the relevant official pages exist as indexed URLs — the Board of County Commissioners page, "Contact Your Commissioners," "Who's My Commissioner," and the BOCC overview page all appear in search results — but search result snippets did not surface individual district-to-commissioner-name content. Search snippets are index metadata, not the page content itself, and are not an acceptable substitute for reading the official page under this document's source standards.
-- The five per-district URLs from the prior plan's Gate 1 worksheet did not appear in either web search performed this session. Their continued existence at those exact paths is unconfirmed (though the fetch attempts against them also returned 403 rather than 404, which is consistent with the site-wide block rather than evidence the pages are gone).
-- No official source was successfully opened and read in this session. No name, district number, office title, or page date could be independently confirmed from an official source under the standards in Section 3.
+- The `stlucieco.gov` domain blocked every fetch attempt made by this session's tooling, including the site root (`https://www.stlucieco.gov/`), with HTTP 403 Forbidden. This indicates a site-wide block on this session's automated fetch tool, not a page-specific issue. This blocker was never resolved for Claude Code's own tooling.
+- A domain-restricted web search (`allowed_domains: ["stlucieco.gov"]`) confirmed that the relevant official pages exist as indexed URLs, and a later search surfaced a corroborating snippet — but snippets alone were treated as insufficient for Gate B (see the "Search-result evidence found" subsection in Section 6).
+- **Gate A has since passed on the basis of manual browser verification performed by the project owner (Mike), not this session's tooling.** The project owner directly opened https://www.stlucieco.gov/departments-and-services/board-of-county-commissioners in a real browser on July 7, 2026, and confirmed the District 1-5 commissioner names and titles in Section 4. This satisfies the source standards in Section 3 — an official page, on the official domain, opened and read directly — even though Claude Code's own fetch tool could not reach the same domain.
+- The five original per-district URLs from the prior plan's Gate 1 worksheet were not individually re-opened during the manual pass. This is not treated as an outstanding gap, since the consolidated Board of County Commissioners page manually verified above lists all five districts directly.
 
 ## 6. Blockers or ambiguities
 
-**Blocker (hard):** This session's web-fetch tool cannot retrieve any page on `stlucieco.gov` — all attempts, including the domain root, returned HTTP 403 Forbidden. This is very likely server-side bot/WAF blocking rather than a transient error, since it was consistent across seven distinct URLs on the same domain, including the homepage.
+**Tooling blocker (still present, no longer blocking Gate A):** This session's web-fetch tool still cannot retrieve any page on `stlucieco.gov` — all attempts, including the domain root, returned HTTP 403 Forbidden. This is very likely server-side bot/WAF blocking rather than a transient error, since it was consistent across seven distinct URLs on the same domain, including the homepage. This blocker is recorded for the record but is superseded for Gate A purposes by the manual browser verification below, since Gate A's source standard (Section 3) requires an official page opened and read, not that it be opened by this session's own automated tool.
 
-**Consequence:** Gate A cannot be passed from this session alone. The verification table in Section 4 carries forward the prior session's claimed findings unverified — those findings were themselves attributed to an unspecified "web source review" process rather than a documented, reproducible page fetch, so they should not be treated as current confirmation either.
-
-**Ambiguity:** It is unknown whether the five per-district URLs (`district-1-james-clasby`, etc.) still exist at those exact paths, whether the district-to-name mapping has changed since 2026-07-07, or whether Larry Leet/Jamie Fowler still hold the Vice Chair/Chair titles referenced in the prior worksheet. None of this can be resolved with the tools available in this session.
+**Resolution:** Gate A has passed based on the project owner's manual browser verification (Section 4), performed independently of this session's blocked fetch tool. The five per-district URLs from the prior plan's Gate 1 worksheet (`district-1-james-clasby`, etc.) were not individually re-confirmed and their continued existence at those exact paths remains unknown, but this is no longer an open ambiguity for Gate A, since the consolidated page manually verified in Section 4 supersedes them as the source of record.
 
 ### Search-result evidence found (not sufficient for Gate B)
 
@@ -83,15 +94,14 @@ This is corroborating evidence only. It does not resolve or downgrade the blocke
 
 ## 7. Recommendation for Gate B
 
-**Do not proceed to Gate B.** Gate A has not passed. A Gate B `current_officials` SQL draft must not be written from the unverified names in Section 4.
+**Gate A has passed. Do not proceed to Gate B yet.**
 
-Before Gate A can be marked passed, one of the following must happen, performed by a person (not this session's automated fetch tool) or a tool capable of reaching `stlucieco.gov`:
+Passing Gate A confirms the District 1-5 names, office titles, and an official source page suitable for a future `source_url`. It does not, by itself, authorize Gate B. Per docs/county_commission_current_officials_b2_implementation_plan.md, Gate B (drafting the `current_officials` INSERT SQL) is a separate step that still requires:
 
-1. A human (e.g. Mike) manually opens each of the six URLs in Section 4 in a real browser, confirms the name/district/title/date shown, and records it back into this document with a screenshot reference or direct quote; or
-2. A different verification session/tool that is not blocked by `stlucieco.gov`'s bot protection performs the same six-URL check and records results in this document; or
-3. An alternate official source (e.g. the Florida Division of Elections, the St. Lucie County Supervisor of Elections site, or a St. Lucie County official public-meeting agenda/roster document) is identified and used instead, if it independently satisfies the source standards in Section 3.
+1. Drafting the Gate B SQL for review (not yet done — no SQL has been drafted by this update); and
+2. Explicit approval from Mike of that draft, stating approved names, approved source URL(s), and approved `is_on_next_ballot` values (not yet obtained).
 
-Whichever path is used, the resulting verification must replace the "not verified this session" markings in Section 4's table with an actual confirmed-or-contradicted result per district before Gate B is drafted.
+No Gate B drafting, `current_officials` insert, or Supabase write is authorized by this Gate A update. This document only records that the source re-verification step (Gate A) is complete.
 
 ## 8. Risk check
 
@@ -99,7 +109,7 @@ Scope: Source verification tooling only. No app, schema, or data risk from this 
 
 No-change risk: County Commission District 1-5 `current_officials` seeding remains blocked, same as before this document. No regression to existing behavior.
 
-Change risk if this blocker were ignored: Drafting or approving Gate B SQL from unverified names risks seeding a `current_officials` row with a wrong commissioner name, wrong district assignment, or a stale/incorrect `source_url` — a direct violation of the project's non-negotiable rule that voting/officials data requires an official, verified source. This is the exact failure mode Gate A exists to prevent.
+Change risk if Gate A's pass were treated as authorizing Gate B directly: Drafting or approving Gate B SQL without its own separate draft-and-approval step would skip the explicit-approval control the B2 plan requires, even though the underlying names are now manually verified. Gate A verifies sources; it does not substitute for Gate B's own SQL draft and Gate C's own explicit approval.
 
 ## 9. Testing / review performed
 
@@ -108,7 +118,8 @@ Change risk if this blocker were ignored: Drafting or approving Gate B SQL from 
 - Attempted direct fetch of 7 URLs on `stlucieco.gov` (five district pages, the BOCC overview page, and the domain root) — all 7 returned HTTP 403 Forbidden.
 - Ran 2 web searches restricted to `allowed_domains: ["stlucieco.gov"]` — both returned only page titles/URLs, no district-to-name content.
 - Ran 1 additional domain-restricted web search that returned a snippet from an official `stlucieco.gov` search result for the St. Lucie County home page, listing District 1-5 names/titles consistent with Section 4 — recorded as corroborating, non-sufficient evidence in Section 6 ("Search-result evidence found").
-- No official source page was successfully opened, read, or quoted directly in this session.
+- No official source page was successfully opened, read, or quoted directly by this session's own tooling.
+- The project owner (Mike) subsequently performed manual browser verification, directly opening https://www.stlucieco.gov/departments-and-services/board-of-county-commissioners on July 7, 2026, and confirmed the District 1-5 names and titles recorded in Section 4. This is the basis on which Gate A is now marked passed.
 - No app code, schema, seed file, migration, or Supabase data was touched by this testing.
 
 ## 10. Hard stops
@@ -122,4 +133,4 @@ Change risk if this blocker were ignored: Drafting or approving Gate B SQL from 
 - Do not change `user_districts`.
 - Do not change `officials_for_user`.
 - Do not rename, delete, replace, or repurpose the St. Lucie County Commission At-Large row.
-- Do not draft Gate B SQL using the unverified names in Section 4 until this Gate A blocker is resolved per Section 7.
+- Do not draft Gate B SQL as part of this update. Gate A passing does not authorize Gate B — Gate B drafting and Gate C explicit approval remain separate, future, unstarted steps (see Section 7).
