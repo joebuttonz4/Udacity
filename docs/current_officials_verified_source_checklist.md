@@ -202,10 +202,10 @@ A row is seedable only if it has verified `name`, `office`, `district_id`, `juri
 | Office | Status | Block reason | Required next decision or source | SQL draftable later? |
 |---|---|---|---|---|
 | Port St. Lucie Mayor | Blocked | `district_id` missing — no Mayor `districts` row exists yet | Resolve Mayor district prerequisite checklist (Section 4): create the districts row, confirm naming/type convention, confirm user assignment model | Yes, after Section 4 decisions are made and a `district_id` is assigned |
-| Port St. Lucie City Council District 1 | Seedable now | None | None required to seed; `Verified by` column is still blank for this row, so a reviewer sign-off before Gate 5 SQL review is still open | Yes |
-| St. Lucie School Board District 1 | Seedable now | None | None required to seed; `Verified by` column is still blank for this row, so a reviewer sign-off before Gate 5 SQL review is still open | Yes |
+| Port St. Lucie City Council District 1 | Seedable now | None | None required to seed | Yes |
+| St. Lucie School Board District 1 | Seedable now | None | None required to seed | Yes |
 | St. Lucie County Commission At-Large | Blocked | `name` and `source_url` are blank; district model gap — official county source shows District 1–5 commissioners, app row is one countywide At-Large office | Product/data decision: keep one At-Large row, or add separate County Commission District 1–5 rows (see "County Commission district model gap") | No, not until the district model decision is made |
-| Florida House District 85 | Seedable now | None | None required to seed; official biography district area includes St. Lucie, consistent with the app's district; `Verified by` column is still blank for this row | Yes |
+| Florida House District 85 | Seedable now | None | None required to seed; official biography district area includes St. Lucie, consistent with the app's district | Yes |
 | Florida Senate District 27 | Blocked | Geography mapping gap — official Senate page district area (Charlotte, DeSoto, Hardee, parts of Lee and Polk) does not mention St. Lucie or Martin County | Verify whether PSL users should map to a different Florida Senate district, or confirm the app's District 27 row is intentionally scoped differently (see "Florida Senate District geography mapping gap") | No, not until the district mapping is resolved |
 
 **Gate 2 note:** Gate 2 source sign-off completed for City Council District 1, School Board District 1, and Florida House District 85 on 2026-07-06.
