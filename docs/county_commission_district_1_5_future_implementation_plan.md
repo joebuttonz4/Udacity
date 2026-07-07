@@ -512,7 +512,7 @@ Only after explicit approval:
 ## Gate 7 verification plan
 
 Status:
-Limited verification pending. Full UI verification is not applicable yet.
+Limited (data-layer) verification complete and passed, 2026-07-07 — see "Gate 7 limited verification result" below. Full UI verification remains not applicable yet.
 
 Purpose:
 Define what can be verified right now, after the Gate 6 `districts`-only insert, and separate it clearly from the UI verification that only becomes possible once the approved B2 `getOfficialsForUser` work and District 1-5 `current_officials` rows exist (a later, separately approved step).
@@ -589,6 +589,33 @@ WHERE district_id IN (
 
 Gate 7 verification plan result:
 Limited verification pending. Items 1-4 above (data-layer checks) can be run now, read-only, against Supabase. Full UI verification remains blocked until the B2 app behavior work and District 1-5 `current_officials` rows are implemented and approved through their own future gate sequence.
+
+### Gate 7 limited verification result
+
+Status:
+Complete and passed.
+
+Date:
+2026-07-07.
+
+Scope:
+Read-only Supabase verification only — the four data-layer checks defined above. Only SELECT queries were run. No Supabase writes were performed.
+
+Results:
+
+1. District 1-5 rows exist — PASS, 5 rows found (all five ids, correct name/type/city/state).
+2. At-Large unchanged — PASS, 1 row found for id `11111111-0000-0000-0000-000000000003` with name St. Lucie County Commission At-Large.
+3. No `current_officials` rows for District 1-5 — PASS, 0 rows found.
+4. No `user_districts` rows for District 1-5 — PASS, 0 rows found.
+5. No unexpected rows appeared in any check.
+
+No app code, schema, seed file, SQL migration, `current_officials`, `user_districts`, or At-Large changes were made by this verification. Repo working tree remained clean throughout.
+
+Current Officials UI status:
+UI verification (Home page, Profile page, District 1-5 officials displaying clearly, no duplicate/confusing entries) remains not applicable — it stays deferred until the approved B2 `getOfficialsForUser` widening is implemented and District 1-5 `current_officials` rows are seeded, both through their own future, separately approved gate sequence. County Commission District 1-5 officials remain blocked from Current Officials display for now.
+
+Gate 7 limited verification result:
+Complete and passed for the data-layer scope defined above. Full Gate 7 UI verification remains pending and blocked on future B2/`current_officials` work.
 
 ### Gate 7: UI verification
 
