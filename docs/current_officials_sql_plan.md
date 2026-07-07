@@ -588,3 +588,18 @@ This section was originally a draft for manual review only. The INSERT above has
   - St. Lucie County Commission At-Large
   - Ben Albritton / Florida Senate District 27
 - **Scope note:** This documentation update records the completed seed and Gate 6 pass only. No schema, seed file, app code, or SQL migration file was changed by this update. `officials_for_user` UI verification (Gate 7) is not covered here.
+
+## Gate 7 verification result — UI verified
+
+- **Date:** 2026-07-06
+- **Method:** read-only UI verification in the running app, after the 3-row Path A seed recorded above.
+- **Result:** Current Officials content appeared correctly on both the Home page and the Profile page.
+- **Rows confirmed showing:**
+  1. **Stephanie Morgan** — City Council Member, District 1
+  2. **Debbie Hawley** — School Board Member, District 1
+  3. **Tobin Rogers "Toby" Overdorf** — State Representative, District 85
+- **Rows excluded — not seeded, not shown:**
+  - Shannon Martin / Port St. Lucie Mayor
+  - St. Lucie County Commission At-Large
+  - Ben Albritton / Florida Senate District 27
+- **Scope note:** This was a read-only UI verification pass only. No SQL was run during Gate 7. No schema, seed file, app code, SQL migration, or data changes were made during Gate 7.
