@@ -52,29 +52,38 @@ function scoreColor(v: number | null | undefined): string {
 function SettingsRow({
   href,
   label,
+  helper,
   disabled = false,
   onClick,
   danger = false,
 }: {
   href?: string
   label: string
+  helper?: string
   disabled?: boolean
   onClick?: () => void
   danger?: boolean
 }) {
   const inner = (
     <div
-      className={`flex items-center justify-between px-4 py-[15px] border-b border-[#F6F8FA] last:border-0 ${
+      className={`flex items-center justify-between gap-3 px-4 py-[15px] border-b border-[#F6F8FA] last:border-0 ${
         disabled ? 'opacity-45' : ''
       }`}
     >
-      <span
-        className={`text-sm [font-family:var(--font-instrument-sans)] ${
-          danger ? 'text-[#DC2626]' : 'text-[#0D1117]'
-        }`}
-      >
-        {label}
-      </span>
+      <div className="min-w-0">
+        <p
+          className={`text-sm [font-family:var(--font-instrument-sans)] ${
+            danger ? 'text-[#DC2626]' : 'text-[#0D1117]'
+          }`}
+        >
+          {label}
+        </p>
+        {helper && (
+          <p className="text-[#9CA3AF] text-xs mt-0.5 leading-snug [font-family:var(--font-instrument-sans)]">
+            {helper}
+          </p>
+        )}
+      </div>
       <svg
         width="16"
         height="16"
@@ -85,6 +94,7 @@ function SettingsRow({
         strokeLinecap="round"
         strokeLinejoin="round"
         aria-hidden="true"
+        className="flex-shrink-0"
       >
         <path d="M9 18l6-6-6-6" />
       </svg>
@@ -242,6 +252,11 @@ export default function ProfilePage() {
                 Settings
               </h2>
               <SettingsRow href="/ballot" label="My Districts" />
+              <SettingsRow
+                href="/profile/county-commission"
+                label="Set County Commission District"
+                helper="Use the official St. Lucie County lookup tool to verify your district."
+              />
               <SettingsRow href="/data-sources" label="Data Sources" />
               <SettingsRow href="/report" label="Report an Issue" />
               <SettingsRow label="Notifications" disabled />
