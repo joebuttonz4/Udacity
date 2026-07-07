@@ -165,6 +165,62 @@ Before adding rows, explicitly approve:
 
 Stop before writing SQL if any naming or type decision is unresolved.
 
+
+## Gate 3 app behavior review worksheet
+
+Status:
+Reviewed. Blocked pending app/data behavior decision.
+
+Purpose:
+Record how future County Commission District 1 through District 5 rows would interact with onboarding, user district assignment, ballot filtering, and Current Officials display.
+
+Files and database behavior reviewed:
+
+- `src/app/onboarding/zip/page.tsx`
+- `src/lib/candidates.ts`
+- `src/lib/officials.ts`
+- `src/components/CurrentOfficialsSection.tsx`
+- `officials_for_user` view definition in the schema addendum
+- `ballot_for_user` behavior in the schema
+
+Findings:
+
+1. Onboarding district assignment:
+   - `src/app/onboarding/zip/page.tsx` hardcodes `ALL_PSL_DISTRICTS`.
+   - Current PSL users are assigned to the existing `St. Lucie County Commission At-Large` row.
+   - Proposed County Commission District 1 through District 5 rows are not currently assigned by onboarding.
+
+2. Current Officials source:
+   - `src/lib/officials.ts` reads from `officials_for_user`.
+   - `CurrentOfficialsSection` renders whatever `officials_for_user` returns.
+   - The UI does not appear to assume only one county official.
+   - The UI would likely display five county commissioner cards if the view returned them.
+   - Current ordering is by official name, not jurisdiction or district number.
+
+3. `officials_for_user` dependency:
+   - The view joins `user_districts` to `current_officials` using exact `district_id`.
+   - A current official appears for a user only when the user has the same `district_id` in `user_districts`.
+
+4. Ballot and candidate filtering:
+   - Candidate filtering reads the user's `user_districts` rows.
+   - `ballot_for_user` also depends on `user_districts`.
+   - Adding District 1 through District 5 rows to `user_districts` could affect ballot/candidate/measure visibility if future rows share `type = county`.
+
+Gate 3 blocker:
+
+Adding County Commission District 1 through District 5 rows and inserting `current_officials` rows would not be sufficient by itself. Users would not see those officials unless one of these future behavior decisions is approved:
+
+- add District 1 through District 5 rows to `user_districts` for relevant users;
+- change onboarding to assign those rows;
+- change `officials_for_user` or Current Officials logic to include county commissioner districts without adding them to ballot-facing user district assignment;
+- create another approved mapping approach that keeps countywide ballot context separate from district-specific Current Officials display.
+
+Gate 3 result:
+Blocked pending explicit app/data behavior decision.
+
+No implementation authorization:
+This worksheet does not approve SQL, schema changes, app code changes, seed changes, migration changes, Supabase data changes, current_officials inserts, user_districts changes, ballot behavior changes, or At-Large rename/delete.
+
 ### Gate 3: Confirm app behavior
 
 Before adding rows, inspect whether adding District 1 through District 5 rows will affect:
