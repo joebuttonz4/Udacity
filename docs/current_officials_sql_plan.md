@@ -64,7 +64,7 @@ It exists to make the next SQL-writing step faster and safer by pre-organizing v
 | `source_url` | https://www.cityofpsl.com/Government/Your-City-Government/Mayor-City-Council/District-1-Stephanie-Morgan | https://www.stlucie.k12.fl.us/our-district/meet-the-board/ | https://housedocs.myfloridahouse.gov/Sections/Representatives/custom/biography.aspx?MemberId=4728 |
 | `source_label` | City of Port St. Lucie District 1 Council profile | St. Lucie Public Schools Meet the Board | Florida House of Representatives member profile |
 | `candidate_id` | NULL | NULL | NULL |
-| `is_on_next_ballot` | Unknown — see Section 6 open decision | Unknown — see Section 6 open decision | Unknown — see Section 6 open decision |
+| `is_on_next_ballot` | false — see Section 6 decision | false — see Section 6 decision | false — see Section 6 decision |
 
 ## 5. Fields that must stay null or blank
 
@@ -72,7 +72,7 @@ It exists to make the next SQL-writing step faster and safer by pre-organizing v
 - `term_start`, `term_end`, `next_election_date` — no exact official date verified for any of the 3 rows; must not be invented or estimated from term length.
 - `candidate_id` — must stay `NULL` for all 3 rows; no verified matching `candidates` row exists for any of the three officials per the checklist.
 
-## 6. Open decision: `is_on_next_ballot` boolean storage
+## 6. Decision: `is_on_next_ballot` boolean storage
 
 Per `Reference Files/civicmarket_schema_addendum_officials_reviews.sql` line 26, the column is defined as:
 
@@ -80,9 +80,19 @@ Per `Reference Files/civicmarket_schema_addendum_officials_reviews.sql` line 26,
 is_on_next_ballot boolean DEFAULT false
 ```
 
-The schema stores a boolean, not a tri-state "Unknown." All 3 rows in this plan are documented as `is_on_next_ballot = Unknown` in the checklist (no official election source has verified ballot status for any of the three).
+The schema stores a boolean, not a tri-state "Unknown." Decision (documented here, not run):
 
-This plan does **not** silently decide how to resolve that mismatch. The draft SQL in Section 7 shows `false` for all 3 rows only as the schema's own column default, consistent with the checklist rule "`is_on_next_ballot` stays unknown or false unless verified by an official election source" — but whether `false` is the correct choice to actually run, versus leaving the column omitted (which also resolves to the same default), or revisiting whether the schema should allow `NULL` for a true tri-state, is flagged here as an **open decision for a future review step**, not resolved by this document.
+- `is_on_next_ballot = true` only when an official election source verifies the current official is on the next ballot.
+- `is_on_next_ballot = false` when ballot status is unverified or unknown — a boolean cannot represent "Unknown," so unverified status is recorded as `false`, not left open.
+- The uncertainty itself (i.e., that ballot status has not been confirmed by an official election source) is preserved in this document's notes/source fields, not guessed into the boolean.
+
+Applied to the three rows in this plan:
+
+1. **Stephanie Morgan, City Council District 1** — `is_on_next_ballot: false`. Reason: District 1 is a 2026 expiring term, but Stephanie Morgan was not verified as listed on the 2026 candidate list in the current checklist batch (`docs/current_officials_verified_source_checklist.md` Section 3.2).
+2. **Debbie Hawley, School Board District 1** — `is_on_next_ballot: false`. Reason: no official election source verified next-ballot status in the current checklist batch (Section 3.3).
+3. **Tobin Rogers "Toby" Overdorf, Florida House District 85** — `is_on_next_ballot: false`. Reason: no official election source verified next-ballot status in the current checklist batch (Section 3.5).
+
+No row in this plan is marked `true`. This decision does not authorize seeding — it only resolves how the draft SQL in Section 8 should treat `is_on_next_ballot` for these three rows when a future Gate 5 review occurs.
 
 ## 7. Pre-run verification queries (run before any future SQL)
 
@@ -143,8 +153,8 @@ ORDER BY policyname;
 ```sql
 -- DRAFT ONLY - DO NOT RUN
 -- This is a shape for future Gate 5 review, not an approved statement.
--- is_on_next_ballot = false is shown per the schema's own column default
--- and is an OPEN DECISION (see Section 6) — not a final call made here.
+-- is_on_next_ballot = false per the Section 6 decision: no official
+-- election source has verified next-ballot status for any of these 3 rows.
 
 INSERT INTO current_officials (
   name,
@@ -256,7 +266,7 @@ The following rows remain blocked per the checklist Seedability Review and are i
 
 - **Schema deployment status is unconfirmed.** `CIVICMARKET_CURRENT_STATE.md` records the `current_officials` table migration as authored (commit `f1b1e31`, July 4 2026) but explicitly notes "Tables not yet in production — deploy pending." Any future SQL step must reconfirm deployment (Section 7, query 0) before attempting an insert.
 - **`Verified by` column is blank for all 3 rows** in the source checklist. The checklist's own Gate 2 ("Official names and offices verified") has no recorded sign-off name/date yet, even though source URLs and values are present. This is a process gap worth closing before Gate 5.
-- **`is_on_next_ballot` boolean-vs-Unknown mismatch is unresolved** (Section 6) — flagged, not decided.
+- **`is_on_next_ballot` boolean-vs-Unknown mismatch is resolved** (Section 6) — unverified ballot status is recorded as `false` for all 3 rows; no row is marked `true` without official election source verification.
 - **No dates were invented.** `term_start`, `term_end`, and `next_election_date` are blank for all 3 rows, consistent with the checklist and the global "do not guess" rules.
 - **No blocked-row data appears anywhere in this plan** — Mayor, County Commission At-Large, and Florida Senate District 27 are excluded from Sections 3, 4, 7, 8, 9, and 10.
 - **This plan is documentation only.** No `.sql` file was created; no SQL was run; no schema, code, UI, or Supabase change was made.
