@@ -210,7 +210,9 @@ A row is seedable only if it has verified `name`, `office`, `district_id`, `juri
 
 **Gate 2 note:** Gate 2 source sign-off completed for City Council District 1, School Board District 1, and Florida House District 85 on 2026-07-06.
 
-**Gate 5 note:** Gate 5 SQL review completed for the three draft seed rows only: City Council District 1, School Board District 1, and Florida House District 85 (Mike - SQL draft review - 2026-07-06). Blocked rows remain excluded: Mayor, County Commission At-Large, Florida Senate District 27. SQL has not been run.
+**Gate 5 note:** Gate 5 SQL review completed for the three draft seed rows only: City Council District 1, School Board District 1, and Florida House District 85 (Mike - SQL draft review - 2026-07-06). Blocked rows remain excluded: Mayor, County Commission At-Large, Florida Senate District 27. SQL has since been run only for the three approved rows; see Gate 6 note below.
+
+**Gate 6 note:** Gate 6 Supabase verification passed on 2026-07-06 for the three seeded rows only: City Council District 1 (Stephanie Morgan), School Board District 1 (Debbie Hawley), and Florida House District 85 (Tobin Rogers "Toby" Overdorf). Pre-run table check, district check (3 expected rows), duplicate current_officials check (0 rows), and candidate-name check (0 rows) all passed; policy check returned 4 policies (SELECT/INSERT/UPDATE/DELETE); INSERT succeeded; post-run query returned exactly 3 rows; required-fields-NULL check returned 0 rows; is_on_next_ballot-false check returned 0 rows. Full result recorded in `docs/current_officials_sql_plan.md`. Blocked rows remain excluded and were not seeded: Shannon Martin / Mayor, County Commission At-Large, Ben Albritton / Florida Senate District 27.
 
 Summary:
 - **Seedable now:** Port St. Lucie City Council District 1, St. Lucie School Board District 1, Florida House District 85

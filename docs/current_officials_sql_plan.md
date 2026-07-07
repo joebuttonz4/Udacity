@@ -378,7 +378,7 @@ This section assembles a single, self-contained review package for the three row
 
 **Gate 5 SQL review sign-off is recorded:** Mike - SQL draft review - 2026-07-06.
 
-**SQL has not been run.** No statement in this section has been executed. A manual Supabase run still requires a separate, explicit user approval and manual copy/paste into Supabase SQL Editor — recording these sign-offs does not itself run anything.
+**SQL has been run.** Under a separate, explicit user approval, this draft was manually copied into Supabase SQL Editor and executed on 2026-07-06. See "Gate 6 verification result — Path A seed complete" below for full pre-run and post-run confirmation.
 
 ### Pre-run SELECT checks (run immediately before the INSERT, in the same Supabase SQL Editor session)
 
@@ -562,4 +562,29 @@ WHERE district_id IN (
 
 ### Reminder
 
-This entire section is a draft for manual review only. No SQL in this section has been run. Copying any statement above into Supabase SQL Editor requires a separate, explicit approval step and a recorded Gate 5 sign-off — not just the existence of this document.
+This section was originally a draft for manual review only. The INSERT above has since been run — see "Gate 6 verification result — Path A seed complete" below. Any further copy/paste of this or any other draft in this document into Supabase SQL Editor still requires a separate, explicit approval step, not just the existence of this document.
+
+## Gate 6 verification result — Path A seed complete
+
+- **Date:** 2026-07-06
+- **Method:** manual copy/paste of the "Final draft INSERT" (above) into Supabase SQL Editor, under separate explicit user approval, following the documented Gate 2 and Gate 5 sign-offs.
+- **Rows seeded (3):**
+  1. **Stephanie Morgan** — office: City Council Member, District 1; district_id: `11111111-0000-0000-0000-000000000001`; jurisdiction_level: city; candidate_id: NULL; is_on_next_ballot: false.
+  2. **Debbie Hawley** — office: School Board Member, District 1; district_id: `11111111-0000-0000-0000-000000000002`; jurisdiction_level: school_board; candidate_id: NULL; is_on_next_ballot: false.
+  3. **Tobin Rogers "Toby" Overdorf** — office: State Representative, District 85; district_id: `11111111-0000-0000-0000-000000000004`; jurisdiction_level: state; candidate_id: NULL; is_on_next_ballot: false.
+- **Pre-run verification results:**
+  - Table check (current_officials exists): PASS
+  - District check: PASS — returned exactly 3 expected district rows
+  - Duplicate current_officials check: PASS — 0 rows
+  - Candidate name check: PASS — 0 rows
+  - Policy check: PASS — 4 policies returned (SELECT, INSERT, UPDATE, DELETE)
+- **Run result:** INSERT succeeded.
+- **Post-run verification results:**
+  - Row count query: PASS — returned exactly 3 rows
+  - Required-fields NULL check: PASS — 0 rows
+  - is_on_next_ballot-false check: PASS — 0 rows
+- **Rows excluded — not seeded:**
+  - Shannon Martin / Port St. Lucie Mayor
+  - St. Lucie County Commission At-Large
+  - Ben Albritton / Florida Senate District 27
+- **Scope note:** This documentation update records the completed seed and Gate 6 pass only. No schema, seed file, app code, or SQL migration file was changed by this update. `officials_for_user` UI verification (Gate 7) is not covered here.
