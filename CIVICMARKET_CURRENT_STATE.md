@@ -1,6 +1,6 @@
 # CivicMarket Current State
 
-Last updated: July 6, 2026
+Last updated: July 7, 2026
 
 ## Authoritative order
 
@@ -106,6 +106,7 @@ Confirmed complete:
 - Current Officials UI shell (read-only) — commit bb8995a, July 5 2026. CurrentOfficialsSection component added; src/lib/officials.ts read-only helper added; Home page integration complete; Profile page integration complete; reads from officials_for_user view only. No fake officials added. No AI review summaries built yet. No Edge Functions built. No candidate or measure pages changed. npm run build passed. npm run lint still fails only on known pre-existing scripts/*.cjs require-import rule errors.
 - Current Officials Path A seed — 3 verified current_officials rows seeded in Supabase, July 6 2026, following documented Gate 1–5 review in docs/current_officials_verified_source_checklist.md and docs/current_officials_sql_plan.md: Stephanie Morgan (City Council Member, District 1; district_id 11111111-0000-0000-0000-000000000001; jurisdiction_level city; candidate_id NULL; is_on_next_ballot false), Debbie Hawley (School Board Member, District 1; district_id 11111111-0000-0000-0000-000000000002; jurisdiction_level school_board; candidate_id NULL; is_on_next_ballot false), Tobin Rogers "Toby" Overdorf (State Representative, District 85; district_id 11111111-0000-0000-0000-000000000004; jurisdiction_level state; candidate_id NULL; is_on_next_ballot false). Gate 6 (Supabase verification queries pass after run) passed: pre-run table/district/duplicate/candidate-name checks passed, policy check returned 4 policies (SELECT/INSERT/UPDATE/DELETE), INSERT succeeded, post-run row count returned exactly 3 rows, required-fields-NULL check returned 0 rows, is_on_next_ballot-false check returned 0 rows. Shannon Martin / Port St. Lucie Mayor, St. Lucie County Commission At-Large, and Ben Albritton / Florida Senate District 27 remain excluded and were not seeded (see checklist Section 7, Seedability Review). No schema, seed file, app code, or SQL migration file changes — Supabase data change only, documented in docs/current_officials_sql_plan.md and docs/current_officials_verified_source_checklist.md.
 - Current Officials Path A Gate 7 UI verification — passed July 6 2026. Read-only UI verification confirmed Current Officials content appeared correctly on both the Home page and the Profile page for the three seeded rows: Stephanie Morgan (City Council District 1), Debbie Hawley (School Board District 1), and Tobin Rogers "Toby" Overdorf (Florida House District 85). No SQL changes were made during Gate 7. No schema, seed file, app code, SQL migration, or data changes were made during Gate 7. Blocked rows remain excluded: Shannon Martin / Port St. Lucie Mayor, St. Lucie County Commission At-Large, Ben Albritton / Florida Senate District 27. Full result recorded in docs/current_officials_sql_plan.md and docs/current_officials_verified_source_checklist.md.
+- County Commission District 1-5 Gate 6 execution — complete and passed, July 7 2026. Scope: Supabase data insert into the `districts` table only, following the documented Gate 1-5 review in docs/county_commission_district_1_5_future_implementation_plan.md (Gate 3 B2 behavior decision, Gate 4 SQL draft, Gate 5 explicit approval from Mike). Preflight SELECT returned 0 conflicts for the five district ids/names. INSERT added exactly 5 rows to `districts`: St. Lucie County Commission District 1 through District 5 (ids 11111111-0000-0000-0000-000000000031 through ...035, type county, city Port St. Lucie, state FL). Post-insert verification returned exactly the 5 approved rows. St. Lucie County Commission At-Large row (id 11111111-0000-0000-0000-000000000003) confirmed unchanged before and after. No current_officials inserts. No user_districts changes. No schema, app code, seed file, or SQL migration changes. Repo working tree remained clean after Supabase execution. Gate 7 (UI/app verification) is pending — not started. Current Officials display for County Commission District 1-5 remains blocked until the approved B2 `getOfficialsForUser` widening and District 1-5 current_officials rows are completed through a later, separately approved gate sequence; see docs/county_commission_district_1_5_future_implementation_plan.md.
 
 ## Immediate priorities
 
@@ -169,6 +170,16 @@ These are intentional data gaps, not app bugs. Do not manufacture, guess, or "fi
 - Do not add ballot measures unless an official source confirms the measure title, type, election/date, summary, and source URL.
 - Locked match rings are expected while candidate_positions and verified voting records are unavailable.
 - This is a data availability limit, not an app bug.
+
+### Current Officials — County Commission District 1-5 gap
+
+- Five St. Lucie County Commission District 1-5 rows now exist in `districts` (Supabase data only, inserted July 7 2026 — see Completed: County Commission District 1-5 Gate 6 execution).
+- No County Commission District 1-5 `current_officials` rows exist yet. Do not add them without their own future gate approval (source verification, SQL draft, and explicit Mike approval).
+- No user is assigned to any District 1-5 row in `user_districts`. This is intentional under the approved Gate 3 B2 behavior model, not an oversight.
+- `officials_for_user` still joins on exact `district_id` equality and has not been changed. A District 1-5 `current_officials` row would not surface to any user today even if one existed, because no user holds a District 1-5 `district_id`.
+- Current Officials display for County Commission District 1-5 remains blocked until the approved B2 widening is implemented in `src/lib/officials.ts` (`getOfficialsForUser`) and District 1-5 `current_officials` rows are seeded — both require their own future approval.
+- St. Lucie County Commission At-Large remains unchanged and continues to serve onboarding, ballot grouping, and county election context exactly as before.
+- Full history: docs/county_commission_district_1_5_future_implementation_plan.md.
 
 ### Current Officials — Mayor district gap
 

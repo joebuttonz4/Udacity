@@ -466,6 +466,38 @@ Approval must state:
 - approved source URLs
 - approved SQL draft
 
+## Gate 6 execution result
+
+Status:
+Complete and passed.
+
+Date:
+2026-07-07.
+
+Scope:
+Supabase data insert into the `districts` table only, per Mike's explicit Gate 5 approval and the Gate 4 districts-only SQL draft above.
+
+Result:
+
+- Preflight SELECT returned 0 conflicts for the five County Commission District 1-5 ids and names.
+- INSERT added exactly 5 rows to `districts`: St. Lucie County Commission District 1 through District 5 (ids `...031` through `...035`, type `county`, city `Port St. Lucie`, state `FL`).
+- Post-insert verification returned exactly the 5 approved rows.
+- St. Lucie County Commission At-Large row (id `11111111-0000-0000-0000-000000000003`) confirmed unchanged before and after — name, type, city, and state all identical.
+- No `current_officials` inserts were made. No County Commission District 1-5 current officials exist as a result of this Gate 6 action.
+- No `user_districts` changes were made.
+- No schema changes, app code changes, seed file changes, or SQL migration changes were made.
+- No At-Large rename, delete, replace, or repurpose occurred.
+- Repo working tree remained clean after Supabase execution — this was a Supabase-only data change.
+
+What exists now:
+Five County Commission District 1-5 rows exist in `districts` in Supabase. Nothing references them yet — no `current_officials` rows, no `user_districts` rows, and no app code reads them. They are inert until the approved B2 work (`getOfficialsForUser` widening) and District 1-5 `current_officials` rows are completed in a later, separately approved step.
+
+Current Officials status:
+Current Officials display for County Commission District 1-5 remains blocked. It stays blocked until (a) the approved B2 app behavior work in `src/lib/officials.ts` is implemented, and (b) District 1-5 `current_officials` rows are drafted, approved, and inserted through their own future gate sequence. This is a data/behavior availability gap, not an app bug.
+
+Gate 7 status:
+Pending UI/app verification. Not started by this update.
+
 ### Gate 6: Supabase execution
 
 Only after explicit approval:
@@ -478,6 +510,9 @@ Only after explicit approval:
 - verify no existing current_officials rows were altered
 
 ### Gate 7: UI verification
+
+Status:
+Pending. Not started — there is no UI to verify yet, since no `current_officials` rows or `getOfficialsForUser` changes exist for County Commission District 1-5.
 
 After data changes only:
 
