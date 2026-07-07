@@ -45,8 +45,8 @@
 
 | Field | Required before seed? | Accepted source type | Collected value | Source URL | Verified by | Notes |
 |---|---|---|---|---|---|---|
-| name | Yes | Official government source | Stephanie Morgan | https://www.cityofpsl.com/Government/Your-City-Government/Mayor-City-Council/District-1-Stephanie-Morgan | | |
-| office | Yes | N/A (fixed value) | City Council Member, District 1 | | | |
+| name | Yes | Official government source | Stephanie Morgan | https://www.cityofpsl.com/Government/Your-City-Government/Mayor-City-Council/District-1-Stephanie-Morgan | Mike - manual source review - 2026-07-06 | |
+| office | Yes | N/A (fixed value) | City Council Member, District 1 | | Mike - manual source review - 2026-07-06 | |
 | district_id | Yes | N/A (internal) | `11111111-0000-0000-0000-000000000001` | | | Matches `districts.name = 'City Council District 1'` per onboarding code |
 | jurisdiction_level | Yes | N/A (fixed value) | city | | | |
 | photo_url | No | Official government source | | | | |
@@ -55,8 +55,8 @@
 | term_start | No, if unverified | Official government source | | | | Leave blank — no exact term_start date confirmed in this batch |
 | term_end | No, if unverified | Official government source | | | | Leave blank — City elections page says District 1 term is expiring in 2026, but no exact term_end date is confirmed in this batch |
 | next_election_date | No, if unverified | Official election source | 2026-08-18 primary; 2026-11-03 general | https://www.cityofpsl.com/Government/Your-City-Government/Departments/City-Clerk/Elections | | City elections page identifies District 1 as a 2026 expiring term, but does not list Stephanie Morgan as a 2026 District 1 candidate |
-| source_url | Yes | Official government source | https://www.cityofpsl.com/Government/Your-City-Government/Mayor-City-Council/District-1-Stephanie-Morgan | https://www.cityofpsl.com/Government/Your-City-Government/Mayor-City-Council/District-1-Stephanie-Morgan | | |
-| source_label | No | N/A | City of Port St. Lucie District 1 Council profile | | | |
+| source_url | Yes | Official government source | https://www.cityofpsl.com/Government/Your-City-Government/Mayor-City-Council/District-1-Stephanie-Morgan | https://www.cityofpsl.com/Government/Your-City-Government/Mayor-City-Council/District-1-Stephanie-Morgan | Mike - manual source review - 2026-07-06 | |
+| source_label | No | N/A | City of Port St. Lucie District 1 Council profile | | Mike - manual source review - 2026-07-06 | |
 | candidate_id | No | N/A (internal match only) | Null | | | No `candidates` row exists for Stephanie Morgan; all 4 known District 1 candidates in `candidates` are logged `is_incumbent = false` and are distinct names |
 | is_on_next_ballot | No, if unverified | Official election source | Unknown | https://www.cityofpsl.com/Government/Your-City-Government/Departments/City-Clerk/Elections | | City elections page identifies District 1 as a 2026 expiring term, but does not list Stephanie Morgan as a 2026 District 1 candidate |
 
@@ -64,8 +64,8 @@
 
 | Field | Required before seed? | Accepted source type | Collected value | Source URL | Verified by | Notes |
 |---|---|---|---|---|---|---|
-| name | Yes | Official government source | Debbie Hawley | https://www.stlucie.k12.fl.us/our-district/meet-the-board/ | | Source shows District #1 |
-| office | Yes | N/A (fixed value) | School Board Member, District 1 | | | |
+| name | Yes | Official government source | Debbie Hawley | https://www.stlucie.k12.fl.us/our-district/meet-the-board/ | Mike - manual source review - 2026-07-06 | Source shows District #1 |
+| office | Yes | N/A (fixed value) | School Board Member, District 1 | | Mike - manual source review - 2026-07-06 | |
 | district_id | Yes | N/A (internal) | `11111111-0000-0000-0000-000000000002` | | | Matches `districts.name = 'School Board District 1'` per onboarding code |
 | jurisdiction_level | Yes | N/A (fixed value) | school_board | | | |
 | photo_url | No | Official government source | | | | |
@@ -74,8 +74,8 @@
 | term_start | No, if unverified | Official government source | | | | Leave blank — no exact official date verified in this batch |
 | term_end | No, if unverified | Official government source | | | | Leave blank — no exact official date verified in this batch |
 | next_election_date | No, if unverified | Official election source | | | | Leave blank — no exact official election date verified in this batch |
-| source_url | Yes | Official government source | https://www.stlucie.k12.fl.us/our-district/meet-the-board/ | https://www.stlucie.k12.fl.us/our-district/meet-the-board/ | | |
-| source_label | No | N/A | St. Lucie Public Schools Meet the Board | | | |
+| source_url | Yes | Official government source | https://www.stlucie.k12.fl.us/our-district/meet-the-board/ | https://www.stlucie.k12.fl.us/our-district/meet-the-board/ | Mike - manual source review - 2026-07-06 | |
+| source_label | No | N/A | St. Lucie Public Schools Meet the Board | | Mike - manual source review - 2026-07-06 | |
 | candidate_id | No | N/A (internal match only) | Null | | | No `candidates` row exists for Debbie Hawley |
 | is_on_next_ballot | No, if unverified | Official election source | Unknown | | | Stays unknown/false unless verified by an official election source |
 
@@ -110,8 +110,8 @@
 
 | Field | Required before seed? | Accepted source type | Collected value | Source URL | Verified by | Notes |
 |---|---|---|---|---|---|---|
-| name | Yes | Official government source | Tobin Rogers "Toby" Overdorf | https://housedocs.myfloridahouse.gov/Sections/Representatives/custom/biography.aspx?MemberId=4728 | | Official biography page lists District 85, covering parts of Martin and St. Lucie |
-| office | Yes | N/A (fixed value) | State Representative, District 85 | | | |
+| name | Yes | Official government source | Tobin Rogers "Toby" Overdorf | https://housedocs.myfloridahouse.gov/Sections/Representatives/custom/biography.aspx?MemberId=4728 | Mike - manual source review - 2026-07-06 | Official biography page lists District 85, covering parts of Martin and St. Lucie |
+| office | Yes | N/A (fixed value) | State Representative, District 85 | | Mike - manual source review - 2026-07-06 | |
 | district_id | Yes | N/A (internal) | `11111111-0000-0000-0000-000000000004` | | | Matches `districts.name = 'FL House District 85'` per onboarding code |
 | jurisdiction_level | Yes | N/A (fixed value) | state | | | |
 | photo_url | No | Official government source | | | | |
@@ -120,8 +120,8 @@
 | term_start | No, if unverified | Official government source | | | | Leave blank — official biography says elected in 2018 and reelected subsequently, but no exact term_start date is confirmed in this batch |
 | term_end | No, if unverified | Official government source | | | | Leave blank — no exact term_end date is confirmed in this batch |
 | next_election_date | No, if unverified | Official election source | | | | Leave blank — no exact official election date is confirmed in this batch |
-| source_url | Yes | Official government source | https://housedocs.myfloridahouse.gov/Sections/Representatives/custom/biography.aspx?MemberId=4728 | https://housedocs.myfloridahouse.gov/Sections/Representatives/custom/biography.aspx?MemberId=4728 | | |
-| source_label | No | N/A | Florida House of Representatives member profile | | | |
+| source_url | Yes | Official government source | https://housedocs.myfloridahouse.gov/Sections/Representatives/custom/biography.aspx?MemberId=4728 | https://housedocs.myfloridahouse.gov/Sections/Representatives/custom/biography.aspx?MemberId=4728 | Mike - manual source review - 2026-07-06 | |
+| source_label | No | N/A | Florida House of Representatives member profile | | Mike - manual source review - 2026-07-06 | |
 | candidate_id | No | N/A (internal match only) | Null | | | No state house candidates currently exist in `candidates` table |
 | is_on_next_ballot | No, if unverified | Official election source | Unknown | | | Stays unknown/false unless verified by an official election source |
 
@@ -204,6 +204,8 @@ A row is seedable only if it has verified `name`, `office`, `district_id`, `juri
 | St. Lucie County Commission At-Large | Blocked | `name` and `source_url` are blank; district model gap — official county source shows District 1–5 commissioners, app row is one countywide At-Large office | Product/data decision: keep one At-Large row, or add separate County Commission District 1–5 rows (see "County Commission district model gap") | No, not until the district model decision is made |
 | Florida House District 85 | Seedable now | None | None required to seed; official biography district area includes St. Lucie, consistent with the app's district; `Verified by` column is still blank for this row | Yes |
 | Florida Senate District 27 | Blocked | Geography mapping gap — official Senate page district area (Charlotte, DeSoto, Hardee, parts of Lee and Polk) does not mention St. Lucie or Martin County | Verify whether PSL users should map to a different Florida Senate district, or confirm the app's District 27 row is intentionally scoped differently (see "Florida Senate District geography mapping gap") | No, not until the district mapping is resolved |
+
+**Gate 2 note:** Gate 2 source sign-off completed for City Council District 1, School Board District 1, and Florida House District 85 on 2026-07-06.
 
 Summary:
 - **Seedable now:** Port St. Lucie City Council District 1, St. Lucie School Board District 1, Florida House District 85

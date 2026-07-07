@@ -374,7 +374,9 @@ This section assembles a single, self-contained review package for the three row
 - St. Lucie County Commission At-Large — blocked: official county source models District 1–5 commissioners, not one countywide At-Large office (district model gap).
 - Ben Albritton / Florida Senate District 27 — blocked: official Senate district-27 page does not list St. Lucie or Martin County (geography mapping gap).
 
-**This is a draft only.** It has not passed Gate 5 (`Seed SQL reviewed before run`) — the checklist's `Verified by` column is still blank for all 3 rows (see Section 12, Risk check). **This SQL must be manually reviewed and Gate 5 sign-off recorded before it is copied into Supabase SQL Editor and run.** No statement in this section has been executed.
+**This is a draft only.** It has not passed Gate 5 (`Seed SQL reviewed before run`). **This SQL must be manually reviewed and Gate 5 sign-off recorded before it is copied into Supabase SQL Editor and run.** No statement in this section has been executed.
+
+Gate 2 source sign-off is now closed for these three draft seed rows (`docs/current_officials_verified_source_checklist.md`, Mike - manual source review - 2026-07-06); Gate 5 review remains open.
 
 ### Pre-run SELECT checks (run immediately before the INSERT, in the same Supabase SQL Editor session)
 
