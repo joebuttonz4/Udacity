@@ -246,3 +246,46 @@ No beta invitations until:
 - /measures/[id] smoke test ✓ — route verified July 2 2026 using temporary test measure (now deleted): hero header, type tag, plain English summary, full text link, Civic DNA Impact scores (including null dimensions showing —), AI draft label, and back-to-ballot nav all rendered correctly. No real PSL ballot measures exist yet for the Nov 2026 election; insert real measures when confirmed by official source.
 - Email confirmation re-enabled ✓ — signup page handles pending confirmation state (session null → check-inbox screen, commit 9c244f8, July 2 2026); Supabase dashboard toggle confirmed ON July 2 2026
 
+
+## County Commission District 1-5 assignment lookup - Gate 11 negative-path/auth-rejection tests
+
+Status: Complete.
+
+Gate 11 verified the County Commission District assignment API negative paths and dry-run behavior with `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE = false`.
+
+Test results:
+- Unauthenticated POST rejected with `401 Unauthorized`.
+- Missing Bearer token rejected with `401 Unauthorized`.
+- Invalid Bearer token rejected with `401 Unauthorized`.
+- Invalid `districtLabel` rejected with `400 Bad Request`.
+- `attestedOfficialLookup: false` rejected with `400 Bad Request`.
+- Valid token, valid `District 1`, and `attestedOfficialLookup: true` returned dry-run only.
+
+Valid dry-run response confirmed:
+- `dryRun: true`
+- Message: `Write path disabled pending explicit approval. No user_districts row was created or modified.`
+- Resolved district: `St. Lucie County Commission District 1`
+- Resolved district ID: `11111111-0000-0000-0000-000000000031`
+- Delete scope limited only to County Commission District 1-5 IDs ending `031` through `035`.
+- At-Large row `11111111-0000-0000-0000-000000000003` remained outside delete scope.
+
+No-change confirmation:
+- No write guard change.
+- No production Supabase writes.
+- No `user_districts` rows intentionally created or modified.
+- No schema changes.
+- No seed changes.
+- No migration changes.
+- No districts changes.
+- No `officials_for_user` changes.
+- No deployment.
+- No `src/lib/officials.ts` changes.
+- No `CurrentOfficialsSection` changes.
+- No At-Large row rename/delete/replace/repurpose.
+- All-five County Commission At-Large expansion was not restored.
+
+Current safety state:
+`ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE = false`
+
+Recommended next state:
+Hold with writes disabled unless a separate explicit approval gate authorizes a single scoped test-account write with rollback plan.
