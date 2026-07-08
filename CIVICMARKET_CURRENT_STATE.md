@@ -289,3 +289,32 @@ Current safety state:
 
 Recommended next state:
 Hold with writes disabled unless a separate explicit approval gate authorizes a single scoped test-account write with rollback plan.
+
+## County Commission District 1-5 assignment lookup - Gate 12 test-account write approval checklist
+
+Status: Draft checklist complete.
+
+Gate 12 created a pre-approval checklist for any future single scoped test-account write.
+
+No write is approved by this document.
+
+Current safety state:
+`ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE = false`
+
+No-change confirmation:
+- No write guard change.
+- No Supabase writes.
+- No user_districts rows created or modified.
+- No schema changes.
+- No seed changes.
+- No migration changes.
+- No districts changes.
+- No officials_for_user changes.
+- No deployment.
+- No src/lib/officials.ts changes.
+- No CurrentOfficialsSection changes.
+- No At-Large row rename/delete/replace/repurpose.
+- All-five County Commission At-Large expansion was not restored.
+
+Next required approval before any write:
+A separate explicit approval must identify the test account, expected district, pre-test state, post-test state, rollback SQL, verification SQL, temporary write-guard change, immediate guard restoration, and no-deploy boundary.
