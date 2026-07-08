@@ -1,6 +1,6 @@
 # CivicMarket Current State
 
-Last updated: July 8, 2026 (County Commission district assignment lookup Gate 16)
+Last updated: July 8, 2026 (County Commission district assignment lookup Gate 17A)
 
 ## Authoritative order
 
@@ -486,4 +486,34 @@ No-change confirmation:
 
 Next step:
 Still requires the exact completed Gate 15 final approval statement (test account user ID, email, district label, expected district ID, and the three explicit write-guard/no-deploy approvals) before write execution can proceed.
+
+## County Commission District 1-5 assignment lookup - Gate 17A non-write code review
+
+Status: Code review complete.
+
+Date: 07-08-2026
+
+Gate 17A performed a non-write, read-only code review of `src/app/profile/county-commission/page.tsx` and `src/app/api/set-county-commission-district/route.ts`:
+`docs/county_commission_district_assignment_lookup_gate_17a_non_write_code_review.md`
+
+All twelve requested checklist items passed: auth/Bearer-token handling, write guard behavior while false, districtLabel validation, attestedOfficialLookup validation, live districts table verification, delete scope limited to District 1-5 only, At-Large exclusion (structural, via exact-name query), no ZIP-only assignment, no address collection or logging, failure handling, dry-run response contents, and Current Officials compatibility after a future valid District 1-5 row.
+
+Two non-blocking hardening recommendations were identified for a future gate to consider before writes are enabled: (1) assert `deleteScopeIds.length === 5` before allowing the write path to proceed, so a future district-name drift fails closed rather than silently narrowing the duplicate-prevention delete scope; (2) consider trimming the dry-run response's internal table/column detail as response-hygiene polish. Neither is safety-critical, and no file was edited as part of this review.
+
+No-change confirmation:
+- No Supabase writes.
+- No user_districts rows created, updated, or deleted.
+- No schema changes.
+- No seed changes.
+- No migration changes.
+- No districts changes.
+- No officials_for_user changes.
+- No deployment.
+- `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains false.
+- No src/lib/officials.ts changes.
+- No CurrentOfficialsSection changes.
+- No At-Large row rename/delete/replace/repurpose.
+
+Next step:
+Unchanged from Gate 16 — still requires the exact completed Gate 15 final approval statement before any write-execution gate can proceed. The two hardening recommendations above, if pursued, require their own separate review/approval gate.
 
