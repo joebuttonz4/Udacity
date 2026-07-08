@@ -318,3 +318,55 @@ No-change confirmation:
 
 Next required approval before any write:
 A separate explicit approval must identify the test account, expected district, pre-test state, post-test state, rollback SQL, verification SQL, temporary write-guard change, immediate guard restoration, and no-deploy boundary.
+
+## County Commission District 1-5 assignment lookup - Gate 13 explicit test-account write approval package
+
+Status: Documentation package complete.
+
+Date: 07-08-2026
+Timestamp: 07:10 pm EST
+
+Gate 13 created the explicit test-account write approval package:
+`docs/county_commission_district_assignment_lookup_gate_13_test_write_approval_package.md`
+
+Gate 13 is documentation and verification planning only.
+
+No write is approved by this document.
+
+Current safety state:
+`ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE = false`
+
+Latest confirmed pushed commit before this current-state update:
+`f3936bc Add County Commission Gate 13 test write approval package`
+
+Gate 13 requires explicit approval before any future write for:
+- Exact test account user ID.
+- Exact test account email.
+- Exact County Commission District label to test.
+- Expected district ID.
+- Exact pre-test user_districts state for that user.
+- Exact post-test expected user_districts state.
+- Rollback SQL.
+- Verification SQL.
+- Temporary decision to enable `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE`.
+- Immediate decision to restore `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE = false` after the test.
+- No-deploy boundary during the test.
+
+No-change confirmation:
+- No write guard change.
+- No Supabase writes.
+- No user_districts rows created or modified.
+- No schema changes.
+- No seed changes.
+- No migration changes.
+- No districts changes.
+- No officials_for_user changes.
+- No deployment.
+- No src/lib/officials.ts changes.
+- No CurrentOfficialsSection changes.
+- No At-Large row rename/delete/replace/repurpose.
+- All-five County Commission At-Large expansion was not restored.
+
+Recommended next state:
+Hold with writes disabled unless a separate explicit approval gate authorizes a single scoped test-account write with rollback plan.
+
