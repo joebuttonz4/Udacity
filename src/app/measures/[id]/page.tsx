@@ -40,6 +40,14 @@ const DIMENSIONS = [
 
 type DimensionKey = (typeof DIMENSIONS)[number]
 
+type Review = {
+  id: string
+  user_id: string
+  rating: number
+  body: string | null
+  created_at: string
+}
+
 function getTypeStyle(type: string) {
   return TYPE_STYLES[type] ?? { tag: 'bg-[#F3F4F6] text-[#6B7280]', label: type }
 }
@@ -67,6 +75,43 @@ function scoreColor(score: number | null | undefined): string {
   return 'text-[#6B7280]'
 }
 
+function formatReviewDate(dateStr: string): string {
+  if (!dateStr) return ''
+  return new Date(dateStr).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+
+function StarIcon({ filled, size = 20 }: { filled: boolean; size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill={filled ? '#F59E0B' : 'none'}
+      stroke={filled ? '#F59E0B' : '#C4C9D4'}
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M12 2.5l2.9 6.6 7.1.7-5.4 4.8 1.6 7-6.2-3.7-6.2 3.7 1.6-7-5.4-4.8 7.1-.7z" />
+    </svg>
+  )
+}
+
+function StarRow({ rating }: { rating: number }) {
+  return (
+    <div className="flex items-center gap-0.5" aria-label={`${rating} out of 5 stars`}>
+      {[1, 2, 3, 4, 5].map((n) => (
+        <StarIcon key={n} filled={n <= rating} size={16} />
+      ))}
+    </div>
+  )
+}
+
 export default function MeasureProfilePage() {
   const router = useRouter()
   const params = useParams()
@@ -76,6 +121,17 @@ export default function MeasureProfilePage() {
   const [dimensions, setDimensions] = useState<MeasureDimensions | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  const [userId, setUserId] = useState<string | null>(null)
+  const [reviews, setReviews] = useState<Review[]>([])
+  const [reviewsLoading, setReviewsLoading] = useState(true)
+  const [reviewsError, setReviewsError] = useState<string | null>(null)
+  const [ratingInput, setRatingInput] = useState(0)
+  const [reviewBody, setReviewBody] = useState('')
+  const [submittingReview, setSubmittingReview] = useState(false)
+  const [reviewSubmitError, setReviewSubmitError] = useState<string | null>(null)
+
+  const myReview = userId ? reviews.find((r) => r.user_id === userId) ?? null : null
 
   useEffect(() => {
     async function loadMeasure() {
@@ -115,6 +171,80 @@ export default function MeasureProfilePage() {
       loadMeasure()
     }
   }, [measureId, router])
+
+  // Reviews load independently of the main measure fetch above, so a reviews
+  // failure never blocks the rest of the measure profile from rendering.
+  useEffect(() => {
+    async function loadReviews() {
+      setReviewsLoading(true)
+      setReviewsError(null)
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+        if (session) setUserId(session.user.id)
+
+        const { data, error: reviewsErr } = await supabase
+          .from('reviews')
+          .select('id, user_id, rating, body, created_at')
+          .eq('measure_id', measureId)
+          .order('created_at', { ascending: false })
+
+        if (reviewsErr) throw reviewsErr
+        setReviews((data ?? []) as Review[])
+      } catch (err: unknown) {
+        setReviewsError(
+          err instanceof Error ? err.message : 'Could not load reviews.'
+        )
+      } finally {
+        setReviewsLoading(false)
+      }
+    }
+
+    if (measureId) {
+      loadReviews()
+    }
+  }, [measureId])
+
+  async function handleSubmitReview(e: React.FormEvent) {
+    e.preventDefault()
+    if (!ratingInput || submittingReview) return
+
+    setSubmittingReview(true)
+    setReviewSubmitError(null)
+
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+
+    if (!session) {
+      router.push('/onboarding')
+      return
+    }
+
+    const { data, error: insertError } = await supabase
+      .from('reviews')
+      .insert({
+        user_id: session.user.id,
+        measure_id: measureId,
+        candidate_id: null,
+        rating: ratingInput,
+        body: reviewBody.trim() || null,
+      })
+      .select('id, user_id, rating, body, created_at')
+      .single()
+
+    if (insertError) {
+      setReviewSubmitError('Something went wrong submitting your review. Please try again.')
+      setSubmittingReview(false)
+      return
+    }
+
+    setReviews((prev) => [data as Review, ...prev])
+    setRatingInput(0)
+    setReviewBody('')
+    setSubmittingReview(false)
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -256,6 +386,112 @@ export default function MeasureProfilePage() {
                 AI-drafted dimension scores are reviewed before publication.
               </p>
             </div>
+
+            {/* Community Reviews */}
+            <section className="bg-white rounded-[20px] shadow-sm p-4">
+              <h2 className="text-[#6B7280] text-[11px] font-semibold uppercase tracking-widest mb-3 [font-family:var(--font-syne)]">
+                Community Reviews
+              </h2>
+
+              {reviewsLoading && (
+                <div className="flex flex-col gap-2.5 animate-pulse">
+                  <div className="h-20 bg-[#F8FAFC] rounded-2xl" />
+                  <div className="h-20 bg-[#F8FAFC] rounded-2xl" />
+                </div>
+              )}
+
+              {!reviewsLoading && reviewsError && (
+                <p className="text-[#9CA3AF] text-sm [font-family:var(--font-instrument-sans)]">
+                  Could not load reviews right now. Please try again later.
+                </p>
+              )}
+
+              {!reviewsLoading && !reviewsError && reviews.length === 0 && (
+                <p className="text-[#9CA3AF] text-sm mb-4 [font-family:var(--font-instrument-sans)]">
+                  No reviews yet. Be the first to share your thoughts.
+                </p>
+              )}
+
+              {!reviewsLoading && !reviewsError && reviews.length > 0 && (
+                <div className="flex flex-col gap-2.5 mb-4">
+                  {reviews.map((r) => (
+                    <div
+                      key={r.id}
+                      className="bg-[#F8FAFC] border border-[#EEF2F7] rounded-2xl p-4"
+                    >
+                      <div className="flex items-center justify-between gap-3 mb-1.5">
+                        <StarRow rating={r.rating} />
+                        <span className="text-[#9CA3AF] text-xs flex-shrink-0 [font-family:var(--font-instrument-sans)]">
+                          {r.user_id === userId ? 'You' : 'Community member'}
+                        </span>
+                      </div>
+                      {r.body && (
+                        <p className="text-[#374151] text-sm leading-6 [font-family:var(--font-instrument-sans)]">
+                          {r.body}
+                        </p>
+                      )}
+                      <p className="text-[#9CA3AF] text-[11px] mt-2 [font-family:var(--font-instrument-sans)]">
+                        {formatReviewDate(r.created_at)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {!reviewsLoading && !reviewsError && (
+                myReview ? (
+                  <div className="bg-[#F0FDF9] border border-[#99F6E4] rounded-xl p-3">
+                    <p className="text-[#0D9488] text-sm font-medium [font-family:var(--font-instrument-sans)]">
+                      You&apos;ve already reviewed this measure. Thanks for sharing your thoughts!
+                    </p>
+                  </div>
+                ) : (
+                  <form onSubmit={handleSubmitReview} className="flex flex-col gap-3">
+                    <div>
+                      <p className="text-[#6B7280] text-xs font-semibold uppercase tracking-widest mb-2 [font-family:var(--font-syne)]">
+                        Your rating
+                      </p>
+                      <div className="flex gap-2" role="radiogroup" aria-label="Star rating">
+                        {[1, 2, 3, 4, 5].map((n) => (
+                          <button
+                            key={n}
+                            type="button"
+                            onClick={() => setRatingInput(n)}
+                            aria-label={`${n} star${n > 1 ? 's' : ''}`}
+                            aria-pressed={n <= ratingInput}
+                            className="p-1"
+                          >
+                            <StarIcon filled={n <= ratingInput} size={24} />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <textarea
+                      value={reviewBody}
+                      onChange={(e) => setReviewBody(e.target.value)}
+                      placeholder="Share your thoughts (optional)"
+                      rows={3}
+                      className="w-full bg-[#F8FAFC] border border-[#EEF2F7] rounded-xl px-3 py-2.5 text-[#0D1117] text-sm placeholder-[#9CA3AF] focus:outline-none focus:border-[#00C9A7] transition-colors resize-none [font-family:var(--font-instrument-sans)]"
+                    />
+
+                    {reviewSubmitError && (
+                      <p className="text-[#DC2626] text-sm [font-family:var(--font-instrument-sans)]">
+                        {reviewSubmitError}
+                      </p>
+                    )}
+
+                    <button
+                      type="submit"
+                      disabled={!ratingInput || submittingReview}
+                      className="w-full bg-[#00C9A7] disabled:opacity-40 text-[#0D1117] font-bold py-3 rounded-xl text-sm active:scale-[0.98] transition-transform [font-family:var(--font-syne)]"
+                    >
+                      {submittingReview ? 'Submitting…' : 'Submit Review'}
+                    </button>
+                  </form>
+                )
+              )}
+            </section>
 
             {/* Report an Inaccuracy */}
             <a
