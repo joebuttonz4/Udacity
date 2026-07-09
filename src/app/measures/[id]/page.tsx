@@ -290,7 +290,7 @@ export default function MeasureProfilePage() {
       {/* Light content area */}
       <div className="flex-1 bg-[#F6F8FA] px-4 pt-5 pb-28 flex flex-col gap-4">
         {error && (
-          <div className="bg-[#FEF2F2] border border-[#FECACA] rounded-[20px] p-4">
+          <div className="bg-[#FEF2F2] border border-[#FECACA] rounded-[24px] p-4">
             <p className="text-[#DC2626] text-sm [font-family:var(--font-instrument-sans)]">
               {error}
             </p>
@@ -305,8 +305,8 @@ export default function MeasureProfilePage() {
 
         {loading && (
           <div className="flex flex-col gap-4 animate-pulse">
-            <div className="h-28 bg-white rounded-[20px] shadow-sm" />
-            <div className="h-48 bg-white rounded-[20px] shadow-sm" />
+            <div className="h-28 bg-white rounded-[24px] shadow-sm" />
+            <div className="h-48 bg-white rounded-[24px] shadow-sm" />
           </div>
         )}
 
@@ -314,7 +314,7 @@ export default function MeasureProfilePage() {
           <>
             {/* Plain English Summary */}
             {measure.plain_english_summary && (
-              <section className="bg-white rounded-[20px] shadow-sm p-4">
+              <section className="bg-white rounded-[24px] shadow-sm p-4">
                 <h2 className="text-[#6B7280] text-[11px] font-semibold uppercase tracking-widest mb-2 [font-family:var(--font-syne)]">
                   What it means
                 </h2>
@@ -330,14 +330,14 @@ export default function MeasureProfilePage() {
                 href={measure.full_text_url!}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block w-full text-center bg-[#0D1117] text-[#00C9A7] font-semibold py-3.5 rounded-[20px] text-sm active:scale-[0.98] transition-transform [font-family:var(--font-syne)]"
+                className="block w-full text-center bg-[#0D1117] text-[#00C9A7] font-semibold py-3.5 rounded-[24px] text-sm active:scale-[0.98] transition-transform [font-family:var(--font-syne)]"
               >
                 Read Full Text ↗
               </a>
             )}
 
             {/* Dimension Scores */}
-            <section className="bg-white rounded-[20px] shadow-sm p-4">
+            <section className="bg-white rounded-[24px] shadow-sm p-4">
               <h2 className="text-[#6B7280] text-[11px] font-semibold uppercase tracking-widest mb-3 [font-family:var(--font-syne)]">
                 Civic DNA Impact
               </h2>
@@ -380,7 +380,7 @@ export default function MeasureProfilePage() {
             </section>
 
             {/* Beta disclaimer */}
-            <div className="bg-[#FFFBEB] border border-[#FDE68A] rounded-[20px] p-4">
+            <div className="bg-[#FFFBEB] border border-[#FDE68A] rounded-[24px] p-4">
               <p className="text-[#92400E] text-xs leading-5 [font-family:var(--font-instrument-sans)]">
                 CivicMarket beta — ballot measure data sourced from official public records.
                 AI-drafted dimension scores are reviewed before publication.
@@ -388,10 +388,17 @@ export default function MeasureProfilePage() {
             </div>
 
             {/* Community Reviews */}
-            <section className="bg-white rounded-[20px] shadow-sm p-4">
-              <h2 className="text-[#6B7280] text-[11px] font-semibold uppercase tracking-widest mb-3 [font-family:var(--font-syne)]">
+            <section className="bg-white rounded-[24px] shadow-sm p-4">
+              <h2 className="text-[#6B7280] text-[11px] font-semibold uppercase tracking-widest mb-1 [font-family:var(--font-syne)]">
                 Community Reviews
               </h2>
+              <p className="text-[#9CA3AF] text-xs mb-3 [font-family:var(--font-instrument-sans)]">
+                Personal opinions from other CivicMarket users — not verified facts. See{' '}
+                <Link href="/corrections" className="text-[#00C9A7] font-medium">
+                  Corrections Policy
+                </Link>{' '}
+                for how factual errors are handled.
+              </p>
 
               {reviewsLoading && (
                 <div className="flex flex-col gap-2.5 animate-pulse">
@@ -500,7 +507,7 @@ export default function MeasureProfilePage() {
               )}&body=${encodeURIComponent(
                 `I'm reporting a possible inaccuracy for the ballot measure "${measure.title}".\n\nDetails:\n`
               )}`}
-              className="block w-full text-center bg-white border border-[#E5E7EB] text-[#6B7280] font-semibold py-3.5 rounded-[20px] text-sm active:scale-[0.98] transition-transform shadow-sm [font-family:var(--font-syne)]"
+              className="block w-full text-center bg-white border border-[#E5E7EB] text-[#6B7280] font-semibold py-3.5 rounded-[24px] text-sm active:scale-[0.98] transition-transform shadow-sm [font-family:var(--font-syne)]"
             >
               Report an Inaccuracy
             </a>

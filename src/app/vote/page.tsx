@@ -89,23 +89,23 @@ export default function VotePage() {
       <div className="flex-1 bg-[#F6F8FA] px-4 pt-5 pb-28 flex flex-col gap-4">
         {loading && (
           <div className="flex flex-col gap-4 animate-pulse">
-            <div className="h-20 bg-white rounded-[20px] shadow-sm" />
-            <div className="h-40 bg-white rounded-[20px] shadow-sm" />
+            <div className="h-20 bg-white rounded-[24px] shadow-sm" />
+            <div className="h-40 bg-white rounded-[24px] shadow-sm" />
           </div>
         )}
 
         {error && (
-          <div className="bg-[#FEF2F2] border border-[#FECACA] rounded-[20px] p-4">
+          <div className="bg-[#FEF2F2] border border-[#FECACA] rounded-[24px] p-4">
             <p className="text-[#DC2626] text-sm [font-family:var(--font-instrument-sans)]">
               {error}
             </p>
           </div>
         )}
 
-        {!loading && (
+        {!loading && !error && (
           <>
             {elections.length > 0 && (
-              <section className="bg-white rounded-[20px] shadow-sm p-4">
+              <section className="bg-white rounded-[24px] shadow-sm p-4">
                 <h2 className="text-[#6B7280] text-[11px] font-semibold uppercase tracking-widest mb-3 [font-family:var(--font-syne)]">
                   Your upcoming elections
                 </h2>
@@ -124,7 +124,7 @@ export default function VotePage() {
               </section>
             )}
 
-            <section className="bg-white rounded-[20px] shadow-sm p-4">
+            <section className="bg-white rounded-[24px] shadow-sm p-4">
               <h2 className="text-[#6B7280] text-[11px] font-semibold uppercase tracking-widest mb-3 [font-family:var(--font-syne)]">
                 Official resources
               </h2>
@@ -151,7 +151,7 @@ export default function VotePage() {
               </div>
             </section>
 
-            <div className="bg-[#FFFBEB] border border-[#FDE68A] rounded-[20px] p-4">
+            <div className="bg-[#FFFBEB] border border-[#FDE68A] rounded-[24px] p-4">
               <p className="text-[#92400E] text-xs leading-5 [font-family:var(--font-instrument-sans)]">
                 Read-only beta. Links open official government websites in a new tab.
                 CivicMarket does not collect or transmit your voting data. Polling place details

@@ -161,7 +161,7 @@ export default function HomePage() {
           <>
             {/* Top matches — overlaps hero edge */}
             <section className="bg-white rounded-[24px] shadow-[0_4px_24px_rgba(0,0,0,0.09)] p-4 -mt-6 relative z-10">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-1">
                 <h2 className="text-[#6B7280] text-[11px] font-semibold uppercase tracking-widest [font-family:var(--font-syne)]">
                   Top matches
                 </h2>
@@ -172,6 +172,9 @@ export default function HomePage() {
                   View all
                 </Link>
               </div>
+              <p className="text-[#94A3B8] text-xs mb-4 [font-family:var(--font-instrument-sans)]">
+                Higher scores mean stronger alignment with your Civic DNA.
+              </p>
 
               {previewCandidates.length === 0 ? (
                 <div className="bg-[#F6F8FA] rounded-xl p-4">

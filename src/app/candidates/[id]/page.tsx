@@ -513,9 +513,16 @@ export default function CandidateProfilePage() {
 
             {/* Community Reviews */}
             <section id="section-reviews" className="bg-white rounded-[24px] shadow-sm p-4">
-              <h2 className="text-[#6B7280] text-[11px] font-semibold uppercase tracking-widest mb-3 [font-family:var(--font-syne)]">
+              <h2 className="text-[#6B7280] text-[11px] font-semibold uppercase tracking-widest mb-1 [font-family:var(--font-syne)]">
                 Community Reviews
               </h2>
+              <p className="text-[#9CA3AF] text-xs mb-3 [font-family:var(--font-instrument-sans)]">
+                Personal opinions from other CivicMarket users — not verified facts. See{' '}
+                <Link href="/corrections" className="text-[#00C9A7] font-medium">
+                  Corrections Policy
+                </Link>{' '}
+                for how factual errors are handled.
+              </p>
 
               {reviewsLoading && (
                 <div className="flex flex-col gap-2.5 animate-pulse">

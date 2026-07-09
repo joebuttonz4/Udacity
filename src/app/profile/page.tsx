@@ -255,7 +255,7 @@ export default function ProfilePage() {
               <SettingsRow
                 href="/profile/county-commission"
                 label="Set County Commission District"
-                helper="Use the official St. Lucie County lookup tool to verify your district."
+                helper="Preview only — saving is disabled until the team explicitly enables it."
               />
               <SettingsRow href="/data-sources" label="Data Sources" />
               <SettingsRow href="/report" label="Report an Issue" />

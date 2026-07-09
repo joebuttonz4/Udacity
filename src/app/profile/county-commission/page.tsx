@@ -105,7 +105,7 @@ export default function CountyCommissionDistrictPage() {
           <div className="h-7 w-3/4 bg-white/10 rounded animate-pulse" />
         </div>
         <div className="flex-1 px-6 py-6 max-w-md w-full mx-auto">
-          <div className="h-40 bg-white rounded-[20px] shadow-sm animate-pulse" />
+          <div className="h-40 bg-white rounded-[24px] shadow-sm animate-pulse" />
         </div>
       </div>
     )
@@ -128,12 +128,15 @@ export default function CountyCommissionDistrictPage() {
           St. Lucie County has five County Commission districts. A ZIP code alone is not
           reliable for finding the right one — district boundaries can cross ZIP code lines.
         </p>
+        <p className="text-amber-400 text-xs font-semibold mt-3 [font-family:var(--font-syne)]">
+          Preview only — saving is currently disabled
+        </p>
       </div>
 
       {/* Content */}
       <div className="flex-1 px-6 py-6 flex flex-col gap-5 max-w-md w-full mx-auto">
         {/* Step 1: official lookup */}
-        <section className="bg-white rounded-[20px] shadow-sm p-5">
+        <section className="bg-white rounded-[24px] shadow-sm p-5">
           <p className="text-[#6B7280] text-[11px] font-semibold uppercase tracking-widest mb-2 [font-family:var(--font-syne)]">
             Step 1
           </p>
@@ -153,7 +156,7 @@ export default function CountyCommissionDistrictPage() {
 
         {/* Step 2: selection form */}
         <form onSubmit={handleSubmit}>
-          <section className="bg-white rounded-[20px] shadow-sm p-5 flex flex-col gap-4">
+          <section className="bg-white rounded-[24px] shadow-sm p-5 flex flex-col gap-4">
             <div>
               <p className="text-[#6B7280] text-[11px] font-semibold uppercase tracking-widest mb-2 [font-family:var(--font-syne)]">
                 Step 2
@@ -231,10 +234,11 @@ export default function CountyCommissionDistrictPage() {
         </form>
 
         {/* Beta disclaimer */}
-        <div className="bg-[#FFFBEB] border border-[#FDE68A] rounded-[20px] p-4">
+        <div className="bg-[#FFFBEB] border border-[#FDE68A] rounded-[24px] p-4">
           <p className="text-[#92400E] text-xs leading-5 [font-family:var(--font-instrument-sans)]">
-            Beta preview. This page does not save your district yet — the write path is
-            under review before going live.
+            Beta preview. Saving is intentionally disabled and will stay disabled unless the
+            CivicMarket team explicitly approves and turns it on. Submitting the form above
+            only shows you a preview of what would happen — nothing is saved.
           </p>
         </div>
       </div>

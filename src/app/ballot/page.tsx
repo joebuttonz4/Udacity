@@ -152,6 +152,13 @@ export default function BallotPage() {
 
       {/* Light content area */}
       <div className="flex-1 bg-[#F6F8FA] px-4 pt-5 pb-28 flex flex-col gap-4">
+        {!loading && !error && candidates.length > 0 && (
+          <p className="text-[#94A3B8] text-xs -mb-1 [font-family:var(--font-instrument-sans)]">
+            Match score rings show how closely a candidate aligns with your Civic DNA. A ring
+            stays locked until you finish the quiz and matching data is available.
+          </p>
+        )}
+
         {loading && (
           <div className="flex flex-col gap-4">
             {[1, 2, 3].map((item) => (
