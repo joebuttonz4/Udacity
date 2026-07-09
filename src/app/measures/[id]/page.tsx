@@ -256,6 +256,18 @@ export default function MeasureProfilePage() {
                 AI-drafted dimension scores are reviewed before publication.
               </p>
             </div>
+
+            {/* Report an Inaccuracy */}
+            <a
+              href={`mailto:inaccuracy@civicmarket.app?subject=${encodeURIComponent(
+                `Possible inaccuracy: ${measure.title}`
+              )}&body=${encodeURIComponent(
+                `I'm reporting a possible inaccuracy for the ballot measure "${measure.title}".\n\nDetails:\n`
+              )}`}
+              className="block w-full text-center bg-white border border-[#E5E7EB] text-[#6B7280] font-semibold py-3.5 rounded-[20px] text-sm active:scale-[0.98] transition-transform shadow-sm [font-family:var(--font-syne)]"
+            >
+              Report an Inaccuracy
+            </a>
           </>
         )}
       </div>
