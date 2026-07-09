@@ -53,6 +53,17 @@ function getScopeStyle(scope: string) {
   return SCOPE_STYLES[scope] ?? SCOPE_STYLES.state
 }
 
+// `candidates` here has already passed the Gate I7/I8 completeness filter in
+// getCandidatesForDistricts (src/lib/candidates.ts), so a group can never end
+// up empty — every key is created from a candidate that is already present.
+//
+// Gate I8 note: if completeness filtering removes some candidates from a race,
+// a district could show only one remaining candidate. That single candidate
+// might be a genuinely uncontested race, or it might look sparse only because
+// other candidates in that race were filtered for missing required fields —
+// the current data model has no way to distinguish the two here. This must be
+// verified manually against real PSL ballot data before Controlled PSL Beta;
+// see docs/internal_beta_gate_i7_data_completeness_hiding_plan.md Section 7.
 function groupByDistrict(
   candidates: CandidateWithContext[]
 ): Record<string, CandidateWithContext[]> {

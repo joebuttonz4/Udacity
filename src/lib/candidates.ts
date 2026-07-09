@@ -70,6 +70,29 @@ export type CandidateWithContext = {
   match_score: number | null
 }
 
+// Gate I7/I8 data-completeness rule: a candidate is only shown to real beta
+// users once it has a name, an office, and a real district/election tie.
+// Bio, photo, funding, and candidate_positions are intentionally NOT required
+// here — those are optional per the existing UI (bio/photo render only when
+// present, funding renders only when source-backed, and a candidate with no
+// candidate_positions correctly falls back to a locked match-score ring
+// rather than being hidden). See docs/internal_beta_gate_i7_data_completeness_hiding_plan.md.
+function hasRequiredCandidateFields(c: {
+  name: string
+  office: string
+  district_name: string
+  election_name: string
+  election_date: string
+}): boolean {
+  return Boolean(
+    c.name?.trim() &&
+      c.office?.trim() &&
+      c.district_name?.trim() &&
+      c.election_name?.trim() &&
+      c.election_date?.trim()
+  )
+}
+
 export async function getCandidatesForDistricts(
   districtIds: string[],
   userId?: string
@@ -91,18 +114,20 @@ export async function getCandidatesForDistricts(
 
   if (error) throw error
 
-  const candidates = ((data ?? []) as unknown as CandidateRow[]).map((row) => ({
-    id: row.id,
-    name: row.name,
-    office: row.office,
-    is_incumbent: row.is_incumbent,
-    district_id: row.district_id,
-    district_name: row.districts?.name ?? '',
-    district_scope: row.districts?.type ?? '',
-    election_name: row.elections?.name ?? '',
-    election_date: row.elections?.election_date ?? '',
-    match_score: null as number | null,
-  }))
+  const candidates = ((data ?? []) as unknown as CandidateRow[])
+    .map((row) => ({
+      id: row.id,
+      name: row.name,
+      office: row.office,
+      is_incumbent: row.is_incumbent,
+      district_id: row.district_id,
+      district_name: row.districts?.name ?? '',
+      district_scope: row.districts?.type ?? '',
+      election_name: row.elections?.name ?? '',
+      election_date: row.elections?.election_date ?? '',
+      match_score: null as number | null,
+    }))
+    .filter(hasRequiredCandidateFields)
 
   if (!userId || candidates.length === 0) return candidates
 
@@ -171,7 +196,7 @@ export async function getCandidateProfile(id: string): Promise<CandidateProfile 
   if (!data) return null
 
   const row = data as unknown as CandidateProfileRow
-  return {
+  const profile: CandidateProfile = {
     id: row.id,
     name: row.name,
     office: row.office,
@@ -184,6 +209,12 @@ export async function getCandidateProfile(id: string): Promise<CandidateProfile 
     election_name: row.elections?.name ?? '',
     election_date: row.elections?.election_date ?? '',
   }
+
+  // Direct navigation to an incomplete candidate profile is treated the same
+  // as "not found" — see hasRequiredCandidateFields above.
+  if (!hasRequiredCandidateFields(profile)) return null
+
+  return profile
 }
 
 export async function getCandidateFunding(candidateId: string): Promise<CandidateFunding | null> {

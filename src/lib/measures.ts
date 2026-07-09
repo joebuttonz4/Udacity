@@ -35,6 +35,33 @@ export type MeasureDimensions = {
   impact_summary: string | null
 }
 
+function isSafeUrl(url: string | null | undefined): boolean {
+  if (!url) return false
+  return url.startsWith('https://') || url.startsWith('http://')
+}
+
+// Gate I7/I8 data-completeness rule: a measure is only shown to real beta
+// users once it has a title, a plain-English summary, a real election tie,
+// and a sourced full-text URL. Measure dimension scores are intentionally
+// NOT required here — a measure with no measure_dimensions row correctly
+// falls back to "No scoring data yet." in the UI rather than being hidden.
+// See docs/internal_beta_gate_i7_data_completeness_hiding_plan.md.
+function hasRequiredMeasureFields(m: {
+  title: string
+  plain_english_summary: string | null
+  election_name: string
+  election_date: string
+  full_text_url: string | null
+}): boolean {
+  return Boolean(
+    m.title?.trim() &&
+      m.plain_english_summary?.trim() &&
+      m.election_name?.trim() &&
+      m.election_date?.trim() &&
+      isSafeUrl(m.full_text_url)
+  )
+}
+
 export async function getMeasureProfile(id: string): Promise<MeasureProfile | null> {
   const { data, error } = await supabase
     .from('ballot_measures')
@@ -56,7 +83,7 @@ export async function getMeasureProfile(id: string): Promise<MeasureProfile | nu
   if (!data) return null
 
   const row = data as unknown as MeasureRow
-  return {
+  const profile: MeasureProfile = {
     id: row.id,
     title: row.title,
     type: row.type,
@@ -67,6 +94,12 @@ export async function getMeasureProfile(id: string): Promise<MeasureProfile | nu
     election_name: row.elections?.name ?? '',
     election_date: row.elections?.election_date ?? '',
   }
+
+  // Direct navigation to an incomplete measure profile is treated the same
+  // as "not found" — see hasRequiredMeasureFields above.
+  if (!hasRequiredMeasureFields(profile)) return null
+
+  return profile
 }
 
 export async function getMeasureDimensions(id: string): Promise<MeasureDimensions | null> {
@@ -101,15 +134,17 @@ export async function getMeasuresForDistricts(districtIds: string[]): Promise<Me
 
   if (error) throw error
 
-  return ((data ?? []) as unknown as MeasureRow[]).map((row) => ({
-    id: row.id,
-    title: row.title,
-    type: row.type,
-    plain_english_summary: row.plain_english_summary,
-    full_text_url: row.full_text_url,
-    district_name: row.districts?.name ?? '',
-    district_scope: row.districts?.type ?? '',
-    election_name: row.elections?.name ?? '',
-    election_date: row.elections?.election_date ?? '',
-  }))
+  return ((data ?? []) as unknown as MeasureRow[])
+    .map((row) => ({
+      id: row.id,
+      title: row.title,
+      type: row.type,
+      plain_english_summary: row.plain_english_summary,
+      full_text_url: row.full_text_url,
+      district_name: row.districts?.name ?? '',
+      district_scope: row.districts?.type ?? '',
+      election_name: row.elections?.name ?? '',
+      election_date: row.elections?.election_date ?? '',
+    }))
+    .filter(hasRequiredMeasureFields)
 }
