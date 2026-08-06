@@ -121,6 +121,8 @@ export default function CandidateProfilePage() {
   const [funding, setFunding] = useState<CandidateFunding | null>(null)
   const [votingRecords, setVotingRecords] = useState<VotingRecord[]>([])
   const [matchScore, setMatchScore] = useState<number | null>(null)
+  const [matchScoreError, setMatchScoreError] = useState(false)
+  const [dnaQuizStatus, setDnaQuizStatus] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<Tab>('overview')
@@ -148,7 +150,7 @@ export default function CandidateProfilePage() {
           return
         }
 
-        const [profileData, fundingData, records, scoreResult] = await Promise.all([
+        const [profileData, fundingData, records, scoreResult, dnaStatusResult] = await Promise.all([
           getCandidateProfile(candidateId),
           getCandidateFunding(candidateId),
           getCandidateVotingRecords(candidateId),
@@ -157,6 +159,11 @@ export default function CandidateProfilePage() {
             .select('score')
             .eq('user_id', session.user.id)
             .eq('candidate_id', candidateId)
+            .maybeSingle(),
+          supabase
+            .from('profiles')
+            .select('dna_quiz_status')
+            .eq('id', session.user.id)
             .maybeSingle(),
         ])
 
@@ -170,6 +177,10 @@ export default function CandidateProfilePage() {
         setFunding(fundingData)
         setVotingRecords(records)
         setMatchScore((scoreResult.data as { score: number } | null)?.score ?? null)
+        setMatchScoreError(Boolean(scoreResult.error))
+        setDnaQuizStatus(
+          (dnaStatusResult.data as { dna_quiz_status: string | null } | null)?.dna_quiz_status ?? null
+        )
       } catch (err: unknown) {
         const message =
           err instanceof Error ? err.message : 'Something went wrong loading this profile.'
@@ -379,6 +390,25 @@ export default function CandidateProfilePage() {
                 <p className="text-[#6B7280] text-sm text-center [font-family:var(--font-instrument-sans)]">
                   {matchLabel(matchScore)}
                 </p>
+              ) : matchScoreError ? (
+                <p className="text-[#6B7280] text-sm text-center [font-family:var(--font-instrument-sans)]">
+                  We couldn&#39;t check this candidate&#39;s match score. Try again shortly.
+                </p>
+              ) : dnaQuizStatus === 'completed' ? (
+                <>
+                  <p className="text-[#6B7280] text-sm text-center [font-family:var(--font-instrument-sans)]">
+                    <span className="block text-[#0D1117] font-semibold [font-family:var(--font-syne)] mb-1">
+                      Why is this locked?
+                    </span>
+                    CivicMarket does not yet have enough verified, source-backed position data to calculate a reliable match score for this candidate. The lock is not a rating and does not mean the candidate is a poor match.
+                  </p>
+                  <Link
+                    href="/data-sources"
+                    className="text-[#00C9A7] text-sm font-semibold [font-family:var(--font-syne)]"
+                  >
+                    How match scores work →
+                  </Link>
+                </>
               ) : (
                 <>
                   <p className="text-[#6B7280] text-sm text-center [font-family:var(--font-instrument-sans)]">

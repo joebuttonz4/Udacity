@@ -106,9 +106,16 @@ export default function DataSourcesPage() {
               Civic DNA scoring
             </h2>
             <p className="text-[#9CA3AF] text-sm leading-6 [font-family:var(--font-instrument-sans)]">
-              Dimension scores for candidates and ballot measures are AI-generated drafts based
-              on voting records, funding patterns, and public statements. All AI draft scores are
-              reviewed and validated by the CivicMarket team before being shown to beta users.
+              Candidate match scores are calculated only when CivicMarket has approved,
+              source-backed position evidence for a candidate — currently, verified official
+              voting records with a documented source link. CivicMarket never infers a
+              candidate&#39;s positions from party affiliation, donors, endorsements, biography,
+              occupation, demographics, campaign branding, or silence. A Civic DNA dimension with
+              no verified evidence stays unavailable rather than being guessed. During the
+              Internal Beta, some candidates may have a fully locked match ring if no verified
+              evidence exists for them yet — the candidate&#39;s card still remains visible
+              everywhere in CivicMarket, and a locked ring is never shown as zero or as a
+              negative rating.
             </p>
           </section>
 

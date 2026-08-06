@@ -260,6 +260,11 @@ export default function BallotPage() {
                           <p className="text-[#94A3B8] text-xs mt-0.5 truncate [font-family:var(--font-instrument-sans)]">
                             {candidate.office}
                           </p>
+                          {candidate.match_score === null && (
+                            <p className="text-[#B8C4D0] text-[11px] mt-1 leading-tight [font-family:var(--font-instrument-sans)]">
+                              Match unavailable — not enough verified position data yet.
+                            </p>
+                          )}
                         </div>
                         <MatchScoreRing score={candidate.match_score} size="sm" />
                       </Link>

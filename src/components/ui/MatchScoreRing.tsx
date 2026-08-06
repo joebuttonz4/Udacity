@@ -40,7 +40,7 @@ export default function MatchScoreRing({ score, size = 'sm' }: MatchScoreRingPro
     return (
       <div
         className={`relative ${CONTAINER_CLASS[size]} flex-shrink-0`}
-        aria-label="Match score locked"
+        aria-label="Match score unavailable. Not enough verified position data."
       >
         <svg width={px} height={px} viewBox={`0 0 ${px} ${px}`}>
           {/* Lighter, airier dashed track for locked state */}

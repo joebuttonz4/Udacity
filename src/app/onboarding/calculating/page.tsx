@@ -1,11 +1,14 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
+type Phase = 'calculating' | 'ready'
+
 export default function CalculatingPage() {
   const router = useRouter()
+  const [phase, setPhase] = useState<Phase>('calculating')
 
   useEffect(() => {
     let cancelled = false
@@ -30,13 +33,43 @@ export default function CalculatingPage() {
       computeMatchScores().catch(() => {}),
       new Promise<void>((resolve) => setTimeout(resolve, 2500)),
     ]).then(() => {
-      if (!cancelled) router.push('/ballot')
+      if (!cancelled) setPhase('ready')
     })
 
     return () => {
       cancelled = true
     }
-  }, [router])
+  }, [])
+
+  if (phase === 'ready') {
+    return (
+      <div className="min-h-screen bg-[#0D1117] flex flex-col items-center justify-center px-6">
+        <div className="w-16 h-16 mb-8 rounded-full bg-[#00C9A7]/10 flex items-center justify-center">
+          <span className="text-3xl" aria-hidden="true">✅</span>
+        </div>
+
+        <h2
+          className="text-2xl font-bold text-white text-center mb-3"
+          style={{ fontFamily: 'var(--font-syne)' }}
+        >
+          Your Civic DNA is ready
+        </h2>
+        <p
+          className="text-[#6B7280] text-sm text-center max-w-xs mb-8"
+          style={{ fontFamily: 'var(--font-instrument-sans)' }}
+        >
+          We saved your Civic DNA. Match scores will appear only for candidates with enough verified position data. Some candidate rings may stay locked during the Internal Beta.
+        </p>
+
+        <button
+          onClick={() => router.push('/ballot')}
+          className="bg-[#00C9A7] text-[#0D1117] font-bold py-3 px-8 rounded-xl text-sm active:scale-[0.98] transition-transform [font-family:var(--font-syne)]"
+        >
+          View my ballot
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-[#0D1117] flex flex-col items-center justify-center px-6">
@@ -60,7 +93,7 @@ export default function CalculatingPage() {
           />
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-2xl">🗳️</span>
+          <span className="text-2xl" aria-hidden="true">🗳️</span>
         </div>
       </div>
 
