@@ -1191,3 +1191,67 @@ Gate I16 made no changes to: `candidates`, `voting_records`, `candidate_position
 
 No database write was performed. No candidate was scored. No candidate was ranked. No political recommendation was produced. No Claude or Anthropic API call was made. No secret file was inspected. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. No County Commission District 1-5 write was performed. No deployment occurred.
 
+## Gate I17 — Locked-Ring Live UI Verification and Current-State Closure
+
+Status: Live verification performed against a real authenticated session. **Locked-ring workstream is closed.** No source-code defect was found. No source-code changes were made.
+
+Date: 08-06-2026
+Timestamp: 12:16 am EST
+
+Current repository baseline recorded at this update:
+- Branch: master
+- Working tree: clean
+- Up to date with origin/master
+- Latest pushed commit: `640a180` Update current state for Gate I16
+- `npm run build` re-confirmed passing before testing began (25 routes, no errors).
+
+### Start-state verification
+
+- `git status` was clean before testing began; latest commit confirmed as `640a180`; `npm run build` passed; no files were modified before testing.
+- The local dev server was initially blocked by the project's Supabase backend returning HTTP 503 on the auth token-refresh endpoint (confirmed via direct network-request inspection). The user paused and resumed the Supabase project mid-gate; connectivity was independently reconfirmed (401, i.e. reachable, on the project's public auth health endpoint) before live testing resumed.
+- The stored browser session had been invalidated by the earlier outage; the user signed back in manually in the browser. No credentials were entered by the assistant at any point, consistent with the standing prohibition on entering passwords into any field.
+- A transient "Jest worker encountered 2 child process exceptions" dev-server runtime error appeared on the first candidate-profile page load. Root-caused to two concurrent local dev-server processes left over from the earlier restart attempt corrupting the shared Turbopack build cache — not an application or Gate I16 code defect. All stray `node` processes were stopped and a single clean `npm run dev` instance was started; the same candidate-profile page then loaded correctly and consistently across every subsequent navigation for the remainder of this gate, confirming the cause was environmental, not a source-code issue.
+
+### Tests performed and results
+
+| Test | Result | Directly observed |
+|---|---|---|
+| 1. Civic DNA complete, candidate data unavailable (ballot) | **PASS** | All four candidates (Eric Reikenis, Fredric Meltzer, Indony Baptiste, Kevin Zimmerman) visible on `/ballot`; each showed identical "Match unavailable — not enough verified position data yet."; no zero score; no candidate-specific wording |
+| 2. Candidate profile locked state | **PASS** | Confirmed live on three candidates (Reikenis, Baptiste, Meltzer): "Why is this locked?" heading, exact approved body text, "How match scores work →" link to `/data-sources`, no quiz-retake prompt, ring not zero, candidate profile remained fully visible (voting record, funding sections) |
+| 3. Civic DNA incomplete state | **BLOCKED** | No second account with `dna_quiz_status` incomplete was available; no database record was altered to manufacture this state, per instruction |
+| 4. Onboarding completion state | **PASS** | "Your Civic DNA is ready" heading and exact approved body text confirmed live (twice); "View my ballot" is a real button requiring a click, not an automatic redirect, confirmed by clicking it and observing navigation to `/ballot`. The initial "calculating" loading frame itself was not captured in a screenshot (tool round-trip latency exceeded its ~2.5s window both attempts) — not claimed as observed |
+| 5. Data Sources page | **PASS** | Live page text extracted directly and matches the approved corrected methodology paragraph exactly, including all six required points |
+| 6. Mobile width (390px) | **BLOCKED (tooling)** | The `resize_window` tool did not change the actual rendered viewport in this environment (`window.innerWidth` remained 1920 after two attempts, confirmed via direct JS inspection) — an environment/tooling limitation, not a defect. No fabricated pass was recorded |
+| 7. 200% zoom | **PASS (approximated method)** | Native browser-zoom keyboard shortcuts are not supported by the browser automation tool; a CSS `zoom: 200%` approximation was used instead. Locked-state text remained fully readable, no clipping, no horizontal scroll, candidate name/office remained visually more prominent than the locked-state text |
+| 8. Keyboard accessibility | **PASS** | Confirmed via real Tab key presses (not simulated): keyboard focus reached a locked candidate card and the "How match scores work →" link in logical order, with a clearly visible focus outline on both, screenshotted |
+| 9. Accessible locked-ring name | **PASS** | Confirmed via direct DOM/accessibility inspection (not inferred from source): all four locked `MatchScoreRing` instances on `/ballot` exposed exactly `"Match score unavailable. Not enough verified position data."` — not announced as error, zero, failed, low-match, or incompatible |
+| 10. Actual error-state distinction | **NOT APPLICABLE (deferred)** | No safe live error-simulation method was available; per instruction this defers to Gate I16's static verification rather than being forced. No network settings, secrets, database rows, schema, or RLS were manipulated to force an error |
+
+No test result was inferred from source code in place of direct observation, except where explicitly marked as deferring to Gate I16's prior static verification (Test 10) or noted as unobserved (part of Test 4).
+
+### Account state directly observed
+
+One existing, previously-approved beta test account was used, signed in by the user directly in the browser (the assistant never entered credentials). This account has a completed Civic DNA quiz and, consistent with every prior gate's findings, zero `match_scores` rows for any of the four real candidates (the pre-existing, documented data-availability gap — unchanged by this gate).
+
+### Checks that relied only on static verification
+
+Test 10 (actual error-state distinction) relied entirely on Gate I16's prior static verification — no live error was safely simulatable. No contradictory live behavior was observed for anything Gate I16 verified statically.
+
+### Defects found
+
+None. The one anomaly encountered (the "Jest worker" runtime error) was investigated, root-caused to a local dev-server process conflict caused by the assistant's own earlier restart attempt, resolved by cleaning up the process tree, and did not recur across any subsequent page load, candidate, or navigation for the rest of the gate.
+
+### Beta-blocker assessment
+
+Tests 3 and 6 remain BLOCKED — Test 3 because no incomplete-Civic-DNA test account was available (and none was manufactured), Test 6 because of a browser-automation tooling limitation in this environment. Neither is treated as a beta blocker: both fall within the closure rule's explicit allowance ("An unavailable incomplete-DNA test account... may remain documented as BLOCKED without preventing closure, provided the relevant static verification passed and no contradictory live behavior was observed"). For Test 6 specifically, the 200% zoom test — a stronger visual-compression check than a simple width resize — was performed live on the same pages and showed no clipping, overlap, or dominance issues, and Gate I15/I16's static review already confirmed no fixed-pixel-width or non-mobile-safe CSS was introduced.
+
+### Workstream closure
+
+**Closed.** All required closure-rule items were directly verified live: the completed-Civic-DNA locked state was verified live (Test 1, Test 2); all four candidates remain visible; identical ballot wording was verified; no zero scores appeared; the candidate profile no longer shows the incorrect quiz-retake prompt for a Civic-DNA-complete account (confirmed live on three separate candidates); no live mobile-layout blocking issue was found (200% zoom check); no accessibility defect was observed (keyboard and accessible-name checks both passed live); no source-code defect was found (the one anomaly was environmental, not code, and did not recur).
+
+### No-change confirmation — Gate I17
+
+Gate I17 made no changes to: `candidates`, `voting_records`, `candidate_positions`, `match_scores`, `civic_dna`, `civic_dna_answers`, `user_districts`, `districts`, `current_officials`, `officials_for_user`, `src/lib/officials.ts`, `CurrentOfficialsSection`, `MatchScoreRing`, the ballot page, the candidate profile, the onboarding calculating page, the Data Sources page, schema, tables, seeds, migrations, CSV files, RLS, grants, source code, PowerShell scripts, API keys, environment variables, network settings, the County Commission write guard, the At-Large row, or deployment state.
+
+No database write was performed. No candidate was scored. No candidate was ranked. No political recommendation was produced. No Claude or Anthropic API call was made. No secret file was inspected. No credentials were entered by the assistant. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. No County Commission District 1-5 write was performed. No deployment occurred. The local dev server started for this gate was stopped after testing concluded, and all stray Node processes (including two left over from an earlier restart attempt) were cleaned up.
+
