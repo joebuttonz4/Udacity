@@ -517,3 +517,99 @@ No-change confirmation:
 Next step:
 Unchanged from Gate 16 — still requires the exact completed Gate 15 final approval statement before any write-execution gate can proceed. The two hardening recommendations above, if pursued, require their own separate review/approval gate.
 
+## Gate I11 — Candidate Positions and Match-Score Readiness Plan
+
+Status: Documentation and planning complete.
+
+Date: 08-05-2026
+Timestamp: 11:20 pm EST
+
+Current repository baseline recorded at this update:
+- Branch: master
+- Working tree: clean
+- Up to date with origin/master
+- Latest pushed commit: `1422b5e` Add session start automation plan
+- Previous pushed commit: `cb49846` Add Gate I11 candidate positions and match-score readiness plan
+
+Created:
+- `docs/internal_beta_gate_i11_candidate_positions_match_score_readiness_plan.md`
+
+Gate I10B confirmed `candidate_positions` has zero rows system-wide. `match_scores` remain empty because `compute-match-scores` skips candidates without `candidate_positions`. This remains a data-readiness limitation, not an onboarding, match-score, or UI defect. `candidate_positions` must not be invented or manually guessed.
+
+Recommended Internal Beta-safe approach:
+1. Keep rings locked when approved evidence does not exist.
+2. Use verified official item-specific voting records when available.
+3. Score those records through a separately approved, server-side Claude scoring process.
+4. Human-review the score and rationale.
+5. Recompute `candidate_positions` only for the affected candidate.
+6. Test match-score generation using one approved test account.
+
+The four current real City Council District 1 candidates are non-incumbents, so verified government voting histories may not exist. Campaign statements, questionnaires, websites, interviews, or candidate-submitted positions require a separate methodology approval gate before use.
+
+Recommended next candidate-data gate:
+Gate I12, documentation-only non-incumbent candidate-position methodology decision.
+
+## Internal Beta Session-Start Automation Plan
+
+Status: Documentation and planning complete.
+
+Date: 08-05-2026
+Timestamp: 11:20 pm EST
+
+Latest confirmed pushed commit before this current-state update:
+`1422b5e Add session start automation plan`
+
+Created:
+- `docs/internal_beta_session_start_automation_plan.md`
+
+Purpose:
+- Reduce repeated manual checks at the start of each Claude or ChatGPT session.
+- Produce a safe, reusable repository-context summary.
+
+Proposed future files, not yet implemented:
+- `tools/civic-session-start.ps1`
+- `docs/generated/CIVICMARKET_SESSION_CONTEXT.md`
+
+The future script should perform read-only Git, required-file, gate, build-script, secret-tracking, and safety checks. It must never display environment-variable values or recursively inspect secret files. It must exclude:
+- `.env`
+- `.env.local`
+- `.env.*`
+- files with `secret`, `password`, `token`, `key`, `credentials`, or `api` in their names
+- `node_modules`
+- `.next`
+- `.git`
+- build output
+- binary files
+
+It should verify `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. It should fail with a nonzero exit code when a required safety check fails.
+
+No PowerShell automation was implemented in this gate.
+
+Recommended next automation gate:
+Review and implement `tools/civic-session-start.ps1` under a separate approved scope.
+
+## Security note — .env.local exposure and remediation
+
+A broad recursive search previously displayed an Anthropic API key from `.env.local`. The exposed key was revoked and replaced. `.env.local` remains ignored and untracked. No API key value should be written into `CIVICMARKET_CURRENT_STATE.md`. Future search and automation commands must exclude environment and secret files.
+
+## No-change confirmation — Gate I11 and session-start automation plan
+
+- No `voting_records` writes.
+- No `candidate_positions` writes.
+- No `match_scores` writes.
+- No Supabase writes.
+- No application source-code changes.
+- No PowerShell script changes.
+- No schema changes.
+- No seeds.
+- No migrations.
+- No CSV changes.
+- No RLS changes.
+- No grant changes.
+- No `user_districts` changes.
+- No County Commission changes.
+- `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`.
+- No At-Large changes.
+- No deployment.
+- No environment-variable values documented.
+
