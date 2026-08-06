@@ -613,3 +613,144 @@ A broad recursive search previously displayed an Anthropic API key from `.env.lo
 - No deployment.
 - No environment-variable values documented.
 
+## Gate I12 — Non-Incumbent Candidate-Position Methodology Decision
+
+Status: Documentation and methodology decision complete.
+
+Date: 08-05-2026
+Timestamp: 11:29 pm EST
+
+Current repository baseline recorded at this update:
+- Branch: master
+- Working tree: clean
+- Up to date with origin/master
+- Latest pushed commit: `55b9748` Add non-incumbent candidate position methodology decision
+- Previous pushed commits:
+  - `cdff013` Update current state for Gate I11 and session automation
+  - `1422b5e` Add session start automation plan
+  - `cb49846` Add Gate I11 candidate positions and match-score readiness plan
+  - `275c66d` Document Gate I10B final result: onboarding and Civic DNA verified live
+
+Created:
+- `docs/internal_beta_gate_i12_non_incumbent_candidate_position_methodology_decision.md`
+
+Build result:
+- `npm run build` passed.
+- 25 routes generated.
+- No build errors.
+
+Gate I12 evaluated:
+- Option A: keep match rings locked.
+- Option B: verified candidate questionnaires.
+- Option C: campaign websites and direct candidate policy statements.
+- Option D: structured candidate-submitted CivicMarket responses.
+- Option E: interviews, debates, and public forums.
+- Option F: mixed source-backed methodology.
+
+### Approved Internal Beta decision
+
+- Keep all four current non-incumbent City Council District 1 candidate match rings locked.
+- Do not create `candidate_positions` rows from campaign statements, questionnaires, websites, interviews, endorsements, or inferred ideology at this time.
+- Do not create direct manual candidate position values.
+- Locked rings are safer than unsupported or inconsistently sourced scores.
+- The four candidates remain visible in the app.
+- Candidates must not be hidden solely because `candidate_positions` data is unavailable.
+- Silence, non-response, or missing evidence must not be scored as neutral or opposed.
+- Unsupported dimensions must remain unavailable rather than being assigned zero.
+
+### Reason for the decision
+
+- Consistent source availability across all four candidates has not been verified.
+- No approved campaign-derived scoring rubric exists.
+- No approved aggregation or conflict-resolution rules exist.
+- No approved candidate dispute and correction workflow exists for campaign-derived position evidence.
+- The current UI does not distinguish campaign-derived positions from voting-record-derived positions.
+- The current `candidate_positions` schema does not store:
+  - source type
+  - source URL per dimension
+  - methodology version
+  - reviewer identity
+  - scoring rationale per source
+  - confidence level
+  - correction or supersession history
+- Presenting campaign statements as equivalent to governing voting history would create transparency and fairness risk.
+- Internal Beta should prefer transparency and incomplete coverage over artificial completeness.
+
+### Prohibited evidence and inference
+
+These must not be used as standalone candidate-position evidence:
+- Party registration
+- Party endorsements
+- Donor or PAC identity
+- Candidate biography
+- Occupation
+- Religion
+- Race or ethnicity
+- Neighborhood or home address
+- Social-media likes or follows
+- Third-party ideological ratings
+- Opponent claims
+- Anonymous posts
+- General campaign slogans
+- AI-generated summaries without retained verified sources
+- Silence or non-response
+- Assumptions based on incumbency or office sought
+
+### Future methodology requirements
+
+Before any future campaign-derived `candidate_positions` data may be created, require a separately approved methodology covering:
+- Consistent source type across candidates
+- Exact candidate identity
+- First-party source evidence
+- Source URL or retained submission record
+- Publication or submission date
+- Access date
+- Full relevant context
+- Exact Civic DNA dimension
+- Neutral scoring rubric
+- Human review
+- Scoring rationale
+- Confidence indicator
+- Methodology version
+- Candidate dispute and correction process
+- Stale-source handling
+- Conflict resolution
+- UI labeling
+- Provenance and audit trail
+- Rollback plan
+- Limited test plan
+
+### Schema and provenance gap
+
+- `candidate_positions` is an aggregate output table and does not currently provide sufficient per-source or per-dimension provenance for campaign-derived evidence.
+- A future methodology may require a separate candidate-position evidence or provenance table.
+- Gate I12 did not create or approve a new table.
+- Campaign-derived evidence must not be silently stored in `voting_records` because campaign statements are not government voting records.
+- Campaign-derived positions must not be silently combined with voting-record-derived positions.
+
+### Recommended next gate
+
+Gate I13 — Non-Incumbent Source Availability Inventory.
+
+Gate I13 should be read-only, documentation-only, and no-scoring.
+
+Its purpose should be:
+- Review all four current real District 1 candidates.
+- Determine whether one consistent first-party source type is available for all four.
+- Record source type, URL, publication date, access date, and coverage by Civic DNA dimension.
+- Do not score statements.
+- Do not create `candidate_positions`.
+- Do not create `match_scores`.
+- Do not write to Supabase.
+- Do not call Claude or Anthropic.
+- Do not change app code or schema.
+- Stop if consistent source availability cannot be established.
+
+Gate I13 was not implemented by this update.
+
+### No-change confirmation — Gate I12
+
+Gate I12 made no changes to: `candidates`, `voting_records`, `candidate_positions`, `match_scores`, `civic_dna`, `civic_dna_answers`, `user_districts`, `districts`, `current_officials`, `officials_for_user`, `src/lib/officials.ts`, `CurrentOfficialsSection`, schema, tables, seeds, migrations, CSV files, RLS, grants, source code, PowerShell scripts, API keys, environment variables, the County Commission write guard, the At-Large row, or deployment state.
+
+`ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. No County Commission District 1-5 write was performed. No deployment occurred.
+
