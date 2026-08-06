@@ -1255,3 +1255,154 @@ Gate I17 made no changes to: `candidates`, `voting_records`, `candidate_position
 
 No database write was performed. No candidate was scored. No candidate was ranked. No political recommendation was produced. No Claude or Anthropic API call was made. No secret file was inspected. No credentials were entered by the assistant. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. No County Commission District 1-5 write was performed. No deployment occurred. The local dev server started for this gate was stopped after testing concluded, and all stray Node processes (including two left over from an earlier restart attempt) were cleaned up.
 
+## Gate I18 — Non-Incumbent Source Availability Re-Check and Closure Decision
+
+Status: Read-only source re-check complete.
+
+Date: 08-06-2026
+Timestamp: 12:40 am EST
+
+Current repository baseline recorded at this update:
+- Branch: master
+- Working tree: clean
+- Up to date with origin/master
+- Latest pushed commit: `24f7f1f` Add non-incumbent source availability recheck
+- Previous pushed commits:
+  - `bada51f` Record Gate I17 live UI verification
+  - `640a180` Update current state for Gate I16
+  - `8d75978` Implement locked-ring communication states
+  - `4bd5840` Update current state for Gate I15
+
+Created:
+- `docs/internal_beta_gate_i18_non_incumbent_source_availability_recheck.md`
+
+Build result:
+- `npm run build` passed.
+- 25 routes generated.
+- No build errors.
+
+No source code or existing documentation was modified during the Gate I18 research step. No candidate was scored, ranked, or recommended.
+
+### Candidates re-checked
+
+- Eric Reikenis
+- Indony Baptiste
+- Kevin Zimmerman
+- Fredric Meltzer
+
+All four remain the current City Council District 1 candidates for PSL City Council D1 2026. Election date: August 18, 2026.
+
+### Equal-research method
+
+- The same source categories and first-party evidence standards were applied to all four candidates.
+- Sources checked included: official campaign websites, candidate-controlled social accounts, candidate-authored policy pages, candidate questionnaires, candidate interviews, debates or forums, official campaign-finance filings, and official election-office candidate listings.
+- Search-result snippets, third-party summaries, endorsements, donors, party, biography, occupation, demographics, campaign branding, silence, and AI-generated summaries were not treated as candidate-position evidence.
+- Campaign-finance filings were used only for identity or candidacy confirmation unless they contained direct policy statements.
+
+### Candidate findings
+
+**Eric Reikenis**
+- Confirmed campaign website remains available: `vote4eric.org`.
+- A Facebook page was found but was not confirmed as candidate-controlled and was not used as first-party position evidence.
+- A newly reviewed About page contained a direct transparency statement.
+- Transparency coverage changed from potential or ambiguous to confirmed substantive coverage.
+- Previously confirmed website-based coverage remained available.
+- No candidate-position score was created.
+
+**Kevin Zimmerman**
+- Confirmed campaign website remains available: `zimmermanforcityofpsl.com`.
+- A Facebook page was found but was not confirmed as candidate-controlled.
+- No material new policy content was found.
+- Gate I13 dimension availability remained unchanged.
+- No candidate-position score was created.
+
+**Fredric Meltzer / Rick Meltzer**
+- Confirmed campaign website remains available: `vote4rickmeltzer.com`.
+- A third-party endorsement page was found and explicitly excluded as candidate-position evidence.
+- The repository identifies the candidate as Fredric Meltzer.
+- The campaign website and official campaign-finance filing use Rick Meltzer.
+- The official campaign-finance filing was re-checked.
+- The St. Lucie County Supervisor of Elections site was also checked where available.
+- No authoritative source was found that explicitly connects Fredric Meltzer and Rick Meltzer.
+- The identity/name discrepancy remains unresolved.
+- No candidate data was changed.
+- No candidate-position score was created.
+
+**Indony Baptiste**
+- No first-party 2026 campaign website was found.
+- No confirmed candidate-controlled social account was found.
+- No candidate questionnaire was found.
+- No candidate interview was found.
+- No debate or forum response was found.
+- No candidate-authored policy source was found.
+- The result remains unchanged from Gate I13.
+- No Civic DNA dimension coverage was established.
+- No candidate-position score was created.
+
+### New sources since Gate I13
+
+- Reikenis: newly reviewed About page with a direct transparency statement; unverified Facebook page, excluded as first-party evidence.
+- Zimmerman: unverified Facebook page, excluded as first-party evidence.
+- Meltzer: third-party endorsement page, excluded as candidate-position evidence.
+- Baptiste: no new source.
+
+None of the newly found material creates a consistent source type across all four candidates.
+
+### Dimension coverage change
+
+- Only one dimension availability classification changed: Eric Reikenis `transparency` moved from potential or ambiguous coverage to confirmed substantive coverage.
+- No other candidate or dimension changed.
+- Education still lacks confirmed first-party coverage across all four candidates.
+- Indony Baptiste still has no confirmed dimension coverage.
+- No -2 through +2 value was assigned.
+- Issue availability was not converted into ideological direction.
+
+### Consistent-source result
+
+Outcome A: No consistent first-party source type exists across all four candidates.
+
+Reason:
+- Reikenis, Zimmerman, and Meltzer have confirmed campaign websites.
+- Baptiste still has no confirmed first-party policy source.
+- Unequal source availability prevents a consistent evidence standard across all four candidates.
+- Weaker or third-party sources must not be used only for the candidate with less web presence.
+- One new transparency statement for Reikenis does not change the cross-candidate outcome.
+
+### Closure decision
+
+- Keep all four candidate match rings locked.
+- Do not create `candidate_positions` for these four candidates.
+- Do not create or recalculate `match_scores` from campaign materials.
+- Do not score missing evidence or silence as zero, neutral, or opposed.
+- Keep all four candidate cards visible.
+- Do not open another immediate candidate-source research gate.
+- Close the current non-incumbent source re-check sequence.
+- Re-check only: after the August 18, 2026 election, or when a material new first-party source is proactively provided and verified.
+- Return focus to the remaining Internal Beta launch blockers.
+
+### Locked-ring workstream status
+
+- Gates I11 through I17 remain complete and closed.
+- Gate I18 did not reopen the locked-ring implementation.
+- The approved locked-ring UI wording remains in place.
+- Gate I18 did not change the app.
+- Gate I18 did not uncover a reason to alter the locked-ring communication.
+- Outcome A supports the existing locked-ring state.
+
+### Next actual beta blocker
+
+The next remaining blocker identified in this document is: **Voting records with official source URLs.**
+
+- This blocker remains intentionally open pending official, item-specific source material.
+- It concerns officials or incumbents and verified voting-record evidence.
+- Gate I18's non-incumbent campaign-source findings do not resolve it.
+- No voting-record data was implemented or fabricated during this current-state update.
+- Gate I19 was not automatically created.
+- The next session should review the broader Internal Beta launch plan and decide the safest next action for the voting-record source blocker.
+
+### No-change confirmation — Gate I18
+
+Gate I18 made no changes to: `candidates`, `voting_records`, `candidate_positions`, `match_scores`, `civic_dna`, `civic_dna_answers`, `user_districts`, `districts`, `current_officials`, `officials_for_user`, `src/lib/officials.ts`, `CurrentOfficialsSection`, `compute-match-scores` logic, Civic DNA scoring, `MatchScoreRing`, the ballot page, the candidate profile, the onboarding calculating page, the Data Sources page, schema, tables, seeds, migrations, CSV files, RLS, grants, source code, PowerShell scripts, API keys, environment variables, the County Commission write guard, the At-Large row, deployment configuration, or deployment state.
+
+No database write was performed. No candidate was scored. No candidate was ranked. No political recommendation was produced. No Claude or Anthropic API call was made. No secret file was inspected. No credentials were entered. No forms were submitted. No candidate or campaign was contacted. No executable file was downloaded. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. No County Commission District 1-5 write was performed. No deployment occurred.
+
