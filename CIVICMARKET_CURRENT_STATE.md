@@ -1029,3 +1029,165 @@ Gate I15 made no changes to: `candidates`, `voting_records`, `candidate_position
 
 No candidate was scored. No candidate was ranked. No political recommendation was produced. No Supabase write was performed. No Claude or Anthropic API call was made. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. No County Commission District 1-5 write was performed. No deployment occurred.
 
+## Gate I16 — Locked-Ring Communication Implementation and Static Verification
+
+Status: Source-code implementation complete.
+
+Date: 08-06-2026
+Timestamp: 12:13 am EST
+
+Current repository baseline recorded at this update:
+- Branch: master
+- Working tree: clean
+- Up to date with origin/master
+- Latest pushed commit: `8d75978` Implement locked-ring communication states
+- Previous pushed commits:
+  - `4bd5840` Update current state for Gate I15
+  - `db86380` Add locked-ring implementation plan
+  - `3eb922b` Add locked-ring internal beta communication plan
+  - `5b7d50e` Update current state for Gate I13
+
+Commit: `8d75978` Implement locked-ring communication states.
+
+Five approved source files were modified:
+- `src/components/ui/MatchScoreRing.tsx`
+- `src/app/ballot/page.tsx`
+- `src/app/candidates/[id]/page.tsx`
+- `src/app/onboarding/calculating/page.tsx`
+- `src/app/data-sources/page.tsx`
+
+No new file was created. A shared copy module was not created because the approved strings were not duplicated across call sites. Inline copy was the simpler implementation.
+
+### MatchScoreRing accessibility change
+
+- The locked-state accessible label changed from "Match score locked" to "Match score unavailable. Not enough verified position data."
+- The locked state is not announced as an error.
+- No zero, low-score, failed-score, or incompatibility wording was introduced.
+- Existing unlocked score behavior remains unchanged.
+- Existing visual dimensions, dashed ring, and lock icon remain unchanged.
+
+### Ballot candidate-card change
+
+- Candidate cards with `candidate.match_score === null` now show "Match unavailable" / "Not enough verified position data yet."
+- The same wording is applied to every locked candidate.
+- Candidate name and office remain visually more prominent.
+- No candidate is hidden.
+- No numeric zero is substituted.
+- No candidate-specific source criticism is displayed.
+- No implication of candidate refusal or non-participation was added.
+
+### Candidate-profile state correction
+
+The candidate profile now reads `profiles.dna_quiz_status` using the existing profile completion field. The `match_scores` query error is captured separately. The profile now distinguishes four states:
+
+**State 1: Valid match score** — existing match-score display remains unchanged.
+
+**State 2: Match-score query error** — the page displays a neutral message that CivicMarket could not check the candidate's match score. Database details are not exposed. The error is not presented as a normal locked-ring state. The user is not incorrectly prompted to retake Civic DNA.
+
+**State 3: Civic DNA complete but candidate match data unavailable** — the profile now shows:
+- Heading: Why is this locked?
+- Body: CivicMarket does not yet have enough verified, source-backed position data to calculate a reliable match score for this candidate. The lock is not a rating and does not mean the candidate is a poor match.
+- A link to the Data Sources page is included.
+- No quiz-retake prompt is shown.
+
+**State 4: Civic DNA incomplete** — the existing Civic DNA quiz prompt remains available. The user may be directed to complete the quiz.
+
+Gate I16 fixed the prior defect where every null match score could incorrectly trigger the Civic DNA quiz prompt.
+
+### Onboarding calculating-screen change
+
+- A `phase` state now separates genuine calculation/loading from successful completion.
+- The screen begins in the calculating phase.
+- After the save and compute flow resolves, it changes to the ready phase.
+- Success heading: Your Civic DNA is ready
+- Success body: We saved your Civic DNA. Match scores will appear only for candidates with enough verified position data. Some candidate rings may stay locked during the Internal Beta.
+- CTA: View my ballot
+- The prior unconditional automatic redirect was replaced with a user-controlled button after completion.
+- Actual error handling remains separate.
+- Decorative emoji was marked `aria-hidden`.
+- Missing candidate-position data does not trigger a quiz-retake prompt.
+
+### Data Sources methodology correction
+
+- Outdated wording suggesting AI-generated candidate-position drafts based on voting records, funding, and public statements was removed.
+- The page now explains that candidate match scores require approved, source-backed candidate-position evidence.
+- Current approved evidence is limited to verified voting records.
+- CivicMarket does not infer candidate positions from: political party, donors, endorsements, biography, occupation, demographics, campaign branding, or silence/missing evidence.
+- Unsupported candidate dimensions remain unavailable.
+- Some candidate rings may remain fully locked during Internal Beta.
+- Candidate cards remain visible regardless of score availability.
+- A locked ring is not zero or a negative rating.
+
+### Validation results
+
+**Build:** `npm run build` passed. 25 routes generated. No build errors.
+
+**Lint:** `npm run lint` reported five errors. All five errors are the previously documented `@typescript-eslint/no-require-imports` errors in `scripts/import-real-psl-data.cjs` and `scripts/validate-real-psl-csvs.cjs`. No new lint errors were introduced in the five Gate I16 files.
+
+**Static verification passed:**
+- Users with completed Civic DNA and unavailable candidate data no longer receive the quiz prompt.
+- Ballot locked-state wording is identical for every candidate.
+- No zero score was introduced.
+- Locked data and actual query errors are separate states.
+- No candidate filtering or visibility logic was changed.
+- All current candidate cards remain visible by code path.
+- The onboarding screen retains a genuine loading phase before success.
+- Data Sources no longer implies automatic or unsupported scoring.
+- MatchScoreRing has a concise accessible locked-state label.
+- No secret file was inspected.
+- `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`.
+
+### Manual verification status
+
+Manual authenticated UI verification was not performed during Gate I16 because no authenticated local UI session was available.
+
+The following remain pending manual verification:
+1. Incomplete Civic DNA user sees the quiz prompt.
+2. Completed Civic DNA user with no candidate score sees "Why is this locked?"
+3. No quiz-retake prompt appears for unavailable candidate data.
+4. All four current City Council District 1 candidates remain visible.
+5. Every locked candidate displays identical wording.
+6. No candidate displays zero because data is unavailable.
+7. Onboarding completion displays "Your Civic DNA is ready."
+8. Ballot and candidate profile fit at 390px width.
+9. Locked messaging remains readable at 200% zoom.
+10. Keyboard navigation and accessible names work correctly.
+11. Actual errors remain visually and textually separate from the locked state.
+
+These checks are not claimed as passed.
+
+### Internal Beta impact
+
+- Gate I12 through Gate I15 decisions remain unchanged.
+- All four current non-incumbent candidate match rings remain locked.
+- Candidate cards remain visible.
+- CivicMarket now explains the locked state more accurately.
+- A locked ring is not zero.
+- A locked ring is not a negative rating.
+- A locked ring is not evidence that a candidate refused to participate.
+- CivicMarket prefers no score over an unsupported score.
+- No candidate-specific source gap is exposed in the locked-ring UI wording.
+
+### Recommended next step
+
+Gate I17 — Locked-Ring Live UI Verification and Current-State Closure.
+
+Gate I17 should:
+- Perform only the pending authenticated UI checks.
+- Verify the four profile and ballot states.
+- Verify 390px mobile behavior.
+- Verify 200% zoom.
+- Verify keyboard and accessible labeling.
+- Verify the onboarding ready state.
+- Confirm actual error states remain distinct.
+- Update `CIVICMARKET_CURRENT_STATE.md` with the results.
+- Avoid additional planning documents unless a real defect is found.
+
+No additional documentation-only planning gate is recommended.
+
+### No-change confirmation — Gate I16
+
+Gate I16 made no changes to: `candidates`, `voting_records`, `candidate_positions`, `match_scores`, `civic_dna`, `civic_dna_answers`, `user_districts`, `districts`, `current_officials`, `officials_for_user`, `src/lib/officials.ts`, `CurrentOfficialsSection`, `compute-match-scores` logic, Civic DNA scoring, schema, tables, seeds, migrations, CSV files, RLS, grants, PowerShell scripts, API keys, environment variables, the County Commission write guard, the At-Large row, deployment configuration, or deployment state.
+
+No database write was performed. No candidate was scored. No candidate was ranked. No political recommendation was produced. No Claude or Anthropic API call was made. No secret file was inspected. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. No County Commission District 1-5 write was performed. No deployment occurred.
+
