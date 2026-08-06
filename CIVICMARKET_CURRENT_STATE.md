@@ -891,3 +891,141 @@ Gate I13 made no changes to: `candidates`, `voting_records`, `candidate_position
 
 No candidate was scored. No candidate was ranked. No political recommendation was produced. No Claude or Anthropic API call was made. No Supabase write was performed. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. No County Commission District 1-5 write was performed. No deployment occurred.
 
+## Gate I15 — Locked-Ring Communication Implementation Plan
+
+Status: Documentation-only implementation plan complete.
+
+Date: 08-05-2026
+Timestamp: 11:52 pm EST
+
+Current repository baseline recorded at this update:
+- Branch: master
+- Working tree: clean
+- Up to date with origin/master
+- Latest pushed commit: `db86380` Add locked-ring implementation plan
+- Previous pushed commits:
+  - `3eb922b` Add locked-ring internal beta communication plan
+  - `5b7d50e` Update current state for Gate I13
+  - `0aedbc6` Add non-incumbent source availability inventory
+  - `2935bf1` Update current state for Gate I12
+
+Created:
+- `docs/internal_beta_gate_i15_locked_ring_implementation_plan.md`
+
+Build result:
+- `npm run build` passed.
+- 25 routes generated.
+- No build errors.
+
+No source code was modified. No implementation or deployment occurred.
+
+### Planned Gate I16 source files
+
+- `src/components/ui/MatchScoreRing.tsx` — strengthen locked-state accessible labeling.
+- `src/app/ballot/page.tsx` — add the approved locked-ring label and helper text to candidate cards.
+- `src/app/candidates/[id]/page.tsx` — correct the current state logic that treats every null match score as an incomplete Civic DNA quiz.
+- `src/app/onboarding/calculating/page.tsx` — replace indefinite calculating language with a successful Civic DNA completion message.
+- `src/app/data-sources/page.tsx` — correct the outdated candidate scoring methodology paragraph.
+- Optional: `src/lib/copy/lockedRing.ts` — small reusable constants module for approved locked-ring wording. Not required if Gate I16 determines inline copy is clearer and less complex.
+
+### Candidate-profile logic defect
+
+- The candidate profile currently checks `matchScore === null` without checking whether the user completed Civic DNA.
+- As a result, a user who already completed Civic DNA may still see: "Take the Civic DNA quiz to unlock your personal match score."
+- This incorrectly combines two separate states: Civic DNA not completed, and Civic DNA completed but candidate-position data unavailable.
+- Gate I15 proposes reading `profiles.dna_quiz_status` using the same general pattern already used by the Profile page.
+- Future logic should distinguish:
+  1. Civic DNA incomplete
+  2. Civic DNA complete but candidate match data unavailable
+  3. Valid match score available
+  4. Actual candidate, match-score, network, or database error
+- Missing candidate-position data must not trigger a quiz-retake prompt.
+- A null score must not automatically be treated as an application error.
+- A match-score query error must not silently be presented as a normal locked-ring state.
+
+### Approved copy direction (planning only, not yet implemented)
+
+**Ballot card**
+- Label: Match unavailable
+- Helper: Not enough verified position data yet.
+
+**Candidate profile**
+- Heading: Why is this locked?
+- Body: CivicMarket does not yet have enough verified, source-backed position data to calculate a reliable match score for this candidate. The lock is not a rating and does not mean the candidate is a poor match.
+
+**Onboarding calculating screen**
+- Heading: Your Civic DNA is ready
+- Body: We saved your Civic DNA. Match scores will appear only for candidates with enough verified position data. Some candidate rings may stay locked during the Internal Beta.
+- CTA: View my ballot
+
+Gate I15 approved this direction for implementation planning only. The wording has not yet been implemented.
+
+### Accessibility and mobile requirements
+
+- Do not rely on the lock icon alone.
+- Provide visible locked-state text.
+- Provide a concise accessible name or aria-label.
+- Do not rely on color alone.
+- Do not announce a locked ring as an error.
+- Do not use hover-only explanations.
+- Maintain keyboard and touch access.
+- Verify at 200% zoom.
+- Verify at 390px mobile width.
+- Avoid clipping and horizontal scrolling.
+- Keep candidate names and offices visually more prominent than the locked-state explanation.
+- Apply identical locked-state wording to every candidate.
+
+### Gate I16 test matrix (planned)
+
+1. User has not completed Civic DNA.
+2. User completed Civic DNA and candidate data is unavailable.
+3. User completed Civic DNA and a valid match score exists.
+4. Candidate query fails.
+5. Match-score query fails.
+6. Ballot page at 390px width.
+7. Candidate profile at 390px width.
+8. 200% zoom.
+9. Keyboard navigation.
+10. Screen-reader accessible label.
+11. All four current City Council District 1 candidates remain visible.
+12. No candidate displays a zero score merely because evidence is unavailable.
+13. No quiz-retake prompt appears solely because candidate-position data is unavailable.
+14. Actual application errors remain distinct from locked candidate-data states.
+
+### Internal Beta decision carried forward
+
+- Gate I12, Gate I13, and Gate I14 decisions remain unchanged.
+- All four current non-incumbent candidate match rings remain locked.
+- Candidate cards remain visible.
+- A locked ring is not zero.
+- A locked ring is not a poor match.
+- A locked ring is not evidence of candidate non-participation.
+- No unsupported score should be shown.
+- No candidate-specific source criticism should appear in locked-ring UI copy.
+- Identical wording and treatment should apply to every locked candidate.
+- CivicMarket prefers no score over an unsupported score.
+
+### Recommended next gate
+
+Gate I16 — Locked-Ring Communication Implementation and Verification.
+
+Gate I16 may:
+- Make the approved source-code changes.
+- Add reusable copy constants only if they reduce duplication without unnecessary complexity.
+- Correct candidate-profile state logic.
+- Add visible and accessible locked-ring wording.
+- Update onboarding success communication.
+- Update Data Sources methodology wording.
+- Run `npm run build`.
+- Run `npm run lint`.
+- Perform mobile, accessibility, and state-distinction checks.
+- Perform a live Internal Beta smoke test where practical.
+
+Avoid splitting Gate I16 into additional documentation-only gates unless a real blocker or unexpected risk appears.
+
+### No-change confirmation — Gate I15
+
+Gate I15 made no changes to: `candidates`, `voting_records`, `candidate_positions`, `match_scores`, `civic_dna`, `civic_dna_answers`, `user_districts`, `districts`, `current_officials`, `officials_for_user`, `src/lib/officials.ts`, `CurrentOfficialsSection`, `compute-match-scores`, `MatchScoreRing`, the ballot page, the candidate profile, the onboarding calculating page, the Data Sources page, schema, tables, seeds, migrations, CSV files, RLS, grants, source code, PowerShell scripts, API keys, environment variables, the County Commission write guard, the At-Large row, or deployment state.
+
+No candidate was scored. No candidate was ranked. No political recommendation was produced. No Supabase write was performed. No Claude or Anthropic API call was made. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. No County Commission District 1-5 write was performed. No deployment occurred.
+
