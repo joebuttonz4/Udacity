@@ -754,3 +754,140 @@ Gate I12 made no changes to: `candidates`, `voting_records`, `candidate_position
 
 `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. No County Commission District 1-5 write was performed. No deployment occurred.
 
+## Gate I13 — Non-Incumbent Source Availability Inventory
+
+Status: Read-only source inventory complete.
+
+Date: 08-05-2026
+Timestamp: 11:38 pm EST
+
+Current repository baseline recorded at this update:
+- Branch: master
+- Working tree: clean
+- Up to date with origin/master
+- Latest pushed commit: `0aedbc6` Add non-incumbent source availability inventory
+- Previous pushed commits:
+  - `2935bf1` Update current state for Gate I12
+  - `55b9748` Add non-incumbent candidate position methodology decision
+  - `cdff013` Update current state for Gate I11 and session automation
+  - `1422b5e` Add session start automation plan
+
+Created:
+- `docs/internal_beta_gate_i13_non_incumbent_source_availability_inventory.md`
+
+Build result:
+- `npm run build` passed.
+- 25 routes generated.
+- No build errors.
+
+Candidate names verified against `candidates_real.csv`:
+- Eric Reikenis
+- Indony Baptiste
+- Kevin Zimmerman
+- Fredric Meltzer
+
+All four are City Council District 1 candidates in PSL City Council D1 2026. No candidate was scored, ranked, or recommended.
+
+### Source findings — Eric Reikenis
+
+- Confirmed first-party campaign website: `vote4eric.org`.
+- Substantive policy content was found.
+- Potential source coverage was identified for: `growth_development`, `taxation_spending`, `environment`, `public_safety`.
+- `housing` and `transparency` coverage remained ambiguous.
+- No candidate-position score was created.
+
+### Source findings — Kevin Zimmerman
+
+- Confirmed first-party campaign website: `zimmermanforcityofpsl.com`.
+- Substantive policy content was found.
+- Potential source coverage was identified for: `growth_development`, `taxation_spending`, `environment`, `public_safety`.
+- `housing` and `transparency` coverage remained ambiguous.
+- A second domain found during research did not resolve and was not used.
+- No candidate-position score was created.
+
+### Source findings — Fredric Meltzer
+
+- Confirmed first-party campaign website: `vote4rickmeltzer.com`.
+- Substantive policy content was found.
+- Potential source coverage was identified for: `growth_development`, `taxation_spending`, `environment`, transparency-adjacent accountability language.
+- Important unresolved identity discrepancy:
+  - The repository and CSV identify the candidate as Fredric Meltzer.
+  - The first-party campaign website and official campaign-finance filing use the name Rick Meltzer.
+  - Gate I13 did not assume or approve that these names refer to the same person without separate verification.
+- No candidate-position score was created.
+
+### Source findings — Indony Baptiste
+
+- No first-party 2026 campaign website, candidate-authored policy source, questionnaire, interview, debate, or candidate social account was confirmed.
+- A government-adjacent campaign-finance filing confirmed active candidacy but contained no substantive policy content.
+- No Civic DNA dimension source coverage was established.
+- No candidate-position score was created.
+
+### Cross-candidate result
+
+Outcome A: No consistent first-party source type is currently available across all four candidates.
+
+Reason:
+- Three candidates have confirmed campaign websites.
+- One candidate, Indony Baptiste, does not currently have a confirmed first-party policy source.
+- Gate I13 required the same source standard across all four candidates.
+- Weaker or third-party sources must not be used only for the candidate with less web presence.
+- Unequal source availability creates a fairness and consistency risk.
+
+### Dimension coverage limitations
+
+- Education had no confirmed first-party policy coverage for any of the four candidates.
+- Housing and transparency were ambiguous or absent for most candidates.
+- Indony Baptiste had no confirmed dimension coverage.
+- No questionnaire, interview, debate, or consistent alternate first-party source type was found across all four candidates.
+- A source mentioning an issue does not automatically make it sufficient for scoring.
+- No -2 through +2 score was assigned to any statement.
+
+### Unresolved issues
+
+- Fredric Meltzer versus Rick Meltzer identity/name discrepancy remains unresolved.
+- Indony Baptiste had no confirmed first-party policy source.
+- Possible third-party candidate-name or multi-candidacy conflation was not treated as verified.
+- Search-result snippets, third-party summaries, and unverified candidate-identity matches were not used as position evidence.
+- These issues must remain unresolved until verified through a separate gate.
+
+### Internal Beta impact
+
+- Gate I12's decision remains unchanged.
+- Keep all four current non-incumbent candidate match rings locked.
+- Do not create campaign-derived `candidate_positions`.
+- Do not create direct manual candidate-position values.
+- Do not score missing sources or non-response as zero, neutral, or opposed.
+- Keep all four candidate cards visible.
+- Do not hide a candidate solely because position data is unavailable.
+- Internal Beta should prefer transparent incomplete coverage over inconsistent or unsupported scoring.
+
+### Recommended next gate
+
+Gate I14 — Locked-Ring Internal Beta Communication Plan.
+
+Purpose:
+- Define clear user-facing language explaining why match rings are locked.
+- Explain that verified source-backed candidate-position data is not yet consistently available.
+- Avoid implying the app is broken.
+- Avoid implying candidates refused to participate.
+- Avoid political or ideological wording.
+- Keep all candidate cards visible.
+- Define language for ballot cards, candidate profiles, onboarding/calculating, and help/data-sources content.
+- Define accessibility and mobile-display requirements.
+- No source-code implementation in the first Gate I14 step.
+- No database writes.
+- No candidate scoring.
+- No deployment.
+
+Alternative future gate noted:
+- Gate I14 — Candidate Source Reverification. This may be used closer to the August 18, 2026 election if the user prefers another read-only source check before finalizing locked-ring communication.
+
+Gate I14 was not implemented by this update.
+
+### No-change confirmation — Gate I13
+
+Gate I13 made no changes to: `candidates`, `voting_records`, `candidate_positions`, `match_scores`, `civic_dna`, `civic_dna_answers`, `user_districts`, `districts`, `current_officials`, `officials_for_user`, `src/lib/officials.ts`, `CurrentOfficialsSection`, schema, tables, seeds, migrations, CSV files, RLS, grants, source code, PowerShell scripts, API keys, environment variables, the County Commission write guard, the At-Large row, or deployment state.
+
+No candidate was scored. No candidate was ranked. No political recommendation was produced. No Claude or Anthropic API call was made. No Supabase write was performed. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. No County Commission District 1-5 write was performed. No deployment occurred.
+
