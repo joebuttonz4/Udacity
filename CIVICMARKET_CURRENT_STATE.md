@@ -1542,3 +1542,223 @@ Gate I19 made no changes to: `candidates`, `voting_records`, `candidate_position
 
 No database write was performed. No candidate was scored. No candidate was ranked. No political recommendation was produced. No Claude or Anthropic API call was made. No secret file was inspected. No credentials were entered. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. No County Commission District 1-5 write was performed. No deployment occurred.
 
+## Gate I20 — Voting-Record Beta-Scope Decision
+
+Status: Product-scope decision complete.
+
+Date: 08-06-2026
+Timestamp: 09:16 pm EST
+
+### Current repository baseline
+
+- Branch: master
+- Working tree: clean
+- Up to date with origin/master
+- Latest pushed commit:
+  - `b28ad6c` Add voting record beta scope decision
+- Previous pushed commits:
+  - `625f204` Update current state for Gate I19
+  - `50c2a37` Add voting record official source review
+  - `5b7b204` Update current state for Gate I18
+  - `24f7f1f` Add non-incumbent source availability recheck
+
+Created:
+- `docs/internal_beta_gate_i20_voting_record_beta_scope_decision.md`
+
+Commit:
+- `b28ad6c` Add voting record beta scope decision
+- Commit successfully pushed to origin/master
+
+Build result:
+- `npm run build` passed.
+- 25 routes generated.
+- No build errors.
+
+No source code, CSV, schema, database, or application data was modified.
+
+### Current voting-record UI behavior
+
+- Candidate profile currently renders a visible Voting Record section when zero verified rows exist.
+- Current empty text is:
+  - "No voting records yet."
+- The section does not show a numeric zero count.
+- The section does not show placeholder rows.
+- A separate disclaimer already says:
+  - "Voting records are not yet available for these candidates."
+- Ballot cards do not display per-candidate voting-record content.
+- Data Sources currently describes voting records in present tense as though populated records are already available.
+- That Data Sources wording is not fully consistent with the current zero-row state.
+
+### Gate I20 option review
+
+**Option 1 — Keep voting records hidden**
+- Safe from misinformation.
+- Less transparent than an explicit unavailable state.
+- Not selected.
+
+**Option 2 — Show only verified rows**
+- Selected as the long-term data-display rule.
+- Future rows must meet the official source standard.
+- Not sufficient by itself for the current zero-row UX.
+
+**Option 3 — Show an unavailable-state explanation**
+- Selected current beta behavior.
+- Best balance of transparency, fairness, accessibility, mobile clarity, implementation effort, reversibility, and consistency with the locked-ring approach.
+
+**Option 4 — Delay Internal Beta**
+- Not selected.
+- Existing beta-launch documentation does not require populated voting-record rows for Internal Beta.
+- Voting records are documented as intentionally incomplete rather than an application defect.
+
+### Selected wording
+
+Primary:
+- Verified voting record data is not available yet.
+
+Secondary:
+- CivicMarket only shows voting records when an official source confirms the exact item, date, and individual vote. We do not fill missing records with estimates or assumptions.
+
+Optional methodology link:
+- How CivicMarket verifies voting records
+
+Target:
+- `/data-sources`
+
+### Language restrictions
+
+Do not use unavailable-state wording such as:
+- No voting history
+- 0 votes
+- No record
+- Candidate has not voted
+- No activity
+- Nothing to show
+- Coming soon
+- Data missing
+- Failed to load
+
+unless describing an actual technical error where appropriate.
+
+- Missing verified voting-record data must not be interpreted as no voting history.
+- The candidate must not be blamed for the missing data.
+- CivicMarket must not imply a complete historical search was performed.
+- No placeholder or synthetic rows should be displayed.
+
+### State distinction
+
+**Unavailable data state**
+- Zero verified voting-record rows.
+- Neutral styling.
+- No retry required.
+- Methodology explanation.
+- No error icon required.
+
+**Actual application error**
+- Query or network failure.
+- Separate error state.
+- Retry may be offered.
+- Must not use the normal unavailable-data wording.
+
+**Verified data exists**
+- Show only fully supported rows.
+- Each displayed row must have an official source.
+- Never mix verified records with placeholders.
+
+### Candidate fairness requirements
+
+- Same unavailable-state wording for every candidate.
+- No zero count.
+- No inactive label.
+- No candidate penalty because voting-record data is absent.
+- No candidate hidden because voting-record data is absent.
+- Future partial coverage must not imply that candidates without a displayed row have no voting history.
+- Candidate match rings remain locked independently of voting-record availability.
+
+### Accessibility and mobile requirements
+
+- Visible text, not icon-only.
+- Do not rely on color alone.
+- Do not announce unavailable data as an error.
+- Descriptive methodology link.
+- Keyboard accessible.
+- Touch accessible.
+- Logical focus order.
+- Verify at 200% zoom.
+- Verify at 390px viewport width.
+- No horizontal scrolling.
+- No clipped text.
+- Candidate name and office remain visually dominant.
+- Unavailable-state messaging should not visually overpower the candidate profile.
+
+### Gate I20 outcome
+
+Outcome B: Voting records can be removed as a hard Internal Beta blocker after a small unavailable-state implementation and live verification.
+
+- Voting records are no longer a hard blocker in content terms.
+- The blocker is contingent only on implementing and verifying the approved unavailable state.
+- Verified voting-record data acquisition remains an open data-completion task.
+- The beta must not show fake, placeholder, unsupported, or zero-implying records.
+
+### Required implementation
+
+Gate I20 identified the following small presentation-only changes:
+
+- Replace candidate-profile empty text:
+  - "No voting records yet."
+- Add the approved unavailable-state primary and secondary wording.
+- Add or preserve an appropriate Data Sources link.
+- Reconcile the existing redundant disclaimer sentence.
+- Update the Data Sources voting-record methodology section so it accurately reflects the current zero-row state.
+- Decide during implementation whether voting-record query failures need a small separate error state.
+- Do not change data, schema, scoring, APIs, or database behavior.
+
+### Required verification
+
+- `npm run build`
+- `npm run lint`
+- Identical unavailable wording across all four current candidates.
+- No zero or placeholder language.
+- No "no voting history" implication.
+- Candidate profile at approximately 390px width.
+- 200% zoom.
+- Keyboard accessibility.
+- Methodology link accessibility.
+- Candidate profile and Data Sources wording consistency.
+- Regression check that locked-ring behavior remains unchanged.
+- Actual errors remain separate from normal unavailable state if error handling is touched.
+
+### Incidental 11-candidate issue
+
+- `candidates_real.csv` currently contains 11 rows:
+  - 4 City Council District 1
+  - 4 Mayor
+  - 3 City Council District 3
+- Live database import status of Mayor and District 3 rows remains unverified.
+- Gate I20 classifies this as a pre-beta verification item.
+- It is not currently classified as a new hard blocker.
+- It is not automatically treated as post-beta expansion.
+- Do not claim those seven additional CSV candidates are live until separately verified.
+
+### Recommended next gate
+
+Gate I21 — Voting-Record Unavailable-State Implementation and Verification.
+
+Gate I21 should:
+- Make the smallest approved presentation changes.
+- Touch only the necessary source files.
+- Keep all data unchanged.
+- Build.
+- Lint.
+- Perform mobile and accessibility verification.
+- Perform live candidate-profile and Data Sources verification.
+- Update `CIVICMARKET_CURRENT_STATE.md` after results are known.
+- Avoid another documentation-only planning gate unless a real blocker appears.
+
+Gate I21 was not implemented by this update.
+
+### No-change confirmation — Gate I20
+
+Gate I20 made no changes to: `candidates`, `voting_records`, `candidate_positions`, `match_scores`, `civic_dna`, `civic_dna_answers`, `user_districts`, `districts`, `current_officials`, `officials_for_user`, `src/lib/officials.ts`, `CurrentOfficialsSection`, `compute-match-scores` logic, Civic DNA scoring, `MatchScoreRing`, the ballot page, the candidate profile, the onboarding calculating page, the Data Sources page, schema, tables, seeds, migrations, CSV files, RLS, grants, source code, PowerShell scripts, API keys, environment variables, the County Commission write guard, the At-Large row, deployment configuration, or deployment state.
+
+No database write was performed. No voting-record row was created, edited, deleted, or archived. No candidate was scored. No candidate was ranked. No political recommendation was produced. No Claude or Anthropic API call was made. No secret file was inspected. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. No County Commission District 1-5 write was performed. No deployment occurred.
+
