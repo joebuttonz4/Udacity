@@ -1406,3 +1406,139 @@ Gate I18 made no changes to: `candidates`, `voting_records`, `candidate_position
 
 No database write was performed. No candidate was scored. No candidate was ranked. No political recommendation was produced. No Claude or Anthropic API call was made. No secret file was inspected. No credentials were entered. No forms were submitted. No candidate or campaign was contacted. No executable file was downloaded. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. No County Commission District 1-5 write was performed. No deployment occurred.
 
+## Gate I19 — Voting-Record Official Source Review and Beta-Blocker Decision
+
+Status: Read-only repository/source review complete.
+
+Date: 08-06-2026
+Timestamp: 08:54 pm EST
+
+### Current repository baseline
+
+- Branch: master
+- Working tree: clean
+- Up to date with origin/master
+- Latest pushed commit:
+  - `50c2a37` Add voting record official source review
+- Previous pushed commits:
+  - `5b7b204` Update current state for Gate I18
+  - `24f7f1f` Add non-incumbent source availability recheck
+  - `bada51f` Record Gate I17 live UI verification
+  - `640a180` Update current state for Gate I16
+
+Created:
+- `docs/internal_beta_gate_i19_voting_record_official_source_review.md`
+
+Commit:
+- `50c2a37` Add voting record official source review
+- Commit successfully pushed to origin/master
+
+Build result:
+- `npm run build` passed.
+- 25 routes generated.
+- No build errors.
+
+No source code, CSV, schema, database, or existing application data was modified.
+
+### Repository voting-record state
+
+- `data/real-psl-replacement/voting_records_real.csv` is header-only.
+- Current row count is zero.
+- `scripts/validate-real-psl-csvs.cjs` was run during Gate I19.
+- Validation result:
+  - 0 voting-record rows.
+  - 0 validation errors.
+  - 1 expected warning for the header-only voting-record CSV.
+- There are therefore no existing repository voting-record rows to verify individually.
+- No placeholder, duplicate, identity, date, source, or item mismatch was found because no rows exist.
+
+### Database verification limitation
+
+- A fresh live read-only Supabase query was not performed during Gate I19.
+- No credentials or secret files were accessed.
+- Gate I19 therefore does not claim a fresh live `voting_records` row count.
+- Existing repository and prior documented evidence were used only as corroborating context.
+- This limitation does not change the repository finding that the real replacement CSV contains zero voting-record rows.
+
+### Official-source review result
+
+- No new voting records were invented to fill the gap.
+- No new legislative items were researched without an existing repository row.
+- No row-level official source review was possible because there are zero rows.
+- No item-specific source URL exists in the current voting-record replacement CSV.
+- No individual official vote is currently represented in that CSV.
+- No voting-record row is currently beta-safe because no voting-record rows exist.
+
+### Outcome A
+
+No existing voting-record row is ready for beta display.
+
+Clarification:
+- This is not a case of bad rows failing verification.
+- The feature area is empty.
+- The blocker is absence of verified voting-record data, not remediation of incorrect rows.
+
+### Current beta-blocker status
+
+- Voting records with official source URLs remain the sole documented hard beta blocker identified in `CIVICMARKET_CURRENT_STATE.md`.
+- The blocker applies to the voting-record feature area as a whole.
+- It is not currently a row-specific correction problem.
+- Candidate match rings remain locked independently of this blocker.
+- Gate I19 did not reopen the candidate-position or locked-ring workstreams.
+- No candidate scoring or match-score generation was enabled.
+
+### Safe product options (identified, not chosen)
+
+**Option 1 — Keep voting records hidden**
+- Do not display voting-record content until verified rows exist.
+- Lowest misinformation risk.
+
+**Option 2 — Show only verified rows**
+- Applicable later if any rows pass the full official-source standard.
+- Must avoid implying candidates without rows have no voting history.
+
+**Option 3 — Show an unavailable-state explanation**
+- Keep the feature area visible.
+- Explain that verified voting-record data is not yet available.
+- Do not show placeholder rows.
+- Do not show zero counts that imply an official has no voting history.
+
+**Option 4 — Delay beta launch**
+- Use only if voting records are mandatory for the approved Internal Beta experience.
+
+Gate I19 did not select an option.
+
+### Recommended next gate
+
+Gate I20 — Voting-Record Beta-Scope Decision.
+
+Gate I20 should:
+- Make a product-scope decision among the four Gate I19 options.
+- Determine whether voting records are mandatory for Internal Beta launch.
+- If voting records are not mandatory, define the safest beta behavior:
+  - hidden, or
+  - explicit unavailable state
+- Define exact user-facing wording if an unavailable state is selected.
+- Determine whether any current UI path already exposes empty voting-record sections.
+- Review whether hiding or unavailable-state behavior requires a small source-code change.
+- Define accessibility and mobile requirements.
+- Avoid new voting-record source research unless an actual verified item is provided.
+- Avoid creating or modifying voting_records data.
+- Avoid candidate_positions or match_scores changes.
+
+Gate I20 was not implemented by this update.
+
+### Incidental open question (not a voting-record source finding)
+
+- Gate I19 observed that `candidates_real.csv` currently contains 11 candidate rows, including Mayor and City Council District 3 entries.
+- The current-state documentation previously focused on the live import of the original four City Council District 1 candidates.
+- Gate I19 did not verify whether the Mayor and District 3 rows have been imported into the live database.
+- Do not treat those additional CSV rows as confirmed live data until separately verified.
+- This was incidental to Gate I19 and is not a voting-record source finding.
+
+### No-change confirmation — Gate I19
+
+Gate I19 made no changes to: `candidates`, `voting_records`, `candidate_positions`, `match_scores`, `civic_dna`, `civic_dna_answers`, `user_districts`, `districts`, `current_officials`, `officials_for_user`, `src/lib/officials.ts`, `CurrentOfficialsSection`, `compute-match-scores` logic, Civic DNA scoring, `MatchScoreRing`, the ballot page, the candidate profile, the onboarding calculating page, the Data Sources page, schema, tables, seeds, migrations, CSV files, RLS, grants, source code, PowerShell scripts, API keys, environment variables, the County Commission write guard, the At-Large row, deployment configuration, or deployment state.
+
+No database write was performed. No candidate was scored. No candidate was ranked. No political recommendation was produced. No Claude or Anthropic API call was made. No secret file was inspected. No credentials were entered. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. No County Commission District 1-5 write was performed. No deployment occurred.
+
