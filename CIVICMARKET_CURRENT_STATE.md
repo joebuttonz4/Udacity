@@ -1762,3 +1762,56 @@ Gate I20 made no changes to: `candidates`, `voting_records`, `candidate_position
 
 No database write was performed. No voting-record row was created, edited, deleted, or archived. No candidate was scored. No candidate was ranked. No political recommendation was produced. No Claude or Anthropic API call was made. No secret file was inspected. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. No County Commission District 1-5 write was performed. No deployment occurred.
 
+## Gate I21 — Voting-Record Unavailable-State Implementation and Live Verification
+
+Status: Implementation complete, live verification passed. **Voting records are removed as a hard Internal Beta blocker.**
+
+Date: 08-06-2026
+Timestamp: 09:50 pm EST
+
+Implementation commit:
+- `8d2347a` Add voting record unavailable state (`src/app/candidates/[id]/page.tsx`, `src/app/data-sources/page.tsx`)
+
+### Tests performed and results
+
+| Test | Result |
+|---|---|
+| Candidate profile — Eric Reikenis, Fredric Meltzer, Indony Baptiste, Kevin Zimmerman (all four current City Council District 1 candidates) | **PASS** — each showed identical live text: "Verified voting record data is not available yet." plus the approved secondary explanation and a "How CivicMarket verifies voting records →" link; the old "No voting records yet." text is gone; no zero count; no "no voting history" implication; each candidate remained fully visible |
+| Methodology link navigation | **PASS** — clicking the link on Eric Reikenis's profile navigated to `/data-sources` |
+| Data Sources "Voting records" section | **PASS** — live text confirmed to include the official-source requirement, an explicit statement that Internal Beta coverage may be incomplete, a statement that a missing record does not mean no voting history, a statement that CivicMarket never fills gaps with estimates, and a statement that match rings are a separate feature that may remain locked independently |
+| Locked-ring behavior | **PASS (unaffected)** — "Why is this locked?" match-score section observed unchanged on all four candidates, exact wording from Gates I14-I17 preserved |
+| Redundant disclaimer reconciliation | **PASS** — the "Details" disclaimer now reads only "CivicMarket beta — candidate and funding data sourced from official public records." with the redundant voting-record sentence removed, confirmed live |
+| 390px viewport | **BLOCKED (tooling)** — the `resize_window` tool did not change the actual rendered viewport in this environment (`window.innerWidth` remained 1920 after two attempts), the same limitation documented in Gate I17. No fabricated pass recorded. Supplementary note: no fixed-pixel-width classes were introduced by the Gate I21 diff — only flexible Tailwind classes (`text-sm leading-6`, `mt-2 inline-block`) — consistent with the layout already proven safe at narrow widths by prior sections on the same page |
+| 200% zoom | **PASS (approximated method)** — native browser-zoom keyboard shortcuts are not supported by the browser automation tool; a CSS `zoom: 200%` approximation was used instead (same method as Gate I17). Full Voting Record text, primary and secondary copy, and the methodology link all remained fully visible and readable with no clipping and no overlap |
+| Keyboard accessibility | **PASS** — confirmed via real Tab key presses (not simulated) from the "Voting" tab button through Funding, Details, Reviews, the "How match scores work →" link, and finally the "How CivicMarket verifies voting records →" link, in that exact logical order; a visible focus outline was confirmed on the methodology link via screenshot |
+| Voting-record query-error state | **BLOCKED** — no safe way to simulate a live Supabase query failure without touching network, environment, or database state was available; per instruction, the database/network was not intentionally broken. Relies entirely on the static verification already completed prior to this live pass (the `.then/.catch` handling added in commit `8d2347a` was reviewed by build/lint/diff inspection, not exercised live) |
+
+### Defects found
+
+None.
+
+### Account state used
+
+An existing, already-authenticated beta test-account browser session was used (signed in by the user prior to this gate's live testing; the assistant never entered, inspected, or logged credentials).
+
+### Outcome B conditions
+
+Both Gate I20 Outcome B conditions are now satisfied:
+- The small unavailable-state implementation is complete (commit `8d2347a`).
+- Live verification has passed for the unavailable state, the Data Sources wording, candidate visibility, and locked-ring non-interference — the two BLOCKED items (390px tooling limitation, live query-error simulation) do not prevent closure per Gate I20's own closure rule, since static verification passed for both and no contradictory live behavior was observed for either.
+
+### Voting-record hard beta-blocker status
+
+**Voting records are removed as a hard Internal Beta blocker**, effective this update. Verified voting-record data acquisition (official item-specific sources for the four current non-incumbent candidates, or any future candidate) remains an open, ongoing data-completion task, unaffected by this closure. The beta must continue to show no fake, placeholder, unsupported, or zero-implying voting-record rows at any point.
+
+### Remaining pre-beta verification item (separate from this closure)
+
+- Mayor and City Council District 3 live-import status remains unverified (per Gate I19/I20's incidental 11-candidate finding: `candidates_real.csv` has 11 rows — 4 City Council District 1, 4 Mayor, 3 City Council District 3 — and only the live-import status of the 4 City Council District 1 rows has been confirmed across prior gates).
+- This is a separate, still-open pre-beta verification item and is not resolved or affected by this voting-record blocker closure.
+
+### No-change confirmation — Gate I21
+
+Gate I21 made no changes to: `voting_records` data, `voting_records_real.csv`, `candidates`, `candidate_positions`, `match_scores`, `civic_dna`, `civic_dna_answers`, `compute-match-scores`, Civic DNA scoring, `user_districts`, `districts`, `current_officials`, `officials_for_user`, `src/lib/officials.ts`, `CurrentOfficialsSection`, `MatchScoreRing` behavior, ballot locked-ring behavior, onboarding locked-ring behavior, schema, tables, seeds, migrations, RLS, grants, PowerShell scripts, environment files, or deployment configuration.
+
+No Supabase write was performed. No voting-record row was added, removed, or archived. No candidate was scored or ranked. No political recommendation was produced. No secret file was inspected. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. No County Commission logic was changed. No deployment occurred. The local dev server started for this gate's live verification was stopped after testing concluded, and no stray Node processes remained.
+
