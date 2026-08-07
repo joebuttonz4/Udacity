@@ -70,9 +70,16 @@ export default function DataSourcesPage() {
               Voting records
             </h2>
             <p className="text-[#9CA3AF] text-sm leading-6 [font-family:var(--font-instrument-sans)]">
-              Voting records are drawn from official city council and county commission meeting
-              minutes, published vote tallies, and public government records. Every voting record
-              includes a link to the official source document.
+              CivicMarket only shows a voting record when an official source — city council or
+              county commission meeting minutes, published vote tallies, or public government
+              records — confirms the exact item, date, and individual vote. Every displayed
+              record includes a link to that official source. During the Internal Beta, some or
+              all of a candidate&#39;s voting records may be unavailable — a missing record does
+              not mean the candidate has no voting history, only that a verified source-backed
+              record does not exist for them yet. CivicMarket never fills a missing record with
+              an estimate or assumption. Voting records are a separate feature from candidate
+              match scores; a candidate&#39;s match ring may remain locked independently of
+              voting-record availability.
             </p>
           </section>
 

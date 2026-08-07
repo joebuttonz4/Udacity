@@ -120,6 +120,7 @@ export default function CandidateProfilePage() {
   const [candidate, setCandidate] = useState<CandidateProfile | null>(null)
   const [funding, setFunding] = useState<CandidateFunding | null>(null)
   const [votingRecords, setVotingRecords] = useState<VotingRecord[]>([])
+  const [votingRecordsError, setVotingRecordsError] = useState(false)
   const [matchScore, setMatchScore] = useState<number | null>(null)
   const [matchScoreError, setMatchScoreError] = useState(false)
   const [dnaQuizStatus, setDnaQuizStatus] = useState<string | null>(null)
@@ -150,10 +151,15 @@ export default function CandidateProfilePage() {
           return
         }
 
-        const [profileData, fundingData, records, scoreResult, dnaStatusResult] = await Promise.all([
+        const [profileData, fundingData, votingRecordsResult, scoreResult, dnaStatusResult] = await Promise.all([
           getCandidateProfile(candidateId),
           getCandidateFunding(candidateId),
-          getCandidateVotingRecords(candidateId),
+          // Caught locally (not thrown into the outer try/catch) so a
+          // voting-record query failure shows a scoped message in the
+          // Voting Record section instead of failing the whole profile.
+          getCandidateVotingRecords(candidateId)
+            .then((records) => ({ records, error: false }))
+            .catch(() => ({ records: [] as VotingRecord[], error: true })),
           supabase
             .from('match_scores')
             .select('score')
@@ -175,7 +181,8 @@ export default function CandidateProfilePage() {
 
         setCandidate(profileData)
         setFunding(fundingData)
-        setVotingRecords(records)
+        setVotingRecords(votingRecordsResult.records)
+        setVotingRecordsError(votingRecordsResult.error)
         setMatchScore((scoreResult.data as { score: number } | null)?.score ?? null)
         setMatchScoreError(Boolean(scoreResult.error))
         setDnaQuizStatus(
@@ -437,7 +444,11 @@ export default function CandidateProfilePage() {
               <h2 className="text-[#6B7280] text-[11px] font-semibold uppercase tracking-widest mb-3 [font-family:var(--font-syne)]">
                 Voting Record
               </h2>
-              {votingRecords.length > 0 ? (
+              {votingRecordsError ? (
+                <p className="text-[#9CA3AF] text-sm [font-family:var(--font-instrument-sans)]">
+                  We couldn&#39;t load this candidate&#39;s voting record. Try again shortly.
+                </p>
+              ) : votingRecords.length > 0 ? (
                 <div className="flex flex-col gap-3">
                   {votingRecords.map((record) => {
                     const voteStyle = VOTE_STYLES[record.vote_cast] ?? VOTE_STYLES.abstain
@@ -486,9 +497,20 @@ export default function CandidateProfilePage() {
                   })}
                 </div>
               ) : (
-                <p className="text-[#9CA3AF] text-sm [font-family:var(--font-instrument-sans)]">
-                  No voting records yet.
-                </p>
+                <>
+                  <p className="text-[#6B7280] text-sm leading-6 [font-family:var(--font-instrument-sans)]">
+                    <span className="block text-[#0D1117] font-semibold [font-family:var(--font-syne)] mb-1">
+                      Verified voting record data is not available yet.
+                    </span>
+                    CivicMarket only shows voting records when an official source confirms the exact item, date, and individual vote. We do not fill missing records with estimates or assumptions.
+                  </p>
+                  <Link
+                    href="/data-sources"
+                    className="text-[#00C9A7] text-sm font-semibold [font-family:var(--font-syne)] mt-2 inline-block"
+                  >
+                    How CivicMarket verifies voting records →
+                  </Link>
+                </>
               )}
             </section>
 
@@ -537,7 +559,6 @@ export default function CandidateProfilePage() {
             <section id="section-details" className="bg-[#FFFBEB] border border-[#FDE68A] rounded-[24px] p-4">
               <p className="text-[#92400E] text-xs leading-5 [font-family:var(--font-instrument-sans)]">
                 CivicMarket beta — candidate and funding data sourced from official public records.
-                Voting records are not yet available for these candidates.
               </p>
             </section>
 
