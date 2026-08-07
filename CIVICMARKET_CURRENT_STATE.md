@@ -1815,3 +1815,170 @@ Gate I21 made no changes to: `voting_records` data, `voting_records_real.csv`, `
 
 No Supabase write was performed. No voting-record row was added, removed, or archived. No candidate was scored or ranked. No political recommendation was produced. No secret file was inspected. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. No County Commission logic was changed. No deployment occurred. The local dev server started for this gate's live verification was stopped after testing concluded, and no stray Node processes remained.
 
+## Gate I22 — Mayor and City Council District 3 Live-Import Status Verification
+
+Status: Read-only live verification complete.
+
+Date: 08-06-2026
+Timestamp: 10:27 pm EST
+
+### Current repository baseline
+
+- Branch: master
+- Working tree: clean
+- Up to date with origin/master
+- Latest pushed commit:
+  - `9bd55fb` Add Mayor and District 3 live import verification
+- Previous pushed commits:
+  - `bd009af` Record Gate I21 live verification
+  - `8d2347a` Add voting record unavailable state
+  - `112d656` Update current state for Gate I20
+  - `b28ad6c` Add voting record beta scope decision
+
+Created:
+- `docs/internal_beta_gate_i22_mayor_district3_live_import_verification.md`
+
+Commit:
+- `9bd55fb` Add Mayor and District 3 live import verification
+- Commit successfully pushed to origin/master
+
+Build result:
+- `npm run build` passed.
+- 25 routes generated.
+- No build errors.
+
+No database write, source-code change, CSV change, schema change, or deployment occurred.
+
+### Repository candidate inventory
+
+- `candidates_real.csv` contains 11 total rows:
+  - 4 City Council District 1
+  - 4 Mayor
+  - 3 City Council District 3
+
+**Mayor candidates**
+- Shannon Martin — office: Mayor, district_name: Mayor, election_name: PSL Mayor 2026, is_incumbent: true
+- Eric Strazzeri — office: Mayor, district_name: Mayor, election_name: PSL Mayor 2026
+- Steven Giordano — office: Mayor, district_name: Mayor, election_name: PSL Mayor 2026
+- Steven Harrington — office: Mayor, district_name: Mayor, election_name: PSL Mayor 2026
+
+**City Council District 3 candidates**
+- Fritz Alexandre
+- Jim Norton
+- Peter Overhuls
+
+For all three: office in CSV: "City Council"; district_name: "City Council District 3"; election_name: "PSL City Council D3 2026".
+
+**Office-field inconsistency:**
+- District 1 CSV rows use office: "City Council District 1"
+- District 3 CSV rows use office: "City Council"
+- Gate I22 did not modify or normalize this field.
+
+### Live read-only verification method
+
+- Live Supabase verification used read-only REST GET requests.
+- Queries used the public publishable/anon key exposed through the already-compiled public client bundle.
+- No `.env.local`, password, service-role key, private token, or secret file was inspected.
+- Public SELECT access was used under the existing RLS policy.
+- No write-capable operation was performed.
+- An earlier browser-console fetch-override attempt was blocked by the harness safety classifier and was abandoned rather than bypassed.
+
+### Mayor live result
+
+- Outcome for all four Mayor CSV rows: **MISSING**.
+- None of the four Mayor candidates exists in the live candidates table.
+- No active or archived matching Mayor candidate row was found.
+- The prerequisite Mayor district row is also missing.
+- The corresponding Mayor election row is also missing.
+
+### District 3 live result
+
+- Outcome for all three City Council District 3 CSV rows: **MISSING**.
+- None of the three District 3 candidates exists in the live candidates table.
+- No active or archived matching District 3 candidate row was found.
+- The prerequisite City Council District 3 district row is also missing.
+- The corresponding District 3 election row is also missing.
+
+### Live candidates table result
+
+- The live candidates table currently contains exactly four rows.
+- Those four rows are the previously approved City Council District 1 candidates.
+- No duplicate candidate rows were found.
+- No unexpected archived rows were found.
+- No Mayor or District 3 rows were present under alternate office/district values.
+
+### District 1 regression sanity check
+
+- **PASS.**
+- All four City Council District 1 candidates remain live.
+- All four remain active.
+- Material fields match the expected CSV and prior documented state.
+- No District 1 regression was found.
+- Gate I22 did not reopen District 1 candidate review.
+
+### Duplicate and mismatch checks
+
+- No duplicate candidate IDs were found.
+- No duplicate active candidate rows were found.
+- No Mayor candidate was incorrectly assigned to District 1 or District 3.
+- No District 3 candidate was incorrectly assigned to Mayor or District 1.
+- No unexpected archived row was found.
+- No alternate live row appeared to represent one of the seven missing candidates.
+- The issue is missing data, not mismatched existing rows.
+
+### App-facing interpretation
+
+- The current approved beta test account has five real `user_districts` rows:
+  - City Council District 1
+  - School Board District 1
+  - County Commission At-Large
+  - Florida House District 85
+  - Florida Senate District 27
+- Mayor and District 3 candidates are not absent due to a current-user filtering artifact.
+- Their underlying district, election, and candidate rows are missing system-wide.
+- UI visibility was used only as corroborating evidence.
+- Direct live table queries were the verification source.
+- No District 3 user assignment was inferred or created.
+
+### Gate I22 outcome
+
+Outcome B: Some or all expected rows are missing from the live database.
+
+- All seven expected Mayor and District 3 candidate rows are missing.
+- Required prerequisite district and election rows are also missing.
+- This is not a candidate-row-only import problem.
+- A future import must account for the prerequisite district/election data and the District 3 office-field inconsistency.
+
+### Beta impact
+
+- This pre-beta verification item remains open.
+- It is not elevated to a hard Internal Beta blocker.
+- The currently approved and tested beta experience is still based on the existing District 1 candidate coverage.
+- No incorrect or misleading District 1 candidate data was found.
+- Mayor and District 3 are a coverage gap for a broader beta stage.
+- If broader beta scope is expanded to include citywide Mayor coverage or District 3 users, this item must be resolved first.
+
+### Recommended next gate
+
+Gate I23 — Mayor and City Council District 3 Import Approval Decision.
+
+Gate I23 should remain documentation and approval focused before any write. It should:
+- Decide whether Mayor and District 3 must be included before the next beta stage.
+- Verify the correct district model for Mayor and City Council District 3.
+- Verify the correct election rows.
+- Resolve the District 3 CSV office-field inconsistency ("City Council" versus the District 1 pattern "City Council District 1").
+- Inspect `scripts/import-real-psl-data.cjs`, which is currently designed around a single district/election flow.
+- Determine the minimum safe changes required before import.
+- Define exact prerequisite district and election rows.
+- Define exact seven candidate rows.
+- Define validation and rollback requirements.
+- Require explicit approval before any database write or import execution.
+
+Gate I23 was not implemented by this update.
+
+### No-change confirmation — Gate I22
+
+Gate I22 made no changes to: `candidates`, `elections`, `districts`, `voting_records`, `candidate_positions`, `match_scores`, `civic_dna`, `civic_dna_answers`, `user_districts`, `current_officials`, `officials_for_user`, `src/lib/officials.ts`, `CurrentOfficialsSection`, `compute-match-scores` logic, Civic DNA scoring, `MatchScoreRing`, the ballot page, the candidate profile, the onboarding calculating page, the Data Sources page, schema, tables, seeds, migrations, CSV files, RLS, grants, source code, PowerShell scripts, API keys, environment variables, the County Commission write guard, the At-Large row, deployment configuration, or deployment state.
+
+No database write was performed. Only read-only GET queries were used. No candidate row was inserted, updated, deleted, or archived. No district row was inserted, updated, deleted, or archived. No election row was inserted, updated, deleted, or archived. No candidate was scored. No candidate was ranked. No political recommendation was produced. No Claude or Anthropic API call was made. No secret file was inspected. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. No County Commission District 1-5 write was performed. No deployment occurred.
+
