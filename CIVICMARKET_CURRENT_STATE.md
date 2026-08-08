@@ -1,6 +1,6 @@
 # CivicMarket Current State
 
-Last updated: July 8, 2026 (County Commission district assignment lookup Gate 17A)
+Last updated: August 8, 2026 (Gate I31 — City Council district test-account write attempted, RPC defect found, no write occurred)
 
 ## Authoritative order
 
@@ -2862,4 +2862,52 @@ An earlier reported execution had not actually persisted (a full re-check found 
 ### No-change confirmation — Gate I30C
 
 Beyond the one route file, the one reference SQL file, and the explicitly-approved Supabase-side `current_officials` row and RPC recorded above, no other source code, schema, RLS, grants, seeds, migrations, or CSV files were touched. No `user_districts`, `districts`, `elections`, or `candidates` row was created, modified, or deleted. No secret was inspected or exposed. `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` remains `false`. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. The District 1 election-date discrepancy remains unresolved. No deployment occurred.
+
+## Gate I31 — City Council District Test-Account Write: Attempted, RPC Defect Found, No Write Occurred
+
+Status: Attempted under full explicit user approval. **Write did not occur.** A genuine defect was found in the already-deployed `set_psl_city_council_district` SQL function. No rollback was needed because no database state ever changed. `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` is confirmed restored to `false`.
+
+Date: 08-08-2026
+
+Full record: `docs/internal_beta_gate_i31_city_council_district_test_write_result.md`
+
+### What was approved
+
+The user explicitly approved a one-time controlled test for `civicmarket.test.01@example.com` (user UUID `ec59ea92-470f-447f-8873-ab2dbde52aca`, verified real district City Council District 1): temporarily set `ENABLE_CITY_COUNCIL_DISTRICT_WRITE = true`, perform one District 1 → District 3 assignment via the approved RPC, verify, then roll back to District 1 via the same RPC, then immediately restore the guard to `false`. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` was required to remain `false` throughout.
+
+### What happened
+
+Using the already-authenticated test account's live browser session (assistant never entered credentials), the District 1 → District 3 submission was attempted twice at `/profile/city-council-district`. Both attempts failed with a `500` response and "Failed to save verified district" in the UI. A temporary, never-committed diagnostic `console.error` line (immediately removed afterward) captured the actual Postgres error:
+
+```
+code: '42702', message: 'column reference "district_id" is ambiguous'
+```
+
+Root cause: the RPC's own `RETURNS TABLE (district_id uuid)` clause implicitly declares a PL/pgSQL variable named `district_id`, which collides with the `user_districts.district_id` column referenced in the function's `DELETE` statement. This is a bug in the already-deployed SQL function itself (`Reference Files/civicmarket_schema_addendum_city_council_district_rpc.sql`, made live in Gate I30C) — not an app-code, RLS, or route-validation defect. Gate I30C's prior anonymous-`curl` verification correctly confirmed the function was unreachable by `anon`, but never exercised an authenticated call, so this ambiguity was never triggered until this gate's first real authenticated invocation.
+
+Because the `DELETE` statement fails at planning time — before any row is touched — and the whole function body runs as one implicit transaction, **no row was deleted or inserted on either attempt.** This was independently confirmed live: `/profile` → My Current Officials for the test account still showed exactly Debbie Hawley (School Board District 1), Stephanie Morgan (City Council District 1), and Tobin Rogers "Toby" Overdorf (FL House District 85) — unchanged, no District 3 official, no fourth official. No rollback RPC call was made, because there was nothing to roll back.
+
+### Cleanup performed and verified
+
+- `src/app/api/set-city-council-district/route.ts` reverted via `git checkout --` to match committed `HEAD` exactly; `git diff` and `git status --short` confirmed a fully clean working tree (guard-flip edit and temporary debug line both gone, neither ever committed).
+- `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` confirmed unchanged (`false`) throughout — never touched.
+- A stray leftover dev-server process tree from an earlier gate's incomplete cleanup, plus this gate's own dev server, were fully force-stopped; confirmed no `next dev` process and no listener remains on port 3000.
+- `npm run build` passed (27 routes, no errors).
+- `npm run lint` reported only the same 5 known pre-existing `@typescript-eslint/no-require-imports` errors in `scripts/import-real-psl-data.cjs` and `scripts/validate-real-psl-csvs.cjs` — nothing new.
+
+### Final state
+
+City Council District 1 (Stephanie Morgan) for `civicmarket.test.01@example.com` is unchanged. School Board District 1, County Commission At-Large, FL House District 85, FL Senate District 27 all unchanged. Mayor remains absent for this account (not added, per explicit instruction). No District 3 assignment exists for this account. No other user was touched. `ENABLE_CITY_COUNCIL_DISTRICT_WRITE = false`. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE = false`. No deployment occurred. No schema, RLS, grants, policies, migrations, seeds, or district-definition changes were made.
+
+### What remains unresolved
+
+The approved test's actual goal — proving the atomic District 1 → District 3 → District 1 replacement works end-to-end — was not achieved. The `set_psl_city_council_district` function cannot currently complete a write for any input due to the ambiguous-column defect (`RETURNS TABLE (district_id uuid)` colliding with `user_districts.district_id`). Fixing this is a function/schema change and requires its own separate, explicit approval gate — design, approval, and manual Supabase execution — before any future write attempt. No such fix has been drafted, approved, or applied.
+
+### Recommended next gate
+
+Gate I32 — City Council RPC Ambiguous-Column Fix (design + approval + manual execution), followed by a repeat of the same controlled D1→D3→D1 test once the corrected function is live.
+
+### No-change confirmation — Gate I31
+
+No lasting changes to `candidates`, `voting_records`, `candidate_positions`, `match_scores`, `civic_dna`, `civic_dna_answers`, `user_districts` (both attempted writes failed, zero rows changed), `districts`, `current_officials`, `officials_for_user`, `src/lib/officials.ts`, `CurrentOfficialsSection`, `set_psl_city_council_district` (called, not edited), schema, tables, seeds, migrations, CSV files, RLS, grants, `src/app/api/set-city-council-district/route.ts` (reverted to match `HEAD`), `src/app/api/set-county-commission-district/route.ts`, PowerShell scripts, API keys, environment variables, the County Commission write guard, the At-Large row, or deployment state. No database write was performed. No secret file was inspected. No credentials were entered. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` was temporarily `true` during this test and is confirmed restored to `false`. No deployment occurred.
 
