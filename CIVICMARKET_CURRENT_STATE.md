@@ -1,6 +1,6 @@
 # CivicMarket Current State
 
-Last updated: August 8, 2026 (Gate I33 — City Council RPC ambiguity fix manually applied and verified live; write guards remain false)
+Last updated: August 8, 2026 (Gate I34 — City Council District 1↔3 live regression test passed; both write guards restored to false)
 
 ## Authoritative order
 
@@ -2954,4 +2954,30 @@ Gate I34 — City Council District 1 → District 3 → District 1 Live Regressi
 ### No-change confirmation — Gate I32 and Gate I33
 
 Beyond the one explicitly approved live SQL execution (`CREATE OR REPLACE FUNCTION public.set_psl_city_council_district`, Gate I33) and documentation files, no changes were made to: `candidates`, `voting_records`, `candidate_positions`, `match_scores`, `civic_dna`, `civic_dna_answers`, `user_districts`, `districts`, `elections`, `current_officials`, `officials_for_user`, `src/lib/officials.ts`, `CurrentOfficialsSection`, `src/app/api/set-city-council-district/route.ts`, `src/app/api/set-county-commission-district/route.ts`, schema, RLS, seeds, migrations, CSV files, PowerShell scripts, API keys, environment variables, the At-Large row, or deployment state. No secret file was inspected. `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` remains `false`. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. No deployment occurred.
+
+## Gate I34 — City Council District 1 → District 3 → District 1 Live Regression Test
+
+Date: 08-08-2026
+
+Status: **PASS. The corrected RPC completed a real, atomic assignment in both directions for the approved test account. Both write guards confirmed restored to `false`.**
+
+Under explicit user approval (test account `civicmarket.test.01@example.com`, user UUID `ec59ea92-470f-447f-8873-ab2dbde52aca`, verified real district City Council District 1), `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` was temporarily set to `true` locally (never committed) and a real District 1 → District 3 assignment was submitted through `/profile/city-council-district`, using the already-authenticated test-account browser session. The page showed the real (non-dry-run) success message "Your City Council district was saved." — confirming the Gate I33 fix resolved the Gate I31 `42702` ambiguity for an actual authenticated call, not just for metadata verification.
+
+**Temporary District 3 state — every expected item verified live:** Anthony Bonna, Sr. (City Council Member, District 3) appeared in My Current Officials in place of Stephanie Morgan; `/ballot` showed the three City Council District 3 candidates (Fritz Alexandre, Jim Norton, Peter Overhuls) and no longer showed the four District 1 candidates; School Board (Debbie Hawley) and FL House (Tobin Rogers "Toby" Overdorf) were unchanged; Mayor remained absent, consistent with Gate I27 (this account was never given a Mayor assignment).
+
+A second real submission (District 3 → District 1, same route/RPC) rolled the account back. The page again showed "Your City Council district was saved." **Final state — every expected item verified live:** Stephanie Morgan (City Council District 1) reappeared in My Current Officials, Anthony Bonna no longer present; `/ballot` showed the four District 1 candidates again, District 3 candidates gone; School Board and FL House unchanged throughout; Mayor still absent.
+
+`src/app/api/set-city-council-district/route.ts` was reverted via `git checkout --` to exactly match committed `HEAD` immediately after the rollback; `git diff --stat` and `git status --short` both confirmed a fully clean working tree, and a direct file read confirmed `ENABLE_CITY_COUNCIL_DISTRICT_WRITE = false` again. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` was confirmed unchanged (`false`) throughout — never touched. A single, pre-existing, healthy `npm run dev` process tree on port 3000 was reused for the whole test (verified as one clean chain, no stray duplicates) and required no cleanup. `npm run build` passed (27 routes, no errors). `npm run lint` reported only the same 5 known pre-existing `scripts/*.cjs` errors, nothing new.
+
+County Commission At-Large and FL Senate District 27 were not surfaced as named Current Official rows either before or after the test (consistent with the pre-test baseline — no seeded `current_officials` row at that level is displayed this way), so they were unaffected by, and provide no direct evidence about, this test; this is a pre-existing display characteristic, not a Gate I34 finding.
+
+This is the first successful real (non-dry-run) invocation of `set_psl_city_council_district` since it was created in Gate I30C — Gate I31's two attempts both failed before any row was touched, and Gate I33 verified only function metadata/grants, not an authenticated call. Gate I34 is the first live, end-to-end proof that the atomic District 1/3 replacement works correctly in both directions.
+
+Full record: `docs/internal_beta_gate_i34_city_council_district_live_regression_test_result.md`.
+
+Remaining unresolved and unaffected by Gate I34: the pre-existing District 1 election-date discrepancy (live `2026-11-03` vs. Gate I18's documented `August 18, 2026`); the District 1 onboarding-default accuracy risk (every onboarded user defaults to City Council District 1 regardless of actual address). The City Council district-assignment feature remains disabled for real users (`ENABLE_CITY_COUNCIL_DISTRICT_WRITE = false`) — this gate proved the write path works correctly under one controlled test, it did not enable the feature.
+
+### No-change confirmation — Gate I34
+
+`civicmarket.test.01@example.com`'s `current_officials`/`user_districts` state returned to its exact pre-test values by the end of the gate — two real, approved, scoped writes (one out to District 3, one back to District 1) leaving no net change. No other user was touched. No changes were made to: `candidates`, `voting_records`, `candidate_positions`, `match_scores`, `civic_dna`, `civic_dna_answers`, `districts`, `elections`, `officials_for_user`, `src/lib/officials.ts`, `CurrentOfficialsSection`, `set_psl_city_council_district` (called twice, not edited), schema, tables, seeds, migrations, CSV files, RLS, grants, `src/app/api/set-city-council-district/route.ts` (reverted to match `HEAD`), `src/app/api/set-county-commission-district/route.ts`, PowerShell scripts, API keys, environment variables, the At-Large row, or deployment state. No secret file was inspected. No credentials were entered. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` was temporarily `true` during this test and is confirmed restored to `false`. No deployment occurred.
 
