@@ -2778,3 +2778,34 @@ Reconfirmed unchanged and unaddressed — `ALL_PSL_DISTRICTS` still defaults eve
 
 No database write occurred. No `user_districts`, `districts`, `elections`, `candidates`, or `current_officials` row was touched. No source code was modified. No secret was inspected or exposed. `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` remains `false`. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. The District 1 election-date discrepancy remains unresolved. No deployment occurred.
 
+## Gate I30B — City Council District 3 Pre-Write Blocker Resolution
+
+Date: 08-08-2026
+Timestamp: 07:50 am EST
+
+Status: **PASS — both blockers have concrete, ready-to-approve solutions.** Neither is implemented; both require separate explicit approval.
+
+### District 3 current official verification
+
+Freshly verified (not relying on Gate I28's map-tool-only identification) via two independent official City of Port St. Lucie pages: **Anthony Bonna, Sr., District 3 Councilman**, currently serving. Source: `https://www.cityofpsl.com/Government/Your-City-Government/Mayor-City-Council/District-3-Anthony-Bonna` (dedicated bio page, mirrors the exact URL pattern already used for Stephanie Morgan's row). No term dates published — matches Stephanie Morgan's existing precedent row exactly (also `null`). Cross-checked: Bonna is not among the 3 declared 2026 District 3 candidates, mirroring Stephanie Morgan's own non-candidate status — `is_on_next_ballot: false` is correct for both, for the same reason.
+
+### Proposed current_officials row — ready, not inserted
+
+Exact draft row prepared, field-for-field matching the Stephanie Morgan precedent (name, office, district_id `...000007`, jurisdiction_level `city`, source_url/source_label, `candidate_id`/`term_start`/`term_end`/`next_election_date` all `null`). Two explicit judgment calls flagged for approval (name suffix "Sr.", office phrasing normalization). **No `current_officials` write occurred.** Draft SQL, pre-write checks, post-write checks, and a rollback (scoped to the exact inserted id) are all documented.
+
+### Atomic replacement recommendation
+
+Current delete-then-insert in `set-city-council-district/route.ts` reconfirmed non-atomic (two independent Supabase calls). Recommended: a narrowly scoped `SECURITY INVOKER` Postgres RPC deriving the user from `auth.uid()` (never a client-supplied ID), redundantly re-validating the district ID inside the function, atomic by virtue of Postgres function-body semantics, `search_path` pinned, `EXECUTE` granted only to `authenticated`. Option B (client-only transaction) confirmed not achievable with the current Supabase JS architecture. Option C (insert-first) rejected — would risk a transient/permanent dual-district state, worse for this product than the current zero-district failure mode. **No schema or RPC change occurred.**
+
+### District 1 onboarding-default recommendation
+
+Keep the current flat default for Internal Beta only; convert to a mandatory verified District 1/3 step (removing District 1 from `ALL_PSL_DISTRICTS`) as a hard precondition before any Controlled PSL Beta invitation to a real, diverse population. Not implemented in this gate.
+
+### Gate I31 readiness
+
+Still not ready to execute — both blockers now have ready-to-approve solutions, but neither is approved or implemented yet. Recommended minimum remaining sequence: **Gate I30C** (implement the approved row + RPC, guard remains false, build/verify) → **Gate I31** (scoped test-account write, only after a named account, verified target district, pre-state, explicit approval, and rollback are all supplied).
+
+### No-change confirmation — Gate I30B
+
+No `current_officials`, `user_districts`, `districts`, `elections`, or `candidates` row was touched. No schema, RPC, RLS, or grant was created or changed. No source code was modified. No secret was inspected or exposed. `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` remains `false`. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. The District 1 election-date discrepancy remains unresolved. No deployment occurred.
+
