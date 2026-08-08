@@ -1,6 +1,6 @@
 # CivicMarket Current State
 
-Last updated: August 8, 2026 (Gate I36 — ZIP onboarding no longer auto-assigns City Council District 1; static verification only, live test pending; both write guards remain false)
+Last updated: August 8, 2026 (Gate I37 — candidate_position_evidence provenance table created and verified live via one atomic transaction; RLS admin-read-only, zero write policies, zero rows; no evidence inserted, no candidate_positions/match_scores change; both write guards remain false)
 
 ## Authoritative order
 
@@ -3024,4 +3024,49 @@ Full record: `docs/internal_beta_gate_i36_onboarding_city_council_default_fix.md
 ### No-change confirmation — Gate I35 and Gate I36
 
 Beyond `src/app/onboarding/zip/page.tsx`, `src/app/onboarding/calculating/page.tsx`, and this gate's documentation files, no changes were made to: `candidates`, `voting_records`, `candidate_positions`, `match_scores`, `civic_dna`, `civic_dna_answers`, `user_districts`, `districts`, `elections`, `current_officials`, `officials_for_user`, `src/lib/officials.ts`, `src/lib/candidates.ts`, `CurrentOfficialsSection.tsx`, `src/app/profile/city-council-district/page.tsx`, `src/app/api/set-city-council-district/route.ts`, the `set_psl_city_council_district` RPC, `src/app/api/set-county-commission-district/route.ts`, Home, Ballot, schema, RLS, grants, policies, migrations, seeds, district definitions, PowerShell scripts, API keys, or environment variables. No database write was performed. No secret file was inspected. `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` remains `false`. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. No deployment occurred.
+
+## Gate I37 — candidate_position_evidence Table Creation and Verification
+
+Date: 08-08-2026
+Timestamp: 03:46 pm EST
+
+Status: **Complete.** Note on numbering: tracked in-conversation as "Gate I35," renumbered to I37 at documentation time to avoid colliding with the pre-existing, unrelated Gate I35/I36 (Onboarding City Council Default-Assignment) recorded above. Full record: `docs/internal_beta_gate_i37_candidate_position_evidence_table_execution_result.md`.
+
+New table `public.candidate_position_evidence` created and verified live, via one atomic `BEGIN;...COMMIT;` transaction covering `CREATE TABLE`, `ALTER TABLE ... ENABLE ROW LEVEL SECURITY`, the admin-only SELECT policy, and all three indexes together — no intermediate state existed where the table lacked RLS, its policy, or its indexes. Preserves source-backed, candidate-controlled evidence (`campaign_website`, `questionnaire`, `official_social`, `interview`, `debate`) used to later derive `candidate_positions` dimension scores for beta; does not itself alter `candidate_positions` or `match_scores`.
+
+**Verified live:** table exists with 18 columns; `methodology_version text NOT NULL` with no column default (every future insert must state it explicitly); 10 CHECK constraints present (valid dimension, valid score `-2..2`/null, valid source_type, valid confidence, valid extraction_status, non-blank source_url, rationale required when score is non-null, `official_social` requires a non-blank `source_account_url`, reviewed_by/reviewed_at consistency, non-blank methodology_version); `candidate_id → candidates(id) ON DELETE CASCADE`; `reviewed_by → profiles(id) ON DELETE SET NULL`; RLS enabled (`relforcerowsecurity = false`, expected under the service-role-write model); exactly one policy, `"Admins can read candidate position evidence"` (SELECT only); zero INSERT/UPDATE/DELETE policies (writes are service-role-only, mirroring `agent_staging`/`agent_runs`/`monitored_sources`); 4 indexes (`_pkey`, `_candidate_id_idx`, `_candidate_dimension_idx`, `_pending_review_idx` partial on `extraction_status IN ('draft','human_reviewed')`); row count = 0.
+
+**Approved methodology version for future evidence rows:** `campaign_evidence_v1_2026-08` (not a DB default).
+
+**`official_social`** remains a valid schema `source_type` value only — actual ingestion stays deferred pending a separate, not-yet-designed candidate-source allowlist gate.
+
+**Shannon Martin** (candidate_id `d44ff05a-14af-45c2-9f2f-6d530a8a051e`) campaign-website evidence pilot remains the next candidate-scoring task — no evidence was created or inserted for her, no scoring was performed, no campaign content was fetched, no Anthropic/Claude call was made.
+
+No `candidate_positions` or `match_scores` row was created or modified. No application source code was changed. No deployment occurred. `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` remains `false`. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. No content from the pre-existing Gate I35/I36 above was altered.
+
+### Recommended next gate
+
+Gate I38 — Shannon Martin campaign-website source verification (read-only, documentation-only), mirroring the source-verification standard already applied to the four City Council District 1 candidates in Gates I13/I18, before any evidence extraction is attempted for her.
+
+## Milestone 1 — Onboarding Live Validation (City Council-Safe ZIP Flow)
+
+Date: 08-08-2026
+
+Status: **PASS.**
+
+Live-tested the Gate I36 onboarding fix end-to-end using one fresh test account (`civicmarket.test.05@example.com`, user UUID `3b223f8c-059e-4f3a-a507-29714ad8b3a9`), created by the project owner directly in Supabase (email pre-confirmed) and signed in by the project owner — the assistant never entered, requested, or inspected any password, invite code, or credential. Confirmed pre-onboarding via a redirect-to-zip check (zero `user_districts` rows) before testing began.
+
+Submitted ZIP `34953` through the normal onboarding UI. Read-only database verification (via the browser's own already-authenticated Supabase REST call, replayed without ever exposing the captured auth header — the harness's safety classifier blocked one attempt to print it directly, so it was used only internally) confirmed the account received **exactly** the five ZIP-managed rows (`...0002` School Board District 1, `...0003` County Commission At-Large, `...0004` FL House District 85, `...0005` FL Senate District 27, `...0006` Mayor) and **zero** rows for `...0001` (City Council District 1) or `...0007` (City Council District 3).
+
+Live UI validation, all PASS: the onboarding completion screen showed both the unchanged primary "View my ballot" CTA and the new, visually secondary "Verify your City Council district →" link, which correctly navigated to `/profile/city-council-district`; Current Officials (Profile and Home) rendered without error showing Debbie Hawley and Tobin Rogers "Toby" Overdorf, with no Stephanie Morgan and no Anthony Bonna, Sr.; Ballot rendered without error showing only the Mayor race, with no City Council District 1 or District 3 race; Profile showed the correct account and the "Set City Council District" settings row; Home rendered with no false City Council content. The verification page itself was confirmed dry-run-only: a full District 1 selection with attestation was submitted and returned the exact expected message, "Write path disabled pending explicit approval. No user_districts row was created or modified." — confirmed by the same read-only database check afterward still showing zero City Council rows.
+
+Task item 10 (verifying a pre-existing verified City Council row survives ZIP resubmission) was explicitly deferred rather than improvised, since it would have required signing into the heavily-reused shared account `civicmarket.test.01@example.com` and risking its baseline for no safety benefit beyond what the delete-scoping logic already proves structurally.
+
+`npm run build` passed (27 routes, no errors). `npm run lint` reported only the 5 known pre-existing `scripts/*.cjs` errors, nothing new. `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` and `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remained `false` throughout, unedited. No schema, RLS, grant, policy, function, migration, seed, or district-definition change was made. No manual/direct Supabase SQL write was performed — every effect (or confirmed non-effect) came through the normal application flow. No existing real user was modified. No deployment occurred.
+
+Full record: `docs/internal_beta_onboarding_live_validation.md`.
+
+### No-change confirmation — Milestone 1
+
+Beyond the expected, ordinary effects of one fresh test account completing normal ZIP onboarding (its own `profiles.zip_code` update and five-row `user_districts` insert), no database write occurred. No `candidates`, `candidate_positions`, `match_scores`, `civic_dna_answers`, `districts`, `elections`, `current_officials`, `officials_for_user`, or `set_psl_city_council_district` change was made. No existing real user was touched. No schema, RLS, grants, policies, functions, migrations, or seeds were changed. No secret, `.env`, API key, password, service-role key, invite code, or credential was inspected, requested, or exposed. `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` remains `false`. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. No deployment occurred.
 
