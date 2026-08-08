@@ -13,6 +13,7 @@ const ALL_PSL_DISTRICTS = [
   { id: '11111111-0000-0000-0000-000000000003', name: 'St. Lucie County Commission At-Large', scope: 'county' },
   { id: '11111111-0000-0000-0000-000000000004', name: 'FL House District 85', scope: 'state' },
   { id: '11111111-0000-0000-0000-000000000005', name: 'FL Senate District 27', scope: 'state' },
+  { id: '11111111-0000-0000-0000-000000000006', name: 'Mayor', scope: 'city' },
 ];
 
 export default function ZipPage() {

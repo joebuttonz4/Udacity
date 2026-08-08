@@ -2594,3 +2594,44 @@ Beyond the explicitly approved database write, Gate I26 made no changes to: `use
 
 No secret, API key, token, password, connection string, or environment value was inspected or exposed. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`.
 
+## Gate I27 — Mayor Onboarding Assignment Change
+
+Date: 08-08-2026
+Timestamp: 06:59 am EST
+
+### Status
+
+Gate I27 PASS — Mayor citywide onboarding assignment implemented and statically verified. Live production `user_districts` mutation was not performed.
+
+### Implementation
+
+- Exact source file changed: `src/app/onboarding/zip/page.tsx`.
+- Mayor added to the existing `ALL_PSL_DISTRICTS` flat Port St. Lucie citywide onboarding assignment array: `{ id: '11111111-0000-0000-0000-000000000006', name: 'Mayor', scope: 'city' }` — one line added, nothing else touched.
+- Live Mayor district ID: `11111111-0000-0000-0000-000000000006` (re-confirmed live, read-only, immediately before the change).
+- No new API route, no live database lookup, no schema change — the existing flat-array + delete-then-insert onboarding write path already supported this without modification.
+
+### Static/code-trace verification result
+
+- Mayor resolves to `11111111-0000-0000-0000-000000000006`, confirmed by inspection and by the live pre-change read-only check.
+- Future onboarding for a supported ZIP will now include a Mayor `user_districts` row alongside the existing five.
+- **District 3 explicitly excluded** — not added to `ALL_PSL_DISTRICTS`; adding it there would incorrectly assign every onboarded user to District 3, which Gate I23B already identified and rejected.
+- **District 1 behavior unchanged** — the `City Council District 1` array entry and all onboarding control flow are untouched.
+- **County Commission behavior unchanged** — the `St. Lucie County Commission At-Large` array entry is untouched; no County Commission District 1-5 id was added; `src/app/api/set-county-commission-district/route.ts` was not touched.
+- Duplicate handling: the existing delete-then-insert write pattern already prevents duplicate `user_districts` rows on repeated onboarding; adding a sixth array entry introduces no new duplicate risk.
+- No database write occurred. No production `user_districts` mutation occurred. No `districts`, `elections`, or `candidates` row was touched.
+
+### Build and lint
+
+- `npm run build`: passed, 25 routes, no errors.
+- `npm run lint`: 5 pre-existing errors only (`scripts/import-real-psl-data.cjs`, `scripts/validate-real-psl-csvs.cjs`), no new errors.
+
+### Deployment
+
+Did not occur.
+
+### Deferred / unresolved (unchanged)
+
+- District 3 user-assignment mechanism remains deferred.
+- The pre-existing District 1 election-date discrepancy (live `2026-11-03` vs. Gate I18's documented `August 18, 2026`) remains unresolved.
+- `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`.
+
