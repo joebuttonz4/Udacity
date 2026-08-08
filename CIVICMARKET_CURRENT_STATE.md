@@ -2679,3 +2679,60 @@ Gate I29 (implementation, write disabled behind a new guard) → Gate I30 (live 
 
 No database write occurred. No `user_districts` row changed. No source-code implementation occurred. No deployment occurred. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. The District 1 election-date discrepancy remains unresolved.
 
+## Gate I29 — District 3 Assignment Implementation, Write Disabled
+
+Date: 08-08-2026
+Timestamp: 07:23 am EST
+
+Status: **Gate I29 PASS — District 1/3 verified-assignment flow implemented with production writes disabled.**
+
+### Implementation paths
+
+- `src/app/profile/city-council-district/page.tsx` (new)
+- `src/app/api/set-city-council-district/route.ts` (new)
+- `src/app/profile/page.tsx` (one Settings link added, County Commission row unchanged)
+
+### Write guard
+
+`ENABLE_CITY_COUNCIL_DISTRICT_WRITE = false` — a new, independent guard, remains `false`. No production `user_districts` write occurred. Every `DELETE`/`INSERT` statement in the new route is unreachable below the guard's early return.
+
+### Approved fixed District 1/3 IDs
+
+- City Council District 1: `11111111-0000-0000-0000-000000000001`
+- City Council District 3: `11111111-0000-0000-0000-000000000007`
+
+Used only as a redundant safety check after live database resolution, never to skip it.
+
+### Architecture
+
+Official lookup (City of Port St. Lucie "Council District Finder") + user attestation, mirroring the disabled County Commission pattern. No street address collected or stored anywhere in the flow — only the verified district selection.
+
+### District 1 onboarding default risk
+
+Remains unresolved and unaddressed by this gate. `ALL_PSL_DISTRICTS` was not modified; City Council District 1 remains the unconditional default for every onboarded PSL user regardless of actual address.
+
+### Current Officials District 3 gap
+
+Remains unresolved. A user moved from District 1 to District 3 would lose Stephanie Morgan from Current Officials with no replacement, since no District 3 councilmember `current_officials` row is seeded. Anthony Bonna (identified in Gate I28) was **not** seeded in this gate — no `current_officials` write occurred.
+
+### Atomicity status
+
+Delete-then-insert is not wrapped in a transaction/RPC; true atomicity is not guaranteed. Documented as a required decision before Gate I31, not silently accepted. No RPC/schema change made in this gate.
+
+### Negative-path / static result
+
+Live-tested (safe, no auth session used): unauthenticated request → 401; invalid Bearer token → 401. Code-traced against the live `districts` table: invalid label → 400; attestation false → 400; valid District 1/3 + attestation → `dryRun: true` with the exact correct resolved ID and zero mutation; delete scope resolves to exactly `{...000001, ...000007}`; Mayor (`...000006`) and County Commission At-Large (`...000003`) both structurally outside that scope.
+
+### Build and lint
+
+- `npm run build`: passed, 27 routes (2 new), no errors.
+- `npm run lint`: 5 pre-existing errors only, no new errors.
+
+### Next step and blocker
+
+Gate I30 (live UI and negative-path verification) is next. **Gate I31 (scoped test-account write) remains BLOCKED** until: (1) Gate I30 passes, (2) the District 3 Current Officials data gap is resolved, (3) atomic replacement safety is accepted/resolved, (4) explicit scoped test-account write approval is given.
+
+### No-change confirmation — Gate I29
+
+No database write occurred. No `user_districts`, `districts`, `elections`, `candidates`, or `current_officials` row was touched. No secret was inspected or exposed. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. The District 1 election-date discrepancy remains unresolved. No deployment occurred.
+

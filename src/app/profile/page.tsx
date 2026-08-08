@@ -253,6 +253,11 @@ export default function ProfilePage() {
               </h2>
               <SettingsRow href="/ballot" label="My Districts" />
               <SettingsRow
+                href="/profile/city-council-district"
+                label="Set City Council District"
+                helper="Verify District 1 or District 3 using the official City lookup tool."
+              />
+              <SettingsRow
                 href="/profile/county-commission"
                 label="Set County Commission District"
                 helper="Preview only — saving is disabled until the team explicitly enables it."
