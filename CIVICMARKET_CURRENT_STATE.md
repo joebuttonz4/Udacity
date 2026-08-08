@@ -2520,3 +2520,77 @@ Gate I25 made no changes to: `candidates`, `elections`, `districts`, `user_distr
 
 No SQL was executed. No database write occurred. No secret file was inspected. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`.
 
+## Gate I26 — Mayor and District 3 Scoped Write Execution and Verification
+
+Date: 08-08-2026
+Timestamp: 06:50 am EST
+
+### Status
+
+- Gate I25's final write statement was **explicitly approved by the user**.
+- The scoped Mayor and City Council District 3 database write has been **executed and fully verified live**.
+- Created: `docs/internal_beta_gate_i26_mayor_district3_write_execution_result.md`
+- No deployment occurred.
+
+### Execution history
+
+- Two prerequisite `districts` rows (Mayor, City Council District 3) and two prerequisite `elections` rows were inserted manually and verified live; this succeeded and remained stable through every subsequent check.
+- **Earlier candidate-insert attempts, wrapped in an explicit `BEGIN;...COMMIT;` block, were reported successful with no error but produced zero persisted candidate rows** — confirmed independently by direct, unfiltered, cache-busted read-only queries each time, not accepted on the report alone.
+- A read-only schema diagnosis (via `select=*` on an existing candidate row, since PostgREST's OpenAPI introspection requires the secret key, which was correctly not sought) found the live `candidates` schema exactly matches `Reference Files/civicmarket_schema_v4.sql` — no defect found.
+- **The final, successful execution used one standalone multi-row `INSERT ... VALUES (...) RETURNING ...` statement with no explicit transaction wrapper**, relying on the SQL Editor's default autocommit. This returned all seven rows and their generated IDs, independently re-confirmed live.
+
+### Verified live result
+
+**Row-count deltas (vs. Gate I25 baseline):**
+- `candidates`: 4 → 11 (+7) ✓
+- `districts`: 10 → 12 (+2) ✓
+- `elections`: 5 → 7 (+2) ✓
+- `candidate_positions`: 0 → 0 (+0) ✓
+- `voting_records`: 0 → 0 (+0) ✓
+- `match_scores` / `user_districts`: not numerically measurable via anonymous read (RLS-restricted to owning user); zero side effects structurally guaranteed, since no executed statement referenced either table.
+
+**Race breakdown:** City Council District 1 = 4, Mayor = 4, City Council District 3 = 3 (total 11).
+
+**Seven new candidates (verified live):**
+- Shannon Martin (`d44ff05a-14af-45c2-9f2f-6d530a8a051e`, Mayor, is_incumbent true)
+- Eric Strazzeri (`5b03e0af-ad49-4299-83cf-19c73d0da89f`, Mayor)
+- Steven Giordano (`3a52546d-6cdf-42c6-abd2-4fface88e858`, Mayor)
+- Steven Harrington (`6e14b71f-0a08-4623-a442-c444d5f9b276`, Mayor)
+- Fritz Alexandre (`a8f27169-47ee-4c09-af47-fc0ff925beb1`, City Council District 3)
+- Jim Norton (`17d76e2c-744e-41d0-8144-2b92533dffa5`, City Council District 3)
+- Peter Overhuls (`3dda97a1-b331-4642-9009-35a762685ee6`, City Council District 3)
+
+All linked to the correct district/election IDs (`...000006` for Mayor, `...000007` for District 3), `appeared_on_ballot: true` for all seven, `archived_at`/`bio`/`website`/`photo_url` all `null`, District 3 office normalized to `City Council District 3` as approved.
+
+**Prerequisite rows verified live:** Mayor district (`...000006`), City Council District 3 district (`...000007`), PSL Mayor 2026 election (`...000006`, election_date `2026-08-18`), PSL City Council D3 2026 election (`...000007`, election_date `2026-08-18`).
+
+### District 1 preservation
+
+All 4 District 1 candidates, its district, and its election remain unchanged. **District 1 election_date remains `2026-11-03`** — not touched, not normalized.
+
+### Side effects and safety
+
+- No `candidate_positions`, `voting_records`, `match_scores`, or `user_districts` side effects.
+- No District 3 user assignment exists. No Mayor user assignment exists.
+- County Commission districts (At-Large + District 1-5) confirmed unchanged.
+- `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`.
+- Rollback was not required and was not used.
+
+### Build, lint, and UI results
+
+- `npm run build`: passed, 25 routes, no errors.
+- `npm run lint`: 5 pre-existing errors only (`scripts/import-real-psl-data.cjs`, `scripts/validate-real-psl-csvs.cjs`), no new errors.
+- Live UI sanity check: **BLOCKED** — no dev server or authenticated browser session was running for this gate; not fabricated.
+
+### Remaining unresolved / deferred (unchanged)
+
+1. District 3 user-assignment mechanism remains deferred — no `user_districts` row exists for District 3 for any user; the new rows are not exposed to any ballot.
+2. The pre-existing District 1 election-date discrepancy (live `2026-11-03` vs. Gate I18's documented `August 18, 2026`) remains open and unresolved.
+3. Mayor is not yet added to the flat `ALL_PSL_DISTRICTS` onboarding array — no current or future beta user automatically receives the Mayor district yet; this remains a separate, future, explicitly-approved step.
+
+### No-change confirmation — Gate I26
+
+Beyond the explicitly approved database write, Gate I26 made no changes to: `user_districts`, `voting_records`, `candidate_positions`, `match_scores`, `civic_dna`, `civic_dna_answers`, `current_officials`, `officials_for_user`, schema, RLS, grants, seeds, migrations, CSV files, source code, import scripts, validation scripts, API keys, environment variables, County Commission logic, the At-Large row, or deployment state.
+
+No secret, API key, token, password, connection string, or environment value was inspected or exposed. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`.
+
