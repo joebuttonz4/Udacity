@@ -2635,3 +2635,47 @@ Did not occur.
 - The pre-existing District 1 election-date discrepancy (live `2026-11-03` vs. Gate I18's documented `August 18, 2026`) remains unresolved.
 - `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`.
 
+## Gate I28 — District 3 User-Assignment Mechanism Design
+
+Date: 08-08-2026
+Timestamp: 07:04 am EST
+
+Status: Design and read-only verification only. **Gate I28 PASS — recommended District 3 assignment architecture is ready for explicit implementation approval.**
+
+### Official source selected
+
+City of Port St. Lucie "Council District Finder" — `https://pslgis.maps.arcgis.com/apps/webappviewer/index.html?id=397887d028a04aaa91e901feca2e6da1`, hosted on the City's own GIS org, linked from the City's official GIS page. Verified live this gate via direct click-to-identify tests at four points, returning an explicit `DISTRICT` field for each of the four City Council districts: District 1 (Stephanie Morgan, matching the already-seeded live `current_officials` row), District 2 (David Pickett), District 3 (Anthony Bonna), District 4 (Jolien Caraballo). No documented public REST API was confirmed for this tool; it remains a link-out resource, not a server-side integration.
+
+### Recommended assignment approach
+
+**Option A — official lookup + user attestation**, adapted from the already-built (disabled) County Commission pattern: profile/settings page → link to the official tool (no address collected/stored) → closed 2-option selection (District 1 / District 3) → attestation checkbox → authenticated API route → live district resolution against `districts` → scoped delete-then-insert limited to City Council District 1/3 IDs only. ZIP-only assignment (Option D) rejected outright; direct server-side GIS API calls (Option B) and address storage (Option C) both evaluated and not recommended.
+
+### Address-storage policy
+
+CivicMarket will not collect, transmit, log, or store a street address anywhere in this flow — only the verified district assignment itself is stored.
+
+### Proposed District 1/3 replacement behavior
+
+Future route scoped to affect only `user_districts` rows with `district_id IN (11111111-0000-0000-0000-000000000001, 11111111-0000-0000-0000-000000000007)` for the authenticated user; all other assignments (Mayor, School Board, County Commission At-Large, FL House/Senate) preserved untouched.
+
+### District 1 default-assignment risk finding
+
+**Confirmed live and flagged as a real, currently-unaddressed data-accuracy issue, not just a theoretical risk.** Port St. Lucie has 4 City Council districts; every onboarded user is currently unconditionally assigned District 1 regardless of actual address. This has not yet caused real harm (Internal Beta uses trusted test accounts, not a geographically diverse population) but would misrepresent most real residents once Controlled PSL Beta invites a broader population. Recommendation: District 1 should eventually be removed from the flat `ALL_PSL_DISTRICTS` onboarding default in favor of a verified City Council district step for every user — this is a materially larger onboarding-flow change, explicitly out of scope for Gate I28/I29, and requires its own future, separately-approved gate.
+
+### Ballot / Current Officials impact
+
+`getCandidatesForDistricts`/`getUserDistrictIds` and `getOfficialsForUser` already read `user_districts` fully generically — no code change is needed for District 3 candidates to appear and District 1 candidates to disappear once a user's assignment is correctly replaced. However, no District 3 councilmember (Anthony Bonna) `current_officials` row is seeded yet, so a District 3 user would lose Stephanie Morgan from Current Officials without gaining a replacement until a separate, future, verified-source seeding gate addresses that data-completeness gap (parallel to the existing Mayor-district gap pattern).
+
+### Proposed implementation paths (not created)
+
+- `src/app/profile/city-council-district/page.tsx`
+- `src/app/api/set-city-council-district/route.ts`
+
+### Future gate sequence
+
+Gate I29 (implementation, write disabled behind a new guard) → Gate I30 (live UI and negative-path verification) → Gate I31 (scoped test-account write, only after explicit approval).
+
+### No-change confirmation — Gate I28
+
+No database write occurred. No `user_districts` row changed. No source-code implementation occurred. No deployment occurred. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. The District 1 election-date discrepancy remains unresolved.
+
