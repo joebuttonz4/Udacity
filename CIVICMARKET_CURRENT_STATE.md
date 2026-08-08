@@ -1,6 +1,6 @@
 # CivicMarket Current State
 
-Last updated: August 8, 2026 (Gate I31 — City Council district test-account write attempted, RPC defect found, no write occurred)
+Last updated: August 8, 2026 (Gate I33 — City Council RPC ambiguity fix manually applied and verified live; write guards remain false)
 
 ## Authoritative order
 
@@ -2910,4 +2910,48 @@ Gate I32 — City Council RPC Ambiguous-Column Fix (design + approval + manual e
 ### No-change confirmation — Gate I31
 
 No lasting changes to `candidates`, `voting_records`, `candidate_positions`, `match_scores`, `civic_dna`, `civic_dna_answers`, `user_districts` (both attempted writes failed, zero rows changed), `districts`, `current_officials`, `officials_for_user`, `src/lib/officials.ts`, `CurrentOfficialsSection`, `set_psl_city_council_district` (called, not edited), schema, tables, seeds, migrations, CSV files, RLS, grants, `src/app/api/set-city-council-district/route.ts` (reverted to match `HEAD`), `src/app/api/set-county-commission-district/route.ts`, PowerShell scripts, API keys, environment variables, the County Commission write guard, the At-Large row, or deployment state. No database write was performed. No secret file was inspected. No credentials were entered. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` was temporarily `true` during this test and is confirmed restored to `false`. No deployment occurred.
+
+## Gate I32 — City Council RPC Ambiguous-Column Fix: Design and Preparation
+
+Date: 08-08-2026
+
+Status: Design and SQL preparation only (documentation-only gate). Read-only code inspection of `Reference Files/civicmarket_schema_addendum_city_council_district_rpc.sql`.
+
+Gate I31 exposed a live authenticated PostgreSQL `42702` "column reference district_id is ambiguous" error in `public.set_psl_city_council_district(uuid)`. Root cause: `RETURNS TABLE (district_id uuid)` implicitly declares a PL/pgSQL variable named `district_id`, colliding with the unqualified `district_id` reference inside the function's `DELETE FROM user_districts WHERE ... AND district_id IN (...)` statement. Audit of every occurrence of `district_id` in the function found this to be the only ambiguous reference (the `INSERT` target-column list is not ambiguous, since target-column lists resolve against the destination table, not PL/pgSQL variables).
+
+Recommended and approved-for-drafting fix: qualify the reference as `user_districts.district_id`. A `CREATE OR REPLACE FUNCTION` statement implementing exactly this one-line change (nothing else touched — signature, return type, `SECURITY INVOKER`, `search_path`, and closed-set validation all unchanged) was drafted, along with read-only post-change verification SQL (`pg_proc`/`pg_get_functiondef`, `information_schema.routine_privileges`, `has_function_privilege()` checks) and a full regression test plan mirroring Gate I31's approval pattern. `CREATE OR REPLACE FUNCTION` (not `DROP`) was determined sufficient, since the signature is unchanged. Full record: `docs/internal_beta_gate_i32_city_council_rpc_ambiguity_fix_preparation.md`.
+
+No SQL was executed by this gate. No live change was made. `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` and `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` both remained `false`, untouched.
+
+## Gate I33 — City Council RPC Ambiguity Fix: Execution and Live Verification
+
+Date: 08-08-2026
+
+Status: **Manually executed and verified live. Fix is live. No write guard was enabled. No `user_districts` mutation occurred.**
+
+The user explicitly approved and manually executed, in the Supabase SQL Editor, the exact `CREATE OR REPLACE FUNCTION` statement drafted in Gate I32: the sole change was qualifying the `DELETE` predicate from `district_id IN (...)` to `user_districts.district_id IN (...)`, resolving the Gate I31 `42702` ambiguity. Execution succeeded with no rows returned.
+
+Live verification (reported by the project owner, read-only queries):
+- `prosecdef = false` — `SECURITY INVOKER` preserved.
+- `identity_arguments = p_district_id uuid` — signature unchanged.
+- `result_type = TABLE(district_id uuid)` — return type unchanged.
+- `proconfig = ["search_path=public, pg_temp"]` — `search_path` preserved.
+- `anon_can_execute = false` — anonymous execution remains blocked.
+- `authenticated_can_execute = true` — authenticated execution remains permitted.
+
+`CREATE OR REPLACE FUNCTION` preserved all existing grants automatically, as predicted in Gate I32 (grants are unaffected by a replace when the function signature is unchanged); the optional idempotent `REVOKE`/`GRANT` fallback was not needed. No API route change was required — `src/app/api/set-city-council-district/route.ts` calls the RPC opaquely and never destructures its result by column name; repository diff confirmed this file, and every other tracked file, remained unchanged throughout Gates I32-I33.
+
+No `user_districts` row was created, updated, or deleted during this gate. `civicmarket.test.01@example.com` remains on City Council District 1 (Stephanie Morgan), unaffected. The District 1 → District 3 → District 1 live regression test (Gate I32's §9 test plan) was explicitly not performed and remains blocked pending a separate, explicit, scoped test-account write approval, following the Gate I31 approval pattern. `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` remains `false`. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. No deployment occurred.
+
+Full record: `docs/internal_beta_gate_i33_city_council_rpc_fix_execution_result.md`.
+
+Remaining unresolved and unaffected by Gates I32-I33: the pre-existing District 1 election-date discrepancy (live `2026-11-03` vs. Gate I18's documented `August 18, 2026`); the District 1 onboarding-default accuracy risk (every onboarded user defaults to City Council District 1 regardless of actual address).
+
+### Recommended next gate
+
+Gate I34 — City Council District 1 → District 3 → District 1 Live Regression Test, only after a fresh, explicit, scoped test-account write approval is given, following the Gate I31 approval pattern exactly.
+
+### No-change confirmation — Gate I32 and Gate I33
+
+Beyond the one explicitly approved live SQL execution (`CREATE OR REPLACE FUNCTION public.set_psl_city_council_district`, Gate I33) and documentation files, no changes were made to: `candidates`, `voting_records`, `candidate_positions`, `match_scores`, `civic_dna`, `civic_dna_answers`, `user_districts`, `districts`, `elections`, `current_officials`, `officials_for_user`, `src/lib/officials.ts`, `CurrentOfficialsSection`, `src/app/api/set-city-council-district/route.ts`, `src/app/api/set-county-commission-district/route.ts`, schema, RLS, seeds, migrations, CSV files, PowerShell scripts, API keys, environment variables, the At-Large row, or deployment state. No secret file was inspected. `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` remains `false`. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. No deployment occurred.
 
