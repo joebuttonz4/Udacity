@@ -2364,3 +2364,119 @@ Gate I23B made no changes to: `candidates`, `elections`, `districts`, `user_dist
 
 No database write was performed. No live election row was modified. No District 1 election row was modified. No candidate row was inserted, updated, deleted, or archived. No district row was inserted, updated, deleted, or archived. No user_districts row was created or modified. No CSV field was changed. No import script was run. No candidate was scored. No candidate was ranked. No political recommendation was produced. No Claude or Anthropic API call was made. No secret file was inspected. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. No County Commission District 1-5 write was performed. No deployment occurred.
 
+## Gate I24 — Mayor and District 3 Import Preparation Package
+
+Date: 08-08-2026
+Timestamp: 06:11 am EST
+
+### Status
+
+- Gate I24 preparation package complete.
+- Created: `docs/internal_beta_gate_i24_mayor_district3_import_preparation_package.md`
+- Commit: `6c0cd2e` Add Mayor and District 3 import preparation package
+- Commit pushed successfully to origin/master.
+- `npm run build` passed.
+- No database write occurred.
+- No CSV edit occurred.
+- No source-code change occurred.
+- No import script was executed.
+- No deployment occurred.
+
+### Fresh live baseline
+
+- Existing City Council District 1 baseline remains unchanged.
+- Four District 1 candidate rows remain live.
+- Existing District 1 district row remains live.
+- Existing District 1 election row remains live.
+- Mayor district row remains absent.
+- City Council District 3 district row remains absent.
+- PSL Mayor 2026 election row remains absent.
+- PSL City Council D3 2026 election row remains absent.
+- Four Mayor candidate rows remain absent.
+- Three District 3 candidate rows remain absent.
+
+### Deterministic ID finding
+
+- The existing District 1 election row uses a fixed deterministic ID rather than a random UUID.
+- Elections therefore follow the same human-readable deterministic ID pattern already used for district/reference data.
+- Gate I24 extended that convention for the planned new rows.
+
+**Approved planned IDs:**
+
+- Mayor district: `11111111-0000-0000-0000-000000000006`
+- City Council District 3 district: `11111111-0000-0000-0000-000000000007`
+- PSL Mayor 2026 election: `22222222-0000-0000-0000-000000000006`
+- PSL City Council D3 2026 election: `22222222-0000-0000-0000-000000000007`
+
+- These IDs were read-only checked as unused during Gate I24.
+- No row using these IDs was inserted.
+
+### Election dates
+
+- PSL Mayor 2026: election_date = 2026-08-18
+- PSL City Council D3 2026: election_date = 2026-08-18
+
+These are the explicitly approved Primary Election date convention from Gate I23B. The existing District 1 election date was not altered.
+
+### Planned district rows
+
+**Mayor:** name = Mayor, type = city_council, city = Port St. Lucie, state = FL
+
+**City Council District 3:** name = City Council District 3, type = city_council, city = Port St. Lucie, state = FL
+
+### Planned candidate rows
+
+**Mayor:** Shannon Martin, Eric Strazzeri, Steven Giordano, Steven Harrington
+
+**District 3:** Fritz Alexandre, Jim Norton, Peter Overhuls
+
+- Candidate IDs remain database-generated, matching the District 1 import precedent.
+- Gate I24 did not assign deterministic candidate IDs.
+
+### District 3 office normalization
+
+Approved future import value: office = City Council District 3. The CSV was not modified in Gate I24.
+
+### Provenance handling
+
+Approved Provenance Option A:
+- `official_candidate_source_url` remains preserved in repository CSV/documentation.
+- No candidates-table schema column is being added.
+- No unrelated field will be repurposed.
+
+### Import architecture
+
+Approved hybrid architecture:
+1. Explicit scoped SQL for the Mayor district, District 3 district, Mayor election, and District 3 election.
+2. Scoped insert for exactly four Mayor candidates and three District 3 candidates.
+3. No broad delete.
+4. No delete/reinsert of District 1.
+5. Do not use `scripts/import-real-psl-data.cjs` unchanged.
+6. Preserve all existing District 1 data.
+
+### Gate I24 SQL status
+
+- Gate I24 contains draft SQL.
+- It is labeled DRAFT ONLY / NOT EXECUTED.
+- No statement was run against Supabase.
+- The draft contains no broad DELETE operation.
+
+### Validation package
+
+Gate I24 defines: pre-write verification, ID collision checks, District 1 baseline checks, post-write verification, exact expected 11-candidate state, side-effect checks for `candidate_positions`/`match_scores`/`voting_records`, ID-scoped rollback, and an unchecked final write-approval statement.
+
+### Remaining unresolved/out-of-scope items
+
+1. District 3 user-assignment mechanism.
+2. Existing District 1 election-date discrepancy (live row = 2026-11-03, prior documentation referenced August 18, 2026).
+
+- Neither issue blocks creation of the Mayor/District 3 district/election/candidate rows if personalization remains disabled for District 3.
+- District 3 must not be assigned to users during the import.
+- District 1 must not be changed during this work.
+
+### No-change confirmation — Gate I24
+
+Gate I24 made no changes to: `candidates`, `elections`, `districts`, `user_districts`, `voting_records`, `candidate_positions`, `match_scores`, `civic_dna`, `civic_dna_answers`, `current_officials`, `officials_for_user`, schema, RLS, grants, seeds, migrations, CSV files, source code, import scripts, validation scripts, API keys, environment variables, County Commission logic, the At-Large row, or deployment state.
+
+`ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`.
+
