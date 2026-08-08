@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
 import { createServiceClient } from '@/lib/supabase-server'
 
 // Gate I29 draft (see CIVICMARKET_CURRENT_STATE.md, "Gate I29 — District 3 Assignment
@@ -102,31 +103,15 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  // Resolve both City Council District 1 and District 3 ids live, so a future delete step
-  // scopes only to these two ids and can never touch Mayor, School Board, County Commission,
-  // FL House/Senate, or any other assignment.
-  const { data: cityCouncilDistricts, error: scopeLookupError } = await supabase
-    .from('districts')
-    .select('id, name')
-    .in('name', VALID_DISTRICT_LABELS as unknown as string[])
-
-  if (scopeLookupError) {
-    return NextResponse.json({ error: 'Failed to resolve delete scope' }, { status: 500 })
-  }
-
-  const deleteScopeIds = ((cityCouncilDistricts ?? []) as DistrictRow[]).map((d) => d.id)
-
+  // The delete scope (City Council District 1/3 only) is no longer resolved or applied
+  // here — it now lives inside the set_psl_city_council_district RPC itself (Gate I30C),
+  // hardcoded to the same two approved ids, so it cannot drift from what this route
+  // validates above.
   const writePlan = {
     userId,
-    deleteScope: {
-      table: 'user_districts',
-      filter: { user_id: userId, district_id_in: deleteScopeIds },
-      note: 'Scoped only to City Council District 1 and District 3 ids. Never includes Mayor, School Board, County Commission, or FL House/Senate.',
-    },
-    insert: {
-      table: 'user_districts',
-      row: { user_id: userId, district_id: resolvedDistrict.id, scope: 'city' },
-    },
+    rpc: 'set_psl_city_council_district',
+    args: { p_district_id: resolvedDistrict.id },
+    note: 'Atomic replacement scoped only to City Council District 1/3 ids via a SECURITY INVOKER Postgres RPC (Gate I30C). Never touches Mayor, School Board, County Commission, or FL House/Senate. Requires Reference Files/civicmarket_schema_addendum_city_council_district_rpc.sql to have been run in Supabase first.',
   }
 
   if (!ENABLE_CITY_COUNCIL_DISTRICT_WRITE) {
@@ -149,33 +134,34 @@ export async function POST(req: NextRequest) {
 
   // ---------------------------------------------------------------------------------
   // BLOCKED PENDING APPROVAL: unreachable while ENABLE_CITY_COUNCIL_DISTRICT_WRITE is
-  // false, per the guard above. This code intentionally performs the live mutation
-  // described by writePlan and must not be enabled without separate, explicit approval.
-  // Note: this delete-then-insert pair is not wrapped in a single transaction/RPC — see
-  // Gate I28/I29's atomicity finding. A failure between these two calls would leave the
-  // user with no City Council district assigned, not a duplicate.
+  // false, per the guard above. Calls the atomic set_psl_city_council_district RPC
+  // (Gate I30C) using a request-scoped client authenticated AS THE CALLING USER (their
+  // own Bearer token forwarded via the public anon key), not the service-role client —
+  // this is required so the RPC's SECURITY INVOKER auth.uid() check correctly resolves
+  // to this specific user, and so RLS on user_districts (already scoped to
+  // auth.uid() = user_id) is the actual enforcement boundary, matching how every other
+  // direct client write to user_districts already works in this app. This requires
+  // Reference Files/civicmarket_schema_addendum_city_council_district_rpc.sql to have
+  // already been run in Supabase — see Gate I30C.
   // ---------------------------------------------------------------------------------
 
-  const { error: deleteError } = await supabase
-    .from('user_districts')
-    .delete()
-    .eq('user_id', userId)
-    .in('district_id', deleteScopeIds)
+  const userScopedSupabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      auth: { persistSession: false },
+      global: { headers: { Authorization: `Bearer ${token}` } },
+    }
+  )
 
-  if (deleteError) {
-    return NextResponse.json(
-      { error: 'Failed to clear prior City Council district' },
-      { status: 500 }
-    )
-  }
+  const { data: rpcResult, error: rpcError } = await userScopedSupabase.rpc(
+    'set_psl_city_council_district',
+    { p_district_id: resolvedDistrict.id }
+  )
 
-  const { error: insertError } = await supabase
-    .from('user_districts')
-    .insert({ user_id: userId, district_id: resolvedDistrict.id, scope: 'city' })
-
-  if (insertError) {
+  if (rpcError) {
     return NextResponse.json({ error: 'Failed to save verified district' }, { status: 500 })
   }
 
-  return NextResponse.json({ dryRun: false, resolvedDistrict })
+  return NextResponse.json({ dryRun: false, resolvedDistrict, rpcResult })
 }

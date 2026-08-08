@@ -2809,3 +2809,42 @@ Still not ready to execute — both blockers now have ready-to-approve solutions
 
 No `current_officials`, `user_districts`, `districts`, `elections`, or `candidates` row was touched. No schema, RPC, RLS, or grant was created or changed. No source code was modified. No secret was inspected or exposed. `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` remains `false`. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. The District 1 election-date discrepancy remains unresolved. No deployment occurred.
 
+## Gate I30C — City Council Pre-Write Blocker Implementation
+
+Date: 08-08-2026
+Timestamp: 08:02 am EST
+
+Status: **Implementation and SQL preparation complete. Both Supabase-side executions (data row + RPC) remain pending manual action — not yet live.**
+
+### Capability finding
+
+Neither approved write could be executed by this session: `current_officials` INSERT requires `profiles.is_admin = true` under RLS (no admin session available to the anon key), and `CREATE FUNCTION` is schema DDL, impossible via PostgREST. This mirrors every prior real write in this project (e.g. Gate I26) — exact SQL is prepared for manual execution in the Supabase SQL Editor.
+
+### Anthony Bonna row (not yet live)
+
+Fresh pre-write verification passed (District 3 exists, no existing D3/Bonna row, Stephanie Morgan intact, count = 8). Exact approved INSERT SQL documented in Gate I30C, ready to run. **No `current_officials` write occurred.**
+
+### Atomic RPC (not yet live)
+
+Created `Reference Files/civicmarket_schema_addendum_city_council_district_rpc.sql` — `set_psl_city_council_district(p_district_id uuid)`, `SECURITY INVOKER`, `auth.uid()`-derived caller, closed district validation (`...000001`/`...000007` only, re-verified live), atomic by Postgres function-body semantics, explicit `search_path`, `EXECUTE` granted only to `authenticated`, plain `CREATE FUNCTION` (not `OR REPLACE`) to fail closed on any name collision. **No schema/RPC change occurred live.**
+
+### API route migrated
+
+`src/app/api/set-city-council-district/route.ts` updated: old non-atomic delete-then-insert fully removed (not just made unreachable); new path calls the RPC via a request-scoped client authenticated as the calling user (forwarding their Bearer token through the public anon key), not the service-role client — required so `auth.uid()` resolves correctly inside the `SECURITY INVOKER` function. All existing validation (auth, attestation, closed label set, live district resolution) unchanged. `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` remains `false`, unchanged, still guards the entire mutation path.
+
+### Verification performed
+
+- `npm run build`: passed, 27 routes, no errors.
+- `npm run lint`: 5 pre-existing errors only, no new errors.
+- Negative-path regression (live): unauthenticated → 401, invalid token → 401, both unchanged from Gate I29/I30.
+- Full authenticated dry-run round-trip re-exercised live via the already-authenticated UI after the route refactor: `200`, exact expected dry-run message, confirming no regression from removing the old delete-scope code.
+- RPC's own live negative-path behavior (anonymous rejection, invalid-district rejection at the DB level) cannot be tested until the RPC exists live — correctly deferred.
+
+### Gate I31 readiness
+
+Still blocked, now on a shorter list: (1) run Part A's SQL, (2) run Part B's SQL, (3) live post-execution re-verification of both, (4) approved test-account identity + verified target district, (5) explicit scoped live-write approval for Gate I31 itself. District 1 onboarding-default accuracy risk remains separate and unaddressed.
+
+### No-change confirmation — Gate I30C
+
+Beyond the one route file and the one new reference SQL file, no other source code, schema, RLS, grants, seeds, migrations, or CSV files were touched. No `current_officials`, `user_districts`, `districts`, `elections`, or `candidates` row was created, modified, or deleted. No secret was inspected or exposed. `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` remains `false`. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. The District 1 election-date discrepancy remains unresolved. No deployment occurred.
+
