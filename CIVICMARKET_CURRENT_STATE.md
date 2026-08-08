@@ -2480,3 +2480,43 @@ Gate I24 made no changes to: `candidates`, `elections`, `districts`, `user_distr
 
 `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`.
 
+## Gate I25 — Mayor and District 3 Write Execution Approval
+
+Date: 08-08-2026
+Timestamp: 06:11 am EST
+
+### Status
+
+- Gate I24 preparation package complete (recorded above).
+- Gate I25 approval package created:
+  - `docs/internal_beta_gate_i25_mayor_district3_write_execution_approval.md`
+- Commit: `b93c16f` Add Mayor and District 3 write approval package
+- Commit pushed successfully to origin/master.
+- `npm run build` passed.
+
+### Readiness
+
+- Gate I25 is **READY FOR EXPLICIT WRITE APPROVAL**.
+- **Database write is NOT approved yet.**
+- No SQL was executed. No database write occurred.
+
+### Scope reaffirmed
+
+- Planned district IDs: Mayor `11111111-0000-0000-0000-000000000006`; City Council District 3 `11111111-0000-0000-0000-000000000007`.
+- Planned election IDs and dates: PSL Mayor 2026 `22222222-0000-0000-0000-000000000006` (election_date 2026-08-18); PSL City Council D3 2026 `22222222-0000-0000-0000-000000000007` (election_date 2026-08-18).
+- Seven planned candidates: Shannon Martin, Eric Strazzeri, Steven Giordano, Steven Harrington (Mayor); Fritz Alexandre, Jim Norton, Peter Overhuls (District 3, office normalized to City Council District 3).
+- Full pre-write checks, exact allowed write sequence, forbidden-action list, post-write expected state, and an ID-scoped rollback package are defined in Gate I25. None have been executed.
+- An unchecked final approval statement is included in Gate I25, awaiting explicit user approval in a later message before any write occurs.
+
+### Deferred / unresolved (unchanged)
+
+- District 3 user-assignment mechanism remains deferred.
+- The pre-existing District 1 election-date discrepancy (live row = 2026-11-03; prior documentation referenced August 18, 2026) remains unresolved and out of scope.
+- No write occurred as part of Gate I24 or Gate I25.
+
+### No-change confirmation — Gate I25
+
+Gate I25 made no changes to: `candidates`, `elections`, `districts`, `user_districts`, `voting_records`, `candidate_positions`, `match_scores`, `civic_dna`, `civic_dna_answers`, `current_officials`, `officials_for_user`, schema, RLS, grants, seeds, migrations, CSV files, source code, import scripts, validation scripts, API keys, environment variables, County Commission logic, the At-Large row, or deployment state.
+
+No SQL was executed. No database write occurred. No secret file was inspected. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`.
+
