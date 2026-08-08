@@ -1,6 +1,6 @@
 # CivicMarket Current State
 
-Last updated: August 8, 2026 (Gate I34 — City Council District 1↔3 live regression test passed; both write guards restored to false)
+Last updated: August 8, 2026 (Gate I36 — ZIP onboarding no longer auto-assigns City Council District 1; static verification only, live test pending; both write guards remain false)
 
 ## Authoritative order
 
@@ -2980,4 +2980,48 @@ Remaining unresolved and unaffected by Gate I34: the pre-existing District 1 ele
 ### No-change confirmation — Gate I34
 
 `civicmarket.test.01@example.com`'s `current_officials`/`user_districts` state returned to its exact pre-test values by the end of the gate — two real, approved, scoped writes (one out to District 3, one back to District 1) leaving no net change. No other user was touched. No changes were made to: `candidates`, `voting_records`, `candidate_positions`, `match_scores`, `civic_dna`, `civic_dna_answers`, `districts`, `elections`, `officials_for_user`, `src/lib/officials.ts`, `CurrentOfficialsSection`, `set_psl_city_council_district` (called twice, not edited), schema, tables, seeds, migrations, CSV files, RLS, grants, `src/app/api/set-city-council-district/route.ts` (reverted to match `HEAD`), `src/app/api/set-county-commission-district/route.ts`, PowerShell scripts, API keys, environment variables, the At-Large row, or deployment state. No secret file was inspected. No credentials were entered. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` was temporarily `true` during this test and is confirmed restored to `false`. No deployment occurred.
+
+## Gate I35 — Onboarding City Council Default-Assignment: Design (Read-Only)
+
+Date: 08-08-2026
+
+Status: Read-only design/inspection only, delivered in-conversation (no separate document file created for this step — see Gate I36 below for the implementation it fed into).
+
+Traced the exact unsafe default: `src/app/onboarding/zip/page.tsx`'s flat `ALL_PSL_DISTRICTS` array auto-assigned City Council District 1 to every qualifying ZIP submission, even though ZIP alone cannot distinguish District 1 from District 3 (Gate I28's already-established finding). Also identified a previously undocumented secondary defect: the same code's unconditional `user_districts` delete (`.eq('user_id', user.id)` with no district scoping) would silently destroy any separately verified City Council assignment on a later ZIP resubmission.
+
+Confirmed via direct code trace that Mayor, School Board District 1, County Commission At-Large, FL House District 85, and FL Senate District 27 remain safe to auto-assign under the current data model (no competing districts exist for any of them in the schema today), and confirmed that Home, Ballot, `/onboarding/districts`, Profile, Current Officials, and candidate fetching (`src/lib/candidates.ts`, `src/lib/officials.ts`, `CurrentOfficialsSection.tsx`) all already degrade safely with zero City Council assignment — no crashes, no hardcoded assumptions found.
+
+Recommended design: stop auto-assigning City Council District 1 (or District 3) from ZIP; scope the delete to only the ZIP-managed districts so a verified City Council row survives; add a small, reused (not duplicated) pointer to the existing `/profile/city-council-district` verification page as a secondary post-onboarding action. Confirmed the existing RPC/API path (`set_psl_city_council_district`, proven live in Gate I34) needs no changes and is safe to call even for a user with zero prior City Council row.
+
+No code was edited, no Supabase access occurred, and no file was committed during Gate I35 itself.
+
+## Gate I36 — Onboarding City Council Default-Assignment Fix: Implementation
+
+Date: 08-08-2026
+
+Status: **Implemented and statically verified. No live/UI onboarding test performed. General-user City Council writes remain disabled.**
+
+Implemented the Gate I35 design in exactly the two approved files:
+
+**`src/app/onboarding/zip/page.tsx`** — `ALL_PSL_DISTRICTS` renamed to `ZIP_MANAGED_DISTRICTS` with the City Council District 1 entry removed, leaving exactly the five approved districts (School Board District 1, County Commission At-Large, FL House District 85, FL Senate District 27, Mayor). The `user_districts` delete before reinsert is now scoped with `.in('district_id', ZIP_MANAGED_DISTRICTS.map((d) => d.id))`, so City Council District 1 (`...0001`) and District 3 (`...0007`) rows — and any other unrelated future `user_districts` row — are structurally excluded from this delete by construction, fixing both the primary default-assignment defect and the secondary delete-all defect identified in Gate I35.
+
+**`src/app/onboarding/calculating/page.tsx`** — added one secondary, visually subordinate text-link CTA ("Verify your City Council district →") below the existing primary "View my ballot" button on the post-Civic-DNA success screen, linking to the existing `/profile/city-council-district` page. No duplicate district selector, no address collection, no new API logic, and no change to the existing primary CTA or its already-approved copy.
+
+No other file was touched — in particular, `src/app/profile/city-council-district/page.tsx`, `src/app/api/set-city-council-district/route.ts`, the `set_psl_city_council_district` RPC SQL, `src/lib/candidates.ts`, `src/lib/officials.ts`, `CurrentOfficialsSection.tsx`, Home, Ballot, and all schema/RLS/grants/policy/migration/seed/district-definition files remained unmodified, per the approved scope.
+
+**Static verification** (code inspection and `grep`, not a live test): confirmed no ZIP onboarding code references `...0001` or `...0007`; confirmed `ZIP_MANAGED_DISTRICTS`/the delete scope contains exactly `...0002`, `...0003`, `...0004`, `...0005`, `...0006`; confirmed a pre-existing `...0001` or `...0007` row survives the ZIP delete by construction, since neither id is ever a member of the delete's `.in()` filter; confirmed the calculating-page CTA points to `/profile/city-council-district`; confirmed no duplicate verification UI (radio/attestation) was introduced in `calculating/page.tsx`.
+
+**Build**: `npm run build` passed, 27 routes, no errors — unchanged from baseline. **Lint**: `npm run lint` reported only the same 5 known pre-existing `scripts/*.cjs` errors, nothing new.
+
+**No database/schema changes**: no Supabase mutation was performed; no `user_districts`, `districts`, `elections`, or `candidates` row was touched; no function/schema/RLS/grant/policy was modified; no deployment occurred. `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` remains `false`. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`.
+
+**Testing limitation and pending live test**: this gate performed static verification only — no dev server was started, no ZIP onboarding flow was run end-to-end, and no pre-existing verified City Council row was actually exercised through a real ZIP resubmission. A future gate should live-test: a new account completing onboarding with exactly 5 `user_districts` rows and zero City Council rows; Home/Ballot/`/onboarding/districts`/Profile/Current Officials rendering safely without a City Council assignment; the new calculating-page link's visibility and correct destination; and — only once a separate future gate enables `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` for a scoped test account — that a real verified City Council assignment survives a subsequent ZIP resubmission for the same account.
+
+**This gate does not establish production or Controlled-PSL-Beta readiness.** It removes an unsafe default and adds a pointer to the existing verification flow; it does not enable City Council writes for any general user, and the live-test items above remain outstanding.
+
+Full record: `docs/internal_beta_gate_i36_onboarding_city_council_default_fix.md`.
+
+### No-change confirmation — Gate I35 and Gate I36
+
+Beyond `src/app/onboarding/zip/page.tsx`, `src/app/onboarding/calculating/page.tsx`, and this gate's documentation files, no changes were made to: `candidates`, `voting_records`, `candidate_positions`, `match_scores`, `civic_dna`, `civic_dna_answers`, `user_districts`, `districts`, `elections`, `current_officials`, `officials_for_user`, `src/lib/officials.ts`, `src/lib/candidates.ts`, `CurrentOfficialsSection.tsx`, `src/app/profile/city-council-district/page.tsx`, `src/app/api/set-city-council-district/route.ts`, the `set_psl_city_council_district` RPC, `src/app/api/set-county-commission-district/route.ts`, Home, Ballot, schema, RLS, grants, policies, migrations, seeds, district definitions, PowerShell scripts, API keys, or environment variables. No database write was performed. No secret file was inspected. `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` remains `false`. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. No deployment occurred.
 

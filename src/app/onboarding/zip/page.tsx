@@ -7,8 +7,12 @@ import { supabase } from '@/lib/supabase';
 // Hardcoded PSL ZIP → districts mapping (beta approach — no Edge Function needed)
 const PSL_ZIPS = ['34952', '34953', '34983', '34984', '34986', '34987', '34988'];
 
-const ALL_PSL_DISTRICTS = [
-  { id: '11111111-0000-0000-0000-000000000001', name: 'City Council District 1', scope: 'city' },
+// Gate I36: districts ZIP onboarding is allowed to manage. City Council District 1/3
+// are intentionally excluded — ZIP alone cannot safely tell them apart (see
+// /profile/city-council-district for the verified-assignment flow). This list is also
+// used to scope the delete below, so a separately verified City Council row is never
+// touched by ZIP onboarding.
+const ZIP_MANAGED_DISTRICTS = [
   { id: '11111111-0000-0000-0000-000000000002', name: 'School Board District 1', scope: 'county' },
   { id: '11111111-0000-0000-0000-000000000003', name: 'St. Lucie County Commission At-Large', scope: 'county' },
   { id: '11111111-0000-0000-0000-000000000004', name: 'FL House District 85', scope: 'state' },
@@ -66,12 +70,16 @@ export default function ZipPage() {
       console.error('[ZipPage] profiles update failed:', profileError);
     }
 
-    // Clear any existing districts for this user before inserting fresh ones.
+    // Clear only the districts this ZIP step manages, then insert fresh ones.
     // user_districts has no UPDATE policy so upsert fails on conflict; DELETE + INSERT works.
+    // Scoped to ZIP_MANAGED_DISTRICTS only — City Council District 1/3 are never included
+    // in this delete, so a separately verified City Council assignment survives ZIP
+    // resubmission (e.g. a later ZIP change) untouched.
     const { error: deleteError } = await supabase
       .from('user_districts')
       .delete()
-      .eq('user_id', user.id);
+      .eq('user_id', user.id)
+      .in('district_id', ZIP_MANAGED_DISTRICTS.map((d) => d.id));
 
     if (deleteError) {
       console.error('[ZipPage] user_districts delete failed:', deleteError);
@@ -80,7 +88,7 @@ export default function ZipPage() {
       return;
     }
 
-    const districtRows = ALL_PSL_DISTRICTS.map(d => ({
+    const districtRows = ZIP_MANAGED_DISTRICTS.map(d => ({
       user_id: user.id,
       district_id: d.id,
       scope: d.scope,

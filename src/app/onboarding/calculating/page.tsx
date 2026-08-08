@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 
 type Phase = 'calculating' | 'ready'
@@ -67,6 +68,23 @@ export default function CalculatingPage() {
         >
           View my ballot
         </button>
+
+        {/* Gate I36: secondary post-onboarding nudge, reuses the existing verification
+            page — no duplicate selector, no address collection, no new API logic. */}
+        <div className="mt-6 max-w-xs text-center">
+          <Link
+            href="/profile/city-council-district"
+            className="text-[#00C9A7] text-sm font-semibold [font-family:var(--font-syne)]"
+          >
+            Verify your City Council district →
+          </Link>
+          <p
+            className="text-[#6B7280] text-xs mt-2 leading-relaxed [font-family:var(--font-instrument-sans)]"
+          >
+            Port St. Lucie ZIP codes can span more than one council district. Verify yours
+            using the official City Council District Finder.
+          </p>
+        </div>
       </div>
     )
   }
