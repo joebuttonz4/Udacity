@@ -2180,3 +2180,187 @@ Gate I23 made no changes to: `candidates`, `elections`, `districts`, `user_distr
 
 No database write was performed. No candidate row was inserted, updated, deleted, or archived. No district row was inserted, updated, deleted, or archived. No election row was inserted, updated, deleted, or archived. No CSV field was changed. No import script was run. No candidate was scored. No candidate was ranked. No political recommendation was produced. No Claude or Anthropic API call was made. No secret file was inspected. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. No County Commission District 1-5 write was performed. No deployment occurred.
 
+## Gate I23B — Mayor and District 3 Open-Decision Resolution
+
+Status: Read-only research and modeling decision gate complete.
+
+Date: 08-08-2026
+Timestamp: 05:53 am EST
+
+### Current repository baseline
+
+- Branch: master
+- Working tree: clean
+- Up to date with origin/master
+- Latest pushed commit:
+  - `e28253d` Record Mayor and District 3 election date decision
+- Previous pushed commits:
+  - `330f5dc` Resolve Mayor and District 3 open import decisions
+  - `8d14ded` Update current state for Gate I23
+  - `68d08c6` Add Mayor and District 3 import approval decision
+  - `30d4c28` Update current state for Gate I22
+
+Created:
+- `docs/internal_beta_gate_i23b_mayor_district3_open_decision_resolution.md`
+
+Commits:
+- `330f5dc` Resolve Mayor and District 3 open import decisions
+- `e28253d` Record Mayor and District 3 election date decision
+- Both commits successfully pushed to origin/master
+
+Build result:
+- `npm run build` passed.
+- 25 routes generated.
+- No build errors.
+
+No database write, source-code change, CSV change, schema change, or deployment occurred.
+
+### Authoritative election-date findings
+
+For the 2026 Port St. Lucie Mayor and City Council District 3 cycle, authoritative official sources support both:
+- Primary Election: August 18, 2026
+- General Election: November 3, 2026
+
+Sources were cross-checked between the City of Port St. Lucie City Clerk election information and the St. Lucie County Supervisor of Elections.
+
+- The sources agree on the dates.
+- The prior ambiguity was about which stage should populate the single-value `election_date` field, not about the accuracy of the dates themselves.
+
+### Explicit election-date convention decision
+
+User decision: use the Primary Election date for both new election rows.
+
+**PSL Mayor 2026**
+- election_date: 2026-08-18
+
+**PSL City Council D3 2026**
+- election_date: 2026-08-18
+
+- November 3, 2026 remains the official General Election date.
+- November 3 is not the selected value for these two new single-value election rows.
+- This is a product/data-model convention decision, not a sourcing correction.
+- The General Election date is not inferred to be invalid.
+- No live election row was modified by this decision.
+
+### Candidate-list verification
+
+- Official City Clerk candidate rosters matched `candidates_real.csv` for Mayor, City Council District 1, and City Council District 3.
+- No candidate-list discrepancy was found during Gate I23B.
+
+### Separate District 1 date discrepancy
+
+- The already-live District 1 election row stores: 2026-11-03.
+- `CIVICMARKET_CURRENT_STATE.md` Gate I18 previously documented: August 18, 2026.
+- This is a pre-existing internal consistency discrepancy.
+- Gate I23B did not modify or normalize the District 1 live election row.
+- District 1 remains a separate unresolved consistency issue.
+- District 1 was not silently changed to match the newly selected Mayor/District 3 convention.
+- Any future District 1 correction requires a separate scoped decision and approval.
+
+### Mayor district-type review result
+
+Ready for explicit approval.
+
+Proposed:
+- name: Mayor
+- type: city_council
+- city: Port St. Lucie
+- state: FL
+
+Reason:
+- Existing UI and query paths correctly bucket `city_council` under City.
+- No obvious code-path breakage was found.
+- Reuse is semantically imperfect but functionally compatible.
+- No new district type was created.
+
+### District 3 office normalization review result
+
+Ready for explicit approval.
+
+Proposed normalization: from `City Council` to `City Council District 3`.
+
+Reason:
+- Mirrors the existing District 1 convention.
+- Candidate grouping already relies on `district_name`.
+- Validation imposes no conflicting office constraint.
+- District 1 does not need to be reopened.
+
+- The CSV has not been edited yet.
+- A future CSV edit still requires explicit approval.
+
+### Candidate-source provenance decision
+
+Recommended: Provenance Option A.
+
+Meaning:
+- Proceed without adding a new candidates-table source URL column.
+- Retain `official_candidate_source_url` in the repository CSV and supporting documentation.
+- Match the existing District 1 precedent.
+- Do not repurpose an unrelated website field.
+
+- This is ready for explicit approval.
+- No schema change occurred.
+
+### District 3 assignment result
+
+Still unresolved and deferred.
+
+- District 3 must not be added to `ALL_PSL_DISTRICTS`.
+- District 3 must not be assigned from ZIP alone.
+- District 3 must not be inferred from District 1 or Mayor.
+- No currently active, approved reusable district-specific assignment mechanism exists.
+- The County Commission verified-lookup pattern remains disabled and is not automatically approved for District 3.
+- District 3 candidate/district/election rows may exist before District 3 personalization is enabled, provided they are not incorrectly exposed to users.
+- No user_districts row was created or modified.
+
+### Hybrid import architecture review
+
+Ready for explicit approval in architecture shape.
+
+Recommended:
+- Explicit reviewed SQL for: Mayor district, District 3 district, Mayor election, District 3 election.
+- Scoped candidate import for exactly: 4 Mayor candidates, 3 District 3 candidates.
+- Race-specific district/election resolution.
+- No broad delete/reinsert.
+- Preserve all four existing District 1 candidates.
+- Do not run `scripts/import-real-psl-data.cjs` unchanged.
+
+No executable import was prepared or run in Gate I23B.
+
+### Gate I23B outcome
+
+Outcome B: election dates are resolved, but District 3 user-assignment design remains unresolved.
+
+**Approval-ready items:**
+1. Mayor district type reuse: `city_council`
+2. District 3 office normalization: `City Council District 3`
+3. Candidate-source provenance: Option A
+4. Hybrid import architecture
+5. Mayor election_date: 2026-08-18
+6. District 3 election_date: 2026-08-18
+
+**Still unresolved:**
+1. District 3 user-assignment mechanism
+2. Separate District 1 election-date consistency issue
+
+### Next decision boundary
+
+- Do not open another research gate for the resolved items.
+- Before Gate I24, obtain explicit user approval for the approval-ready items.
+- District 3 assignment may remain deferred from the import itself if the district/election/candidate rows can safely exist without being assigned to users, and current personalization logic will not expose District 3 candidates to users who do not have a verified District 3 assignment.
+- Gate I24 should begin only after explicit approval is recorded for the approval-ready modeling decisions.
+
+### Recommended next gate
+
+Gate I24 — Mayor and District 3 Import Preparation Package. Only after explicit approval.
+
+Gate I24 should remain preparation-only and define: exact district IDs, exact election IDs, exact candidate IDs, exact approved election dates, exact District 3 office normalization, exact provenance handling, exact scoped SQL/import plan, pre-write verification, post-write verification, rollback, District 1 preservation checks, and an explicit final write-approval statement.
+
+Gate I24 was not implemented by this update.
+
+### No-change confirmation — Gate I23B
+
+Gate I23B made no changes to: `candidates`, `elections`, `districts`, `user_districts`, `voting_records`, `candidate_positions`, `match_scores`, `civic_dna`, `civic_dna_answers`, `current_officials`, `officials_for_user`, `src/lib/officials.ts`, `CurrentOfficialsSection`, `compute-match-scores` logic, Civic DNA scoring, `MatchScoreRing`, the ballot page, the candidate profile, the onboarding pages, the Data Sources page, import scripts, validation scripts, schema, tables, seeds, migrations, CSV files, RLS, grants, PowerShell scripts, API keys, environment variables, the County Commission write guard, the At-Large row, deployment configuration, or deployment state.
+
+No database write was performed. No live election row was modified. No District 1 election row was modified. No candidate row was inserted, updated, deleted, or archived. No district row was inserted, updated, deleted, or archived. No user_districts row was created or modified. No CSV field was changed. No import script was run. No candidate was scored. No candidate was ranked. No political recommendation was produced. No Claude or Anthropic API call was made. No secret file was inspected. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. No County Commission District 1-5 write was performed. No deployment occurred.
+
