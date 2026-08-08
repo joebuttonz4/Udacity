@@ -60,7 +60,7 @@ Exact quoted text:
 
 The City Clerk's page lists both dates for "the 2026 elections" generally, immediately followed by confirmation that Mayor is one of the seats up for election in 2026 — but does **not** state, race-by-race, which of the two dates is "the" election date for the Mayor race specifically, nor does it state whether Mayor could be decided outright in August.
 
-**No single `election_date` value is selected in this gate** — see Section 9 for why, and Section 21 for the resulting outcome.
+**Resolved by explicit user decision (Section 20a): `election_date = 2026-08-18` for `PSL Mayor 2026`, using the Primary election date convention.** This is a product/data-model convention decision, not a sourcing correction — both dates remain equally supported by the authoritative sources above; the user explicitly selected the Primary date for this new election row.
 
 ## 9. Mayor race-stage interpretation
 
@@ -81,7 +81,9 @@ Exact quoted text:
 
 ## 11. District 3 official election date
 
-Same two-date situation as Mayor (Section 8): **August 18, 2026** (Primary) and **November 3, 2026** (General), both sourced from the same official City Clerk page, with no race-specific stage attribution given for District 3 either. No single `election_date` value is selected in this gate, for the same reason given in Section 9 (District 3's seat is explicitly grouped with Mayor and District 1 under the identical "the following seats expire in 2026" / "the 2026 elections" language — there is no source-level distinction between how District 3's race-stage structure works versus Mayor's or District 1's).
+Same two-date situation as Mayor (Section 8): **August 18, 2026** (Primary) and **November 3, 2026** (General), both sourced from the same official City Clerk page, with no race-specific stage attribution given for District 3 either. District 3's seat is explicitly grouped with Mayor and District 1 under the identical "the following seats expire in 2026" / "the 2026 elections" language — there is no source-level distinction between how District 3's race-stage structure works versus Mayor's or District 1's.
+
+**Resolved by explicit user decision (Section 20a): `election_date = 2026-08-18` for `PSL City Council D3 2026`, using the same Primary election date convention selected for Mayor.**
 
 ## 12. District 3 race-stage interpretation
 
@@ -147,37 +149,45 @@ Re-evaluated Gate I23's Section 13 recommendation (explicit reviewed SQL for the
 
 **Classification: Ready for explicit approval**, with one caveat surfaced by this gate's research: the prerequisite `elections` rows cannot actually be drafted yet, because their `election_date` value is exactly the item left unresolved in Sections 8-12. The architecture itself (SQL-first prerequisites, scoped candidate insert, no broad delete) remains sound and does not need further design — but it cannot be executed, even as a reviewed draft, until the date question is settled. No SQL was written in this gate, executable or illustrative, since the architecture's *shape* was already fully specified in Gate I23 and re-confirming it does not require new pseudocode.
 
+## 20a. Explicit election-date decision (user-directed, recorded after initial gate completion)
+
+The user explicitly selected the election-date convention left open in Sections 8-12, resolving it as a product/data-model decision rather than a further sourcing task:
+
+- **Selected convention: Primary election date.**
+- `election_date = 2026-08-18` for `PSL Mayor 2026`.
+- `election_date = 2026-08-18` for `PSL City Council D3 2026`.
+- November 3, 2026 remains the official General Election date for the same 2026 cycle, and remains fully supported by the authoritative sources in Sections 7 and 13 — it is simply not the selected value for these two new, single-value `elections` rows.
+- This is a modeling/convention decision, not a correction of or disagreement with either source; both dates remain accurate and cited.
+- **The existing live District 1 `elections` row (`PSL City Council D1 2026`, currently `election_date: 2026-11-03`) was not modified by this decision and is not silently normalized to match.** The District 1 live-value-versus-Gate-I18-documentation discrepancy identified in Section 9 remains a separate, still-unresolved consistency issue, tracked independently in Section 21 below.
+- No Supabase write, CSV edit, source-code change, or deployment occurred as part of recording this decision — this remains a documentation-only update to this gate's own file.
+
 ## 21. Remaining unresolved items
 
-1. **The single `election_date` value for `PSL Mayor 2026`** — not a missing-source problem; a genuine two-stage-election modeling decision (store the Primary date, the General date, or defer until the August 18, 2026 outcome is known) that this gate is not authorized to make unilaterally.
-2. **The single `election_date` value for `PSL City Council D3 2026`** — identical situation to item 1.
-3. **The pre-existing District 1 election-date discrepancy** (Section 9: live DB value `2026-11-03` vs. Gate I18's documented `August 18, 2026`) — newly surfaced by this gate's research, not previously flagged anywhere in the repository, and not resolved here since correcting District 1 data is out of this gate's scope.
-4. The District 3 user-assignment mechanism (Section 19) — still requires design, not yet ready for approval.
+1. **The pre-existing District 1 election-date discrepancy** (Section 9: live DB value `2026-11-03` vs. Gate I18's documented `August 18, 2026`) — newly surfaced by this gate's research, not previously flagged anywhere in the repository, and not resolved here since correcting District 1 data is out of this gate's scope and was not silently normalized as part of the Section 20a decision.
+2. The District 3 user-assignment mechanism (Section 19) — still requires design, not yet ready for approval. This does not block candidate/district/election import itself, only District 3 candidate personalization for a real user.
 
 ## 22. Approval-ready items
 
-1. Mayor district-type reuse (`type: city_council`) — ready for explicit approval (Section 16).
-2. District 3 office normalization (`office: City Council District 3`) — ready for explicit approval, pending a future CSV edit (Section 17).
-3. Candidate-source provenance handling (Option A — proceed without persisting, matching existing District 1 precedent) — ready for explicit approval (Section 18).
-4. Hybrid import architecture (explicit SQL prerequisites + scoped candidate import) — ready for explicit approval in shape, but blocked from execution until the election-date items are resolved (Section 20).
+1. **Election-date convention for Mayor and District 3** — resolved by explicit user decision (Section 20a): `2026-08-18` for both `PSL Mayor 2026` and `PSL City Council D3 2026`.
+2. Mayor district-type reuse (`type: city_council`) — ready for explicit approval (Section 16).
+3. District 3 office normalization (`office: City Council District 3`) — ready for explicit approval, pending a future CSV edit (Section 17).
+4. Candidate-source provenance handling (Option A — proceed without persisting, matching existing District 1 precedent) — ready for explicit approval (Section 18).
+5. Hybrid import architecture (explicit SQL prerequisites + scoped candidate import) — ready for explicit approval; no longer blocked from being drafted, since the election-date values needed to draft the prerequisite `elections` rows are now resolved (Section 20).
 
 ## 23. Gate outcome
 
-**Outcome C: one or both election dates remain unresolved. Do not proceed toward import preparation.**
+**Outcome B: election dates are resolved, but District 3 user-assignment design remains unresolved.**
 
-This is not a failure to find authoritative sources — both dates (August 18, 2026 and November 3, 2026) are confirmed by the single most authoritative available source (the City of Port St. Lucie City Clerk, the qualifying officer for these exact races) and independently cross-checked against two St. Lucie County Supervisor of Elections pages, with no numeric disagreement between sources anywhere. The reason Outcome C applies is that the schema requires exactly one `election_date` per election, the underlying election is a genuinely two-stage nonpartisan process whose decisive date is not yet knowable (the primary has not yet occurred as of this gate), and the repository's own prior documentation is internally inconsistent about which date convention was even used for the one race (District 1) that already has a live value. Selecting either date for Mayor/District 3 without an explicit decision on this modeling question would be a guess, which this gate's instructions explicitly prohibit.
+The election-date ambiguity that drove Outcome C is resolved by the user's explicit Section 20a decision. Of Gate I23's original five modeling items, four are now ready for explicit approval (Section 22, items 2-5) and one — the District 3 user-assignment mechanism (Section 19) — still requires design and is not approval-ready. The pre-existing District 1 date discrepancy (Section 21, item 1) also remains open, but as a separate, already-live-data consistency question, not a blocker to drafting the Mayor/District 3 prerequisite rows or candidate rows themselves.
 
 ## 24. Recommended next gate
 
-Per Outcome C, import preparation (Gate I24) does not proceed yet. Recommend the smallest possible next step:
+Per Outcome B, recommend the smallest next step — not another research gate:
 
-**A direct, explicit user decision request — not a new research or documentation gate — on exactly one question: which `election_date` convention should `PSL Mayor 2026` and `PSL City Council D3 2026` use, given that Florida law and the official source both confirm an August 18, 2026 Primary and a November 3, 2026 General for the same nonpartisan races.** Three concrete options for that decision, surfaced by this gate's research (not a recommendation for which to choose):
-
-- **(i)** Store the Primary date (`2026-08-18`) for both, since it is the first and potentially final decisive date, and revisit/update the value later if a race is forced to a November runoff.
-- **(ii)** Store the General date (`2026-11-03`) for both, matching District 1's *live database* value (even though that conflicts with District 1's own Gate I18 documentation, per Section 9) — this preserves cross-race consistency with what is *actually* in the database today, if not with what was previously documented about it.
-- **(iii)** Resolve the pre-existing District 1 discrepancy first (confirm which date is actually correct for District 1, correct it if needed via its own separately-approved gate), then apply that same, now-verified convention to Mayor and District 3 for full consistency.
-
-Once that decision is made, **Gate I24 — Mayor and District 3 Import Preparation Package** can proceed, incorporating the now-resolved date(s) and the four approval-ready items from Section 22, plus the still-deferred District 3 assignment-mechanism design (Section 19), which does not block candidate/district/election import itself — it only blocks enabling District 3 candidate personalization for any real user.
+1. **Do not create another research gate.** The election-date question (the item that previously blocked everything) is resolved.
+2. **Request explicit approval of the four approval-ready modeling items** (Section 22, items 2-5): the Mayor district-type reuse, the District 3 office normalization (and its associated future CSV edit), the candidate-source provenance handling (Option A), and the hybrid import architecture shape — now including the resolved `2026-08-18` dates for both new `elections` rows.
+3. **Keep the District 3 user-assignment mechanism (Section 19) deferred from this specific import.** District 3 district/election/candidate rows can safely exist in the database — visible to no one until a user actually holds a District 3 `user_districts` row — without that mechanism being designed or built first; deferring it does not block candidate-row import, it only blocks enabling District 3 personalization for a real user later.
+4. **Proceed to Gate I24 — Mayor and District 3 Import Preparation Package only after the Section 22 approvals are explicitly recorded**, incorporating the resolved `2026-08-18` dates, and continuing to exclude the District 3 assignment-mechanism design from that package's scope.
 
 Gate I24 was not implemented by this update.
 
