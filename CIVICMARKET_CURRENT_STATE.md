@@ -2842,9 +2842,24 @@ Created `Reference Files/civicmarket_schema_addendum_city_council_district_rpc.s
 
 ### Gate I31 readiness
 
-Still blocked, now on a shorter list: (1) run Part A's SQL, (2) run Part B's SQL, (3) live post-execution re-verification of both, (4) approved test-account identity + verified target district, (5) explicit scoped live-write approval for Gate I31 itself. District 1 onboarding-default accuracy risk remains separate and unaddressed.
+**Update 08-08-2026, 08:32 am EST — both Supabase-side changes are now live and independently re-verified. Gate I30C status upgraded to PASS.**
+
+An earlier reported execution had not actually persisted (a full re-check found neither change present); this was caught, reported, and the user re-ran both SQL blocks successfully. Live verification this pass confirms:
+
+- **Anthony Bonna, Sr. row is live**: `id = fed1801c-0b6a-4743-8de2-4f69b91920ec`, `district_id = ...000007`, `office = City Council Member, District 3`, matches the approved draft field-for-field. `current_officials` total count = **9** (was 8, +1 exactly). Stephanie Morgan's row confirmed unchanged.
+- **RPC is live**: a safe anonymous call to `set_psl_city_council_district` (tested with a valid District 1 id, the Mayor id, the County Commission At-Large id, and a garbage UUID) returns `401 {"code":"42501","message":"permission denied for function..."}` for all four — confirming the function exists and that PostgreSQL's own `REVOKE`/`GRANT` are correctly enforced at the database level, before the function body runs. `SECURITY INVOKER`/`auth.uid()`/`search_path` confirmed via the exact committed SQL file content plus the user's own direct Supabase Editor check; not independently re-queried against `pg_proc` (requires the secret key, correctly not sought).
+- **Current Officials blocker: RESOLVED** — generic query path confirmed to require no code change; Bonna now resolves for a future District 3 user, Stephanie Morgan continues to resolve for District 1.
+- **Atomicity blocker: RESOLVED** — old two-call route path confirmed still removed; replacement now delegated to one atomic Postgres function call.
+- `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` remains `false`; `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false` — neither touched or enabled. No production `user_districts` mutation occurred (only anonymous, permission-denied RPC calls were made; the app's own write path was never enabled).
+- `npm run build`: passed, 27 routes, no errors. `npm run lint`: 5 pre-existing errors only, no new errors.
+
+**Gate I30C final outcome: PASS.**
+
+**Gate I31 remains blocked only on:** (1) exact test-account identity, (2) verified target district for that account, (3) captured pre-test `user_districts` state, (4) explicit approval to temporarily enable the City Council write guard, (5) explicit approval for one scoped live assignment, (6) a rollback plan, (7) immediate restoration of the guard to `false`, (8) an explicit no-deploy boundary.
+
+**Kept separate and unresolved:** the District 1 onboarding-default accuracy risk (acceptable only for the current Internal Beta boundary; must be corrected before Controlled PSL Beta) and the District 1 election-date discrepancy (live `2026-11-03` vs. Gate I18's documented `August 18, 2026`).
 
 ### No-change confirmation — Gate I30C
 
-Beyond the one route file and the one new reference SQL file, no other source code, schema, RLS, grants, seeds, migrations, or CSV files were touched. No `current_officials`, `user_districts`, `districts`, `elections`, or `candidates` row was created, modified, or deleted. No secret was inspected or exposed. `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` remains `false`. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. The District 1 election-date discrepancy remains unresolved. No deployment occurred.
+Beyond the one route file, the one reference SQL file, and the explicitly-approved Supabase-side `current_officials` row and RPC recorded above, no other source code, schema, RLS, grants, seeds, migrations, or CSV files were touched. No `user_districts`, `districts`, `elections`, or `candidates` row was created, modified, or deleted. No secret was inspected or exposed. `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` remains `false`. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. The District 1 election-date discrepancy remains unresolved. No deployment occurred.
 
