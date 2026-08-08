@@ -2736,3 +2736,45 @@ Gate I30 (live UI and negative-path verification) is next. **Gate I31 (scoped te
 
 No database write occurred. No `user_districts`, `districts`, `elections`, `candidates`, or `current_officials` row was touched. No secret was inspected or exposed. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. The District 1 election-date discrepancy remains unresolved. No deployment occurred.
 
+## Gate I30 — City Council District Assignment Live UI and Negative-Path Verification
+
+Date: 08-08-2026
+Timestamp: 07:33 am EST
+
+Status: **Gate I30: PASS.** **Gate I31: BLOCKED.**
+
+### Verified
+
+- Gate I29 implementation inspected and confirmed to exactly match Gate I28's design; no defect found.
+- `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` remains `false`; `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`.
+- Negative-path API results: unauthenticated → 401 (live); malformed Authorization header → 401, same code path as unauthenticated (live); invalid Bearer token → 401 (live); invalid label, attestation false, missing attestation → 400 each (code-traced, live authenticated testing correctly not attempted without credentials).
+- District 1 dry-run and District 3 dry-run both live-tested via an already-authenticated beta session: `dryRun: true`, exact expected message, HTTP 200, zero mutation.
+- Live UI verified: Profile Settings link correct, assignment page loads, exact Gate I28 official lookup URL confirmed, no address input/collection anywhere, exactly two closed-set district choices, attestation gates submission, understandable dry-run/error states.
+- **Direct positive proof of no mutation:** the same test account's Profile page, reloaded after the District 3 dry-run submission, still showed Stephanie Morgan / City Council District 1 in Current Officials — unchanged from before testing.
+- Keyboard access confirmed with a visible focus indicator; true 390px viewport testing BLOCKED by the same pre-existing tooling limitation documented in Gates I17/I21/I27 (200% zoom approximation showed a clean layout).
+
+### Current Officials blocker
+
+Reconfirmed unresolved via a fresh live query: `current_officials` has 8 rows, none referencing City Council District 3 or Anthony Bonna. Gate I31 remains blocked on this data gap.
+
+### Atomicity blocker
+
+Reconfirmed unresolved: delete-then-insert remains two independent, non-transactional Supabase calls. Gate I31 remains blocked on this unless explicitly accepted or resolved.
+
+### District 1 onboarding accuracy risk
+
+Reconfirmed unchanged and unaddressed — `ALL_PSL_DISTRICTS` still defaults every onboarded user to City Council District 1 regardless of address. Recommendation: resolve (remove the default or explicitly accept the risk) before any Controlled PSL Beta invitation to a real, diverse population; not a blocker for continuing Internal Beta with the current small trusted test-account population.
+
+### Gate I31 readiness
+
+**BLOCKED** pending: (1) Gate I30 passing — now satisfied; (2) District 3 Current Officials data gap resolved — still open; (3) atomic replacement safety accepted/resolved — still open; (4) explicit scoped test-account write approval — not given.
+
+### Build and lint
+
+- `npm run build`: passed, 27 routes, no errors.
+- `npm run lint`: 5 pre-existing errors only, no new errors.
+
+### No-change confirmation — Gate I30
+
+No database write occurred. No `user_districts`, `districts`, `elections`, `candidates`, or `current_officials` row was touched. No source code was modified. No secret was inspected or exposed. `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` remains `false`. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. The District 1 election-date discrepancy remains unresolved. No deployment occurred.
+
