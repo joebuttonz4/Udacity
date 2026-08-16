@@ -1,6 +1,6 @@
 # CivicMarket Current State
 
-Last updated: August 16, 2026 (Gate I38 — Shannon Martin campaign-website source verified PASS; approved for a future extraction pilot only, no evidence inserted, no scores assigned, both write guards remain false)
+Last updated: August 16, 2026 (Milestone 2A — ZIP resubmission preservation test PASS; City Council District 1 survived a real ZIP resubmission for civicmarket.test.01@example.com, District 3 never appeared, no City Council write API/RPC used, both write guards remain false)
 
 ## Authoritative order
 
@@ -3090,4 +3090,30 @@ No `candidate_position_evidence` row was inserted. No `candidate_positions` or `
 ### Recommended next gate
 
 Gate I39 — Controlled Shannon Martin campaign-evidence extraction pilot: use only the already-verified campaign website; inspect only the five potentially-supported dimensions; return structured draft evidence (proposed score, rationale, exact source URL) for human review; leave Education and Housing null; insert nothing into Supabase until separately reviewed and explicitly approved. Not designed or implemented by this gate.
+
+## Milestone 2A — ZIP Resubmission Preservation Test
+
+Date: 08-16-2026
+
+Status: **PASS.** Full record: `docs/internal_beta_zip_resubmission_preservation_test.md`.
+
+Proved live that re-running ZIP onboarding does not delete or replace a previously verified City Council District 1 assignment, closing the item Milestone 1 explicitly deferred (its task item 10). Test account: `civicmarket.test.01@example.com` (`ec59ea92-470f-447f-8873-ab2dbde52aca`), verified real district City Council District 1 (Stephanie Morgan). Signed in by the project owner directly in the browser — the assistant never entered or inspected the password.
+
+**Pre-test `user_districts` (5 rows, read-only verified):** City Council District 1 (`...0001`), School Board District 1 (`...0002`), County Commission At-Large (`...0003`), FL House District 85 (`...0004`), FL Senate District 27 (`...0005`). No Mayor row — recorded as observed (this account predates Gate I27). Current Officials pre-test confirmed Stephanie Morgan present.
+
+Submitted ZIP `34953` through the normal `/onboarding/zip` → `/onboarding/districts` → `/onboarding/dna-teaser` ("I'll do this later") flow — no manual/direct Supabase write, ZIP never used to infer City Council District 1 vs. District 3.
+
+**Post-resubmission `user_districts` (6 rows, read-only verified):** the same five rows unchanged, plus a new Mayor row (`...0006`) — expected, since Mayor is part of `ZIP_MANAGED_DISTRICTS` (Gate I27) and this account predates it. **City Council District 1 (`...0001`) survived unmodified. City Council District 3 (`...0007`) never appeared**, before or after.
+
+Current Officials after resubmission: Stephanie Morgan still present, Anthony Bonna Sr. absent, Civic DNA scores unchanged (quiz not retaken). Ballot after resubmission: all four City Council District 1 candidates still present, no District 3 candidates, a new Mayor race section appeared (expected, tied to the new Mayor row).
+
+**No City Council write API/RPC was used** — network requests were tracked continuously through the full test; zero requests to `set-city-council-district` occurred, and `/profile/city-council-district` was never visited. Preservation is proven through the Gate I36 scoped delete-then-insert logic itself, not through any re-save.
+
+`npm run build` passed (27 routes, no errors). `npm run lint` reported only the 5 known pre-existing `scripts/*.cjs` errors, nothing new. `git status --short` was clean after testing — no transient source/debug changes left behind. `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` and `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` both re-confirmed `false` after the test. No schema, RLS, grant, policy, function, migration, seed, or district-definition change was made. No other user was modified. No deployment occurred.
+
+**Limitations:** only one shared test account was used (no verified District 3 account currently exists to test the symmetric case); the Civic DNA quiz was not retaken; no 390px/mobile or accessibility check was performed; District 3's own survival-through-resubmission behavior remains unproven (only its non-appearance for a District-1-only account was verified).
+
+### Recommended next step
+
+Return to the broader Internal Beta launch plan and remaining hard blockers; no further ZIP-resubmission-specific gate is needed unless a new defect is found.
 
