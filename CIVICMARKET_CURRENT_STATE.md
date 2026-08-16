@@ -1,6 +1,6 @@
 # CivicMarket Current State
 
-Last updated: August 8, 2026 (Gate I37 — candidate_position_evidence provenance table created and verified live via one atomic transaction; RLS admin-read-only, zero write policies, zero rows; no evidence inserted, no candidate_positions/match_scores change; both write guards remain false)
+Last updated: August 16, 2026 (Gate I38 — Shannon Martin campaign-website source verified PASS; approved for a future extraction pilot only, no evidence inserted, no scores assigned, both write guards remain false)
 
 ## Authoritative order
 
@@ -3069,4 +3069,25 @@ Full record: `docs/internal_beta_onboarding_live_validation.md`.
 ### No-change confirmation — Milestone 1
 
 Beyond the expected, ordinary effects of one fresh test account completing normal ZIP onboarding (its own `profiles.zip_code` update and five-row `user_districts` insert), no database write occurred. No `candidates`, `candidate_positions`, `match_scores`, `civic_dna_answers`, `districts`, `elections`, `current_officials`, `officials_for_user`, or `set_psl_city_council_district` change was made. No existing real user was touched. No schema, RLS, grants, policies, functions, migrations, or seeds were changed. No secret, `.env`, API key, password, service-role key, invite code, or credential was inspected, requested, or exposed. `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` remains `false`. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remains `false`. No deployment occurred.
+
+## Gate I38 — Shannon Martin Campaign-Website Source Verification
+
+Date: 08-16-2026
+Timestamp: 11:47 am EST
+
+Status: **PASS.** Verification and documentation only. Full record: `docs/internal_beta_gate_i38_shannon_martin_campaign_source_verification.md`.
+
+`https://martinforpslmayor.com/` (candidate: Shannon Martin, `candidate_id` `d44ff05a-14af-45c2-9f2f-6d530a8a051e`, Port St. Lucie Mayor) independently verified live as a genuine candidate-controlled campaign source, approved for `source_type = campaign_website`. Ownership/control evidence: the disclaimer "Paid for and Approved by Shannon Martin for Port St. Lucie Mayor" was independently confirmed verbatim on two separate pages (homepage and `/about-shannon-martin/` footer), matching the same disclaimer convention already accepted for the four City Council District 1 candidates in Gates I13/I18. Verified substantive first-party pages: the homepage plus `/about-shannon-martin/` and `/biography/`.
+
+Approved methodology version for any future evidence: `campaign_evidence_v1_2026-08`.
+
+Apparent dimension coverage (no scores assigned): **potentially supported** by first-party campaign material — growth_development, taxation_spending, environment, public_safety, transparency. **Unsupported / insufficient evidence** — housing (only a biographical board-membership fact was found, not a policy statement, and biography-alone is a prohibited inference source) and education (no explicit statement found). Both must remain null/unsupported unless separately verified eligible evidence is found later; neither may be inferred from silence, and a future extraction pilot must not force a 7-of-7 profile for this candidate.
+
+This gate approves the verified site for a **future extraction pilot only**. It does not approve evidence inserts, any -2..2 score, `candidate_positions` updates, `match_scores` updates, Anthropic API calls, interview ingestion, `official_social` ingestion, or social-media allowlist creation. `official_social` remains deferred pending a separately designed and approved candidate-source allowlist mechanism, unaffected by this gate.
+
+No `candidate_position_evidence` row was inserted. No `candidate_positions` or `match_scores` change was made. No Supabase write or SQL execution occurred. No Anthropic/Claude scoring call was made. No application source code was changed. `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` and `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remain `false`, untouched. No deployment occurred.
+
+### Recommended next gate
+
+Gate I39 — Controlled Shannon Martin campaign-evidence extraction pilot: use only the already-verified campaign website; inspect only the five potentially-supported dimensions; return structured draft evidence (proposed score, rationale, exact source URL) for human review; leave Education and Housing null; insert nothing into Supabase until separately reviewed and explicitly approved. Not designed or implemented by this gate.
 
