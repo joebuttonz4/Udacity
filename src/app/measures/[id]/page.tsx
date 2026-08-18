@@ -502,7 +502,7 @@ export default function MeasureProfilePage() {
 
             {/* Report an Inaccuracy */}
             <a
-              href={`mailto:inaccuracy@civicmarket.app?subject=${encodeURIComponent(
+              href={`mailto:joebuttonzii@gmail.com?subject=${encodeURIComponent(
                 `Possible inaccuracy: ${measure.title}`
               )}&body=${encodeURIComponent(
                 `I'm reporting a possible inaccuracy for the ballot measure "${measure.title}".\n\nDetails:\n`

@@ -154,3 +154,27 @@ None of these three can be meaningfully tested before a deploy target and its Su
 - A local `npm run dev` instance was started solely for the read-only narrow-viewport smoke test (Item 4) and was fully stopped before this task concluded; no stray process remains.
 - No deployment occurred.
 - The unrelated concurrent-work file `src/app/api/admin/extract-shannon-martin-evidence/route.ts` was left untouched and is not included in this task's commit.
+
+---
+
+## Follow-up (08-18-2026) — Temporary monitored corrections email
+
+Item 3's open manual-confirm item ("is `inaccuracy@civicmarket.app` deliverable and monitored?") is resolved by disclosure rather than by testing: **`civicmarket.app` is not a real, owned domain.** It was only ever a placeholder suggested in an old budget-planning reference doc (`Reference Files/CIVICMARKET_BETA_SCOPE_PLAN.md`: "Domain + misc ... civicmarket.app or similar"), never purchased or configured. `inaccuracy@civicmarket.app` was therefore never a deliverable mailbox.
+
+**Fix applied:** both public-facing, user-visible email-based correction paths now use an approved temporary monitored contact, `joebuttonzii@gmail.com`, in place of the nonexistent `inaccuracy@civicmarket.app`:
+- `src/app/corrections/page.tsx` — the Corrections Policy page's "Contact" section (visible link text and `mailto:` href).
+- `src/app/measures/[id]/page.tsx` — the Measure Profile "Report an Inaccuracy" `mailto:` link (subject/body template unchanged, only the address changed).
+
+This is an explicitly **temporary pre-launch contact**, to be replaced with a branded CivicMarket address once a real domain exists — that remains a pre-launch/future cleanup item, not resolved by this fix.
+
+**Left unchanged, by design (internal/documentation-only or historical, not user-facing):**
+- `docs/civicmarket_build_guide_UPDATED_WITH_CURRENT_OFFICIALS_AND_REVIEW_SUMMARIES.md` and `Reference Files/civicmarket_build_guide.md` — historical build-spec documents describing intended UI copy at design time, not live app code; also the only place `appeals@civicmarket.app` appears anywhere in the repository (no live app code references it).
+- `docs/internal_beta_gate_i9_smoke_test_plan.md` and `docs/internal_beta_gate_i9a_read_only_smoke_test_results.md` — historical gate records of what the app displayed at the time those tests ran; changing them would falsify the historical record.
+- `Reference Files/CIVICMARKET_BETA_SCOPE_PLAN.md` — the "civicmarket.app or similar" budget placeholder above; not an email address at all.
+- This document's own Item 3 analysis text above and `CIVICMARKET_CURRENT_STATE.md`'s Milestone 2B section — left as an accurate historical record of what was found before this fix, rather than rewritten.
+
+**Candidate Profile verified, not changed:** `src/app/candidates/[id]/page.tsx`'s "Report an Inaccuracy" control is a `<Link href="/report">`, not a `mailto:` link — confirmed by direct code read (no `mailto:` string appears anywhere in that file). It uses the database-backed `/report` flow exactly as previously designed, with no email assumption of any kind. This candidate-vs-measure reporting-flow inconsistency (flagged in Item 3 above) still exists and was intentionally not unified or redesigned in this task.
+
+**Related but out-of-scope finding, not fixed:** `src/app/privacy/page.tsx` has a live dangling reference — its "Your rights" section tells users they can request account deletion "by contacting us at the email below" (line 108), but the page's own "Contact" section states only that "Contact information will be provided when the beta launches" (lines 118-119) — no email address actually appears anywhere on the page. This is not a `@civicmarket.app` string and falls outside this task's explicit scope (corrections/inaccuracy contact paths only), so it was not touched. Flagged here for a future, separately-approved fix.
+
+No database, schema, RLS, grant, policy, function, migration, seed, district-definition, write-guard, or deployment change occurred as part of this follow-up. `npm run build` passed (28 routes — one more than the previously documented 27, due to the pre-existing untracked concurrent-work file `src/app/api/admin/extract-shannon-martin-evidence/route.ts`, which is unrelated to and unmodified by this task). `npm run lint` reported only the same 5 known pre-existing `scripts/*.cjs` errors, nothing new.

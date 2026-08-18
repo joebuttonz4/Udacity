@@ -1,6 +1,6 @@
 # CivicMarket Current State
 
-Last updated: August 18, 2026 (Milestone 2B — Controlled PSL Beta Readiness verification complete; READY AFTER SPECIFIC ITEMS; no MUST FIX items found; both write guards remain false; no deployment)
+Last updated: August 18, 2026 (Temporary monitored corrections email — inaccuracy@civicmarket.app replaced with joebuttonzii@gmail.com on Corrections and Measure Profile; civicmarket.app confirmed not a real owned domain; both write guards remain false; no deployment)
 
 ## Authoritative order
 
@@ -3144,4 +3144,28 @@ No source code was changed by this task. No Supabase write, schema, RLS, grant, 
 ### Recommended next step
 
 Resolve the five MUST MANUALLY CONFIRM items (most require the user directly: a data-model decision for Item 1, a test email for Item 3, a real-device check for Item 4, Supabase dashboard configuration for Item 5, and a real deploy target for Item 6) before extending the first Controlled PSL Beta invites.
+
+## Temporary Monitored Corrections Email
+
+Date: 08-18-2026
+
+Status: **Complete.** Full record: `docs/controlled_psl_beta_readiness.md` ("Follow-up (08-18-2026) — Temporary monitored corrections email").
+
+Resolved Milestone 2B's Item 3 open confirm item by disclosure: **`civicmarket.app` is not a real, owned domain** — it was only ever a placeholder in an old budget-planning doc (`Reference Files/CIVICMARKET_BETA_SCOPE_PLAN.md`), never purchased. **`inaccuracy@civicmarket.app` was therefore not a deliverable mailbox.**
+
+Both public-facing, user-visible email-based correction paths now use the approved temporary monitored contact **`joebuttonzii@gmail.com`**:
+- `src/app/corrections/page.tsx` — Corrections Policy "Contact" section (link text and `mailto:` href).
+- `src/app/measures/[id]/page.tsx` — Measure Profile "Report an Inaccuracy" `mailto:` link (subject/body template unchanged).
+
+This is an explicitly temporary pre-launch contact; a branded CivicMarket address remains a future cleanup item once a real domain exists.
+
+Left unchanged as internal/documentation-only or historical (not user-facing): `docs/civicmarket_build_guide_UPDATED_WITH_CURRENT_OFFICIALS_AND_REVIEW_SUMMARIES.md` and `Reference Files/civicmarket_build_guide.md` (also the only place `appeals@civicmarket.app` appears in the repository — no live app code references it); `docs/internal_beta_gate_i9_smoke_test_plan.md` and `docs/internal_beta_gate_i9a_read_only_smoke_test_results.md` (historical gate records); `Reference Files/CIVICMARKET_BETA_SCOPE_PLAN.md` (budget placeholder, not an email); and this file's own Milestone 2B section above and `docs/controlled_psl_beta_readiness.md`'s original Item 3 text (left as an accurate historical record of what was found before this fix).
+
+**Candidate Profile verified, not changed:** `src/app/candidates/[id]/page.tsx`'s "Report an Inaccuracy" control remains a `<Link href="/report">` (database-backed flow), confirmed by direct code read — no `mailto:` string exists anywhere in that file, no broken email assumption. The candidate-vs-measure reporting-flow inconsistency noted in Milestone 2B still exists and was intentionally not unified in this task.
+
+**Related but out-of-scope finding, not fixed:** `src/app/privacy/page.tsx` tells users to request account deletion "by contacting us at the email below," but no email address actually appears anywhere on that page (its own "Contact" section says only that contact information "will be provided when the beta launches"). Not a `@civicmarket.app` string, and outside this task's explicit corrections/inaccuracy scope — flagged for a future, separately-approved fix.
+
+`npm run build` passed (28 routes — one more than the previously documented 27, due to the pre-existing untracked concurrent-work file `src/app/api/admin/extract-shannon-martin-evidence/route.ts`, unrelated to and unmodified by this task). `npm run lint` reported only the same 5 known pre-existing `scripts/*.cjs` errors, nothing new.
+
+No database, schema, RLS, grant, policy, function, migration, seed, district-definition, write-guard, or deployment change occurred. `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` and `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` both remain `false`, unchanged. No secret file was inspected. No credentials were entered. No deployment occurred.
 

@@ -104,10 +104,10 @@ export default function CorrectionsPage() {
           <p className="text-[#9CA3AF] text-sm leading-6 [font-family:var(--font-instrument-sans)]">
             To report a correction directly, email{' '}
             <a
-              href="mailto:inaccuracy@civicmarket.app"
+              href="mailto:joebuttonzii@gmail.com"
               className="text-[#00C9A7] hover:text-[#00A688] transition-colors"
             >
-              inaccuracy@civicmarket.app
+              joebuttonzii@gmail.com
             </a>
             .
           </p>
