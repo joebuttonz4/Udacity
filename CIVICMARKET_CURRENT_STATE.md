@@ -1,6 +1,6 @@
 # CivicMarket Current State
 
-Last updated: August 16, 2026 (Milestone 2A — ZIP resubmission preservation test PASS; City Council District 1 survived a real ZIP resubmission for civicmarket.test.01@example.com, District 3 never appeared, no City Council write API/RPC used, both write guards remain false)
+Last updated: August 18, 2026 (Milestone 2B — Controlled PSL Beta Readiness verification complete; READY AFTER SPECIFIC ITEMS; no MUST FIX items found; both write guards remain false; no deployment)
 
 ## Authoritative order
 
@@ -3116,4 +3116,32 @@ Current Officials after resubmission: Stephanie Morgan still present, Anthony Bo
 ### Recommended next step
 
 Return to the broader Internal Beta launch plan and remaining hard blockers; no further ZIP-resubmission-specific gate is needed unless a new defect is found.
+
+## Milestone 2B — Controlled PSL Beta Readiness Verification
+
+Date: 08-18-2026
+
+Status: **READY AFTER SPECIFIC ITEMS.** Full record: `docs/controlled_psl_beta_readiness.md`.
+
+Verified/dispositioned the six remaining MUST VERIFY items ahead of the first small invite-only Controlled PSL Beta, per explicit instruction to treat the prior "City Council District 1 default assignment" concern as **closed** (Gate I36 + Milestone 1 + Milestone 2A already resolved it).
+
+**Item 1 — District 1 election date:** Official sources (St. Lucie County Supervisor of Elections, directly fetched; a third-party voter guide explicitly citing the City Clerk's elections page; independent 2022 news corroboration of the same majority/runoff mechanic) confirm Port St. Lucie uses a majority/runoff system — August 18, 2026 (today) is the Primary, deciding the race outright only if one candidate wins a majority; November 3, 2026 is the runoff/General, used only if no majority is reached. **The live database's single `election_date` value is not simply "wrong" — a single-value date column cannot represent this conditional structure.** No database change was made; this requires a separate, explicit data-model decision plus write approval, not a one-line correction. The City Clerk page and the Municode charter itself returned HTTP 403 to direct fetch and could not be quoted directly.
+
+**Item 2 — City Council write-guard technical readiness:** Reviewed `src/app/api/set-city-council-district/route.ts` and `src/app/profile/city-council-district/page.tsx` directly. **Technically ready to enable** — Gate I34 already proved a real, non-dry-run District 1 → District 3 → District 1 round trip through this exact code path, and the UI's dry-run messaging is honest (no misleading "saved" claim while disabled). The guard (`ENABLE_CITY_COUNCIL_DISTRICT_WRITE`) is a source-controlled boolean, not a per-user flag — enabling it requires a code change + deploy and would affect **all** users at once, with no built-in test-account scoping. **Not enabled.** Real consequence of leaving it false for a first wave: brand-new invitees get zero City Council assignment and zero City Council ballot/Current-Officials content (confirmed to render safely, no crash) unless/until enabled.
+
+**Item 3 — Corrections email:** `mailto:inaccuracy@civicmarket.app` appears in `src/app/corrections/page.tsx` and `src/app/measures/[id]/page.tsx`. Found and flagged (not fixed): the Candidate Profile's "Report an Inaccuracy" link instead points to the database-backed `/report` flow — two different, inconsistent reporting mechanisms currently coexist for candidates vs. measures. Mailbox deliverability/monitoring could not be verified without credentials; one manual test-email check was given.
+
+**Item 4 — Mobile smoke test:** `resize_window` tooling has improved since Gates I17/I21/I30 (previously stuck at 1920px) but now floors at ~500px regardless of a smaller requested width; tested live at ~500px on the two available public pages (`/onboarding`, `/corrections`) with no horizontal overflow found. The four target auth-gated pages (calculating, ballot, profile, city-council-district) could not be tested — no signed-in session was available and the assistant does not enter credentials. One manual real-device check was given.
+
+**Item 5 — Auth redirect readiness:** No hardcoded `localhost`, `redirectTo`, or site-URL env var found anywhere in `src/`; no Google/OAuth code exists in the app at all (email/password only). Redirect behavior is entirely controlled by the Supabase dashboard's Auth → URL Configuration, which was not and could not be inspected from code. A concise deploy-time checklist was produced.
+
+**Item 6 — Fresh signup readiness:** Milestone 1 already proves the local onboarding path end-to-end (five safe districts, zero City Council rows, correct rendering everywhere). Invite-code behavior, email-confirmation deliverability, and deployed-domain redirect behavior are all inherently deploy-time checks against the real production environment and remain unverified until a deploy target and its Supabase Auth configuration exist.
+
+**Reconciliation:** zero MUST FIX items found. Five MUST MANUALLY CONFIRM items (District 1 election-date data-model decision; corrections-mailbox deliverability + reporting-flow inconsistency; mobile check on the four untested auth-gated screens; Supabase Auth URL configuration at deploy time; invite-code/email-confirmation/redirect checks against the real deployed environment). Acceptable-for-first-wave and post-beta items are itemized in the full record.
+
+No source code was changed by this task. No Supabase write, schema, RLS, grant, policy, function, migration, seed, or district-definition change occurred. No secret file was inspected. No credentials were entered. A local `npm run dev` instance used only for the Item 4 smoke test was fully stopped afterward. `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` and `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` both remain `false`, unchanged. No deployment occurred. The unrelated concurrent untracked file `src/app/api/admin/extract-shannon-martin-evidence/route.ts` was left untouched and is not part of this update.
+
+### Recommended next step
+
+Resolve the five MUST MANUALLY CONFIRM items (most require the user directly: a data-model decision for Item 1, a test email for Item 3, a real-device check for Item 4, Supabase dashboard configuration for Item 5, and a real deploy target for Item 6) before extending the first Controlled PSL Beta invites.
 
