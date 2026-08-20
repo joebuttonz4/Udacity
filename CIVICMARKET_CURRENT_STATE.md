@@ -1,6 +1,6 @@
 # CivicMarket Current State
 
-Last updated: August 20, 2026 (Ballot Eligibility Phase 1 correction — School Board countywide anchor gap fixed via type-family jurisdiction rules in src/lib/ballotEligibility.ts; fresh PSL user now ballot-eligible for School Board without any School Board representation row; representation unchanged; both write guards remain false; no deployment; candidate import still pending)
+Last updated: August 20, 2026 (Home "My Current Officials" completeness audit — read-only; no data or query bug found; root cause is a UI labeling issue where the Home "Your districts" chips reflect ballot-eligibility-expanded races, not held representation districts; one pre-existing Mayor current_officials data gap remains, unaffected; no writes, no deployment)
 
 ## Authoritative order
 
@@ -3406,4 +3406,25 @@ Status: **Read-only review complete.** Full record: `docs/internal_beta_launch_p
 Reconciled `docs/controlled_psl_beta_readiness.md` (Milestone 2B) against everything since: the concurrent ballot-eligibility fix (citywide/countywide voting-scope correction, live-verified) and today's executed Package A candidate import (21 candidates now live, up from 11; Package B time-gated to county certification ≤ Aug 26, 2026; Package C statewide remains draft-only). Corrections-mailbox deliverability, previously open, is confirmed already resolved. **Single most important blocker: no deploy target/domain exists yet** — it blocks the entire P0 list (Supabase Auth URL config, real invite-code/email-confirmation verification). Gemini migration is scoped as SMALL (one isolated block in the extraction route) and should happen before scaling candidate-evidence coverage, to avoid duplicate extraction work across two providers. Candidate coverage (1 of 21 candidates scored) is classified SAFE TO CONTINUE DURING INTERNAL BETA, not a P0 blocker — the locked-ring design already handles partial coverage safely. Full P0–P3 blocker matrix and 7-milestone recommended sequence in the linked document.
 
 No Supabase write. No schema/RLS/function change. No deployment. No Anthropic/Gemini call.
+
+## Home "My Current Officials" Completeness Audit
+
+Date: 08-20-2026
+Timestamp: 07:30 pm EST
+
+Status: **Audit complete, read-only. No database write. No code change. No deployment.** Full record: `docs/internal_beta_home_current_officials_audit.md`.
+
+Investigated a reported inconsistency: Home shows only 3 "My Current Officials" (Stephanie Morgan, Debbie Hawley, Tobin Rogers "Toby" Overdorf) for test user `civicmarket.test.01@example.com`, while the same Home screen's "Your districts" chips include FL House District 85, City Council District 1, Mayor, City Council District 3, County Commission District 4, County Commission District 2.
+
+**Live, read-only verification** (temporary Node script using `createServiceClient()`, zero mutation calls, deleted immediately after one run) confirmed `user_districts` for this user is **exactly the documented 6-row Milestone 2A baseline** — City Council District 1, School Board District 1, County Commission At-Large, FL House District 85, FL Senate District 27, Mayor — with **no** City Council District 3 row and **no** County Commission District 2/4 rows. Not stale, not duplicate, not conflicting.
+
+`officials_for_user` (strict `district_id` join, unchanged) and `getOfficialsForUser`/`CurrentOfficialsSection` (no client-side filtering) all behave exactly as designed. The 3 officials returned are exactly correct for this user's actual held districts.
+
+**Root cause: not a data bug and not a query bug.** The Home "Your districts" section is populated from `getCandidatesForDistricts`'s **ballot-eligibility-expanded** candidate list (`src/lib/candidates.ts` + `src/lib/ballotEligibility.ts`'s citywide/countywide expansion, completed earlier the same day) — i.e. every race the user can *vote in* (all City Council seats since they're citywide, all County Commission seats since they're countywide), not the districts the user is actually *represented in*. Labeling it "Your districts" right above "My Current Officials" invites the reader to expect a 1:1 match that was never the design. This is a **UI/labeling issue only**.
+
+**One genuine, separate, pre-existing data gap confirmed unaffected:** the user does hold the Mayor district as representation, but zero `current_officials` row for Mayor exists system-wide yet (source-blocked — see "Current Officials — Mayor district gap" above). Not caused or worsened by this audit.
+
+**Recommended fix (not implemented this session, per task scope):** presentation-only — reorder Home sections (Local Elections → Top Matches/Ballot → My Current Officials → civic actions/updates → demoted "Your Representation" → beta note), relabel "Your districts" so it isn't read as a representation claim, optionally cap `CurrentOfficialsSection` with "View all X officials" for future-proofing. No `officials.ts`, `candidates.ts`, `ballotEligibility.ts`, or database change is implicated. Full Phase 1-7 audit detail, tables, and UX recommendation in the linked document.
+
+No `user_districts`, `current_officials`, `districts`, or `officials_for_user` row was created, modified, or deleted. No schema, RLS, or function change occurred. No secret file was inspected (only the public `NEXT_PUBLIC_` Supabase URL/anon key were read for an earlier, ultimately-unused anonymous RLS-restricted probe; the actual audit used the existing `createServiceClient()` service-role pattern already established by prior gates, read-only). No deployment occurred.
 
