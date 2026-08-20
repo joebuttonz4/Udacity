@@ -3347,3 +3347,17 @@ Packaged exact unexecuted `INSERT` SQL (`growth_development=1, taxation_spending
 
 No `candidate_positions` row was created or modified. No `match_scores` row was created or modified. No Anthropic or Gemini API call was made. No Supabase write was performed. Two temporary read-only diagnostic scripts were created, inspected for zero mutation calls, run once each, and deleted; `git status` confirmed neither remains in the working tree. No deployment occurred.
 
+## Gate I46 — Shannon Martin `candidate_positions` Write: Executed and Verified
+
+Date: 08-20-2026
+
+Status: **EXECUTED. VERIFICATION PASSED. Rollback not required, not used.** Full record: `docs/internal_beta_gate_i46_shannon_candidate_positions_write_execution_result.md`.
+
+The user gave explicit approval matching the Gate I46 approval statement verbatim. A temporary, one-time execution script (inspected for exactly one `.insert(` call, zero `.update(`/`.upsert(`/`.delete(`, deleted immediately after its one run) performed the pre-write recheck (0 existing rows), the single insert, and the four documented read-only verification checks — all exactly as designed, no deviation.
+
+**Shannon Martin now has a `candidate_positions` row** (`id 89803a61-9224-4dea-a10e-82956a0f45ef`): `growth_development=1, taxation_spending=2, environment=2, public_safety=2`, `education/housing/transparency = NULL`. Verification confirmed: `candidate_position_evidence` unchanged (same 5 rows), zero other `candidate_positions` rows exist, zero `match_scores` rows exist for Shannon immediately after this write. She remains the only candidate with a `candidate_positions` row — the explicitly approved, temporary pilot asymmetry.
+
+**Her match ring is not yet unlocked for any real user** — a `candidate_positions` write alone does not populate `match_scores`; that requires a separate, later, explicitly-approved `compute-match-scores` invocation for a specific test user, not performed in this gate.
+
+No `candidate_position_evidence` row was modified. No `match_scores` row was created or modified. No other candidate's `candidate_positions` row was touched. No schema, RLS, grant, or function change occurred. No Anthropic or Gemini API call was made. No deployment occurred.
+
