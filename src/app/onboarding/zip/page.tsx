@@ -7,16 +7,32 @@ import { supabase } from '@/lib/supabase';
 // Hardcoded PSL ZIP → districts mapping (beta approach — no Edge Function needed)
 const PSL_ZIPS = ['34952', '34953', '34983', '34984', '34986', '34987', '34988'];
 
-// Gate I36: districts ZIP onboarding is allowed to manage. City Council District 1/3
-// are intentionally excluded — ZIP alone cannot safely tell them apart (see
-// /profile/city-council-district for the verified-assignment flow). This list is also
-// used to scope the delete below, so a separately verified City Council row is never
-// touched by ZIP onboarding.
+// Ballot Eligibility vs. Representation (Phase 1): districts ZIP onboarding is allowed
+// to manage. City Council District 1/3 remain excluded — ZIP alone cannot safely tell
+// them apart (see /profile/city-council-district for the verified-assignment flow).
+//
+// School Board District 1, FL House District 85, and FL Senate District 27 were
+// removed from this list. None of the three is a safe ZIP-based representation
+// default:
+//   - School Board District 1: every PSL user was being assigned this district as if
+//     it were their verified representation seat, with no address confirmation —
+//     the same shape of defect Gate I36 already fixed for City Council. School Board
+//     ballot eligibility is countywide (handled by src/lib/ballotEligibility.ts via
+//     the County Commission At-Large row below) and does not require this row.
+//   - FL House District 85: Port St. Lucie is confirmed split across FL House
+//     District 84 and District 85 — assigning 85 to every user is factually wrong
+//     for residents actually in District 84. No verified-lookup flow exists yet, so
+//     no automatic assignment is made at all.
+//   - FL Senate District 27: confirmed incorrect for St. Lucie County entirely (the
+//     real coverage is District 29/31, and ZIP alone cannot tell them apart). No
+//     verified-lookup flow exists yet, so no automatic assignment is made at all.
+//
+// This list is also used to scope the delete below, so any legacy School Board
+// District 1 / FL House District 85 / FL Senate District 27 row already held by an
+// existing user is left untouched by a future ZIP resubmission — those require a
+// separate, controlled cleanup once correct verified-assignment flows exist.
 const ZIP_MANAGED_DISTRICTS = [
-  { id: '11111111-0000-0000-0000-000000000002', name: 'School Board District 1', scope: 'county' },
   { id: '11111111-0000-0000-0000-000000000003', name: 'St. Lucie County Commission At-Large', scope: 'county' },
-  { id: '11111111-0000-0000-0000-000000000004', name: 'FL House District 85', scope: 'state' },
-  { id: '11111111-0000-0000-0000-000000000005', name: 'FL Senate District 27', scope: 'state' },
   { id: '11111111-0000-0000-0000-000000000006', name: 'Mayor', scope: 'city' },
 ];
 

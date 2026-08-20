@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { getBallotEligibilityMode } from './ballotEligibility'
 
 type CandidateRow = {
   id: string
@@ -93,10 +94,64 @@ function hasRequiredCandidateFields(c: {
   )
 }
 
+type DistrictJurisdictionRow = { id: string; type: string; city: string | null; state: string | null }
+
+// Ballot Eligibility vs. Representation (Phase 1) - see src/lib/ballotEligibility.ts.
+// Representation (officials_for_user / src/lib/officials.ts) is untouched by this
+// function and keeps matching a user's held district_id exactly. This function only
+// decides which candidates a user is eligible to VOTE for: held districts whose
+// office is citywide/countywide-voted (Mayor, City Council, County Commission,
+// School Board) are expanded to every currently-modeled district sharing that same
+// jurisdiction, instead of matching only the exact district_id the user holds.
+// FL House/FL Senate (and any unmodeled jurisdiction) fail closed to an exact match.
+async function resolveBallotDistrictIds(districtIds: string[]): Promise<string[]> {
+  if (districtIds.length === 0) return []
+
+  const { data: heldDistricts, error: districtsError } = await supabase
+    .from('districts')
+    .select('id, type, city, state')
+    .in('id', districtIds)
+
+  if (districtsError) throw districtsError
+
+  const eligibleIds = new Set<string>()
+  const expansionJurisdictions = new Map<string, { city: string; state: string; type: string }>()
+
+  for (const d of (heldDistricts ?? []) as DistrictJurisdictionRow[]) {
+    const mode = getBallotEligibilityMode(d)
+    if (mode === 'exact') {
+      eligibleIds.add(d.id)
+    } else if (d.city && d.state) {
+      const jurisdictionKey = d.city + '::' + d.state + '::' + d.type
+      expansionJurisdictions.set(jurisdictionKey, { city: d.city, state: d.state, type: d.type })
+    }
+  }
+
+  if (expansionJurisdictions.size > 0) {
+    const expansionResults = await Promise.all(
+      Array.from(expansionJurisdictions.values()).map(({ city, state, type }) =>
+        supabase.from('districts').select('id').eq('type', type).eq('city', city).eq('state', state)
+      )
+    )
+
+    for (const result of expansionResults) {
+      if (result.error) throw result.error
+      for (const row of (result.data ?? []) as { id: string }[]) {
+        eligibleIds.add(row.id)
+      }
+    }
+  }
+
+  return Array.from(eligibleIds)
+}
+
 export async function getCandidatesForDistricts(
   districtIds: string[],
   userId?: string
 ): Promise<CandidateWithContext[]> {
+  const eligibleDistrictIds = await resolveBallotDistrictIds(districtIds)
+  if (eligibleDistrictIds.length === 0) return []
+
   const { data, error } = await supabase
     .from('candidates')
     .select(`
@@ -108,7 +163,7 @@ export async function getCandidatesForDistricts(
       districts ( name, type ),
       elections ( name, election_date )
     `)
-    .in('district_id', districtIds)
+    .in('district_id', eligibleDistrictIds)
     .is('archived_at', null)
     .order('name')
 

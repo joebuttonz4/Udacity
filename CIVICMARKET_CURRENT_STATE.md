@@ -1,6 +1,6 @@
 # CivicMarket Current State
 
-Last updated: August 18, 2026 (Temporary monitored corrections email — inaccuracy@civicmarket.app replaced with joebuttonzii@gmail.com on Corrections and Measure Profile; civicmarket.app confirmed not a real owned domain; both write guards remain false; no deployment)
+Last updated: August 20, 2026 (Ballot Eligibility vs. Representation Phase 1 implemented — new src/lib/ballotEligibility.ts jurisdiction rule table; getCandidatesForDistricts now expands citywide/countywide-voted races; School Board District 1, FL House District 85, and FL Senate District 27 removed from ZIP_MANAGED_DISTRICTS; representation (officials_for_user) unchanged; both write guards remain false; no deployment)
 
 ## Authoritative order
 
@@ -3168,4 +3168,38 @@ Left unchanged as internal/documentation-only or historical (not user-facing): `
 `npm run build` passed (28 routes — one more than the previously documented 27, due to the pre-existing untracked concurrent-work file `src/app/api/admin/extract-shannon-martin-evidence/route.ts`, unrelated to and unmodified by this task). `npm run lint` reported only the same 5 known pre-existing `scripts/*.cjs` errors, nothing new.
 
 No database, schema, RLS, grant, policy, function, migration, seed, district-definition, write-guard, or deployment change occurred. `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` and `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` both remain `false`, unchanged. No secret file was inspected. No credentials were entered. No deployment occurred.
+
+## Ballot Eligibility vs. Representation — Phase 1
+
+Date: 08-20-2026
+
+Status: **Implemented and verified. No deployment. No database writes.** Full record: `docs/ballot_eligibility_representation_phase_1.md`.
+
+Resolved official-source facts: Port St. Lucie City Council (Mayor + District races) is representation-district-specific but citywide-voted; St. Lucie School Board is representation-district-specific but countywide-voted; St. Lucie County Commission remains representation-district-specific but countywide-voted (already-verified conclusion, retained); FL House/FL Senate remain exact-geographic-district for ballot purposes, and FL Senate District 27 remains confirmed incorrect for St. Lucie County (real coverage is District 29/31, not guessed).
+
+**New file `src/lib/ballotEligibility.ts`** — a small, explicit rule table scoped per `(city, state, district.type)`, never a bare global `type` rule: `city_council` + Port St. Lucie/FL → `citywide`; `county` + Port St. Lucie/FL → `countywide`; `school_board` + Port St. Lucie/FL → `countywide`; `state` (FL House/Senate) has no rule and falls through to the `exact` default. An unmodeled jurisdiction/type combination always fails closed to `exact` rather than guessing, so a future city's identically-typed district is never silently assumed to follow Port St. Lucie's voting method.
+
+**`src/lib/candidates.ts`** — `getCandidatesForDistricts` now resolves a user's held districts through this rule table before querying `candidates`: `exact`-mode districts are matched as before; `citywide`/`countywide`-mode districts are expanded to every other district sharing the same `(city, state, type)`, live-queried at read time. No new `user_districts` rows are ever created to achieve this — verified live that a fresh user holding only Mayor + County Commission At-Large correctly resolves to all 11 currently-seeded candidates (Mayor, City Council D1, City Council D3), and that the County Commission expansion already resolves to all 6 County Commission district rows (District 2/4 candidates will appear automatically once imported, with no further code change needed).
+
+**`src/lib/measures.ts` — intentionally unchanged.** Ballot measures have a different `type` semantic (referendum/charter-amendment, not jurisdiction level) and zero real measures currently exist to validate against; applying the same expansion here would be guessing. Flagged as needing its own separate future review once real measure data exists.
+
+**`src/app/onboarding/zip/page.tsx`** — `ZIP_MANAGED_DISTRICTS` reduced from 5 entries to 2, after inspecting each individually:
+- **Kept:** Mayor (citywide pseudo-district). County Commission At-Large — confirmed live that zero `current_officials` rows are tied to this id, so it produces no representation record at all; it functions purely as the countywide ballot-eligibility anchor, not a false representation claim.
+- **Removed — School Board District 1:** was being assigned to every PSL user as a fake verified representation district with zero address confirmation, the same shape of defect Gate I36 already fixed for City Council. No longer needed for ballot purposes either (handled by the `school_board` countywide expansion rule).
+- **Removed — FL House District 85:** Port St. Lucie is confirmed split across District 84 and 85; defaulting everyone to 85 is factually wrong for District-84 residents. No verified-lookup flow exists yet, so no automatic assignment is made — missing data preferred over incorrect data, per explicit instruction.
+- **Removed — FL Senate District 27:** confirmed incorrect for St. Lucie County entirely (real coverage is District 29/31, indistinguishable by ZIP). No automatic assignment is made.
+
+The delete-then-insert write remains scoped to this same (now-smaller) array, so any **existing** user's legacy School Board District 1 / FL House District 85 / FL Senate District 27 row is left completely untouched — neither deleted nor migrated. City Council District 1/3 remain excluded from `ZIP_MANAGED_DISTRICTS`, unchanged from Gate I36.
+
+**Representation confirmed unchanged** — `officials_for_user` (SQL view), `src/lib/officials.ts`, `CurrentOfficialsSection.tsx`, the City Council D1/D3 verified-assignment RPC/API, and County Commission representation behavior were not modified. Verified live that `current_officials` has zero rows tied to the Mayor or County-Commission-At-Large district ids (so the ballot expansion cannot leak into representation), and exactly one row each for City Council District 1 (Stephanie Morgan) and District 3 (Anthony Bonna, Sr.).
+
+**Test results — all verified live (read-only) against the actual database, not simulated:** fresh-user ballot expansion (Mayor + County Commission At-Large → all 11 seeded candidates) PASS; City Council D1/D3 representation isolation PASS; County Commission countywide expansion PASS (6 district rows resolved); County Commission Current Officials does not expand to all commissioners PASS by construction (view untouched); School Board countywide expansion PASS (currently resolves to District 1 only, since D3/D5 rows don't exist yet — will expand automatically once added); fresh user receives no fake School Board representation PASS; FL House stays exact, no universal 85 assignment PASS; FL Senate — no District 27 assignment, no 29/31 guess PASS; Mayor no regression PASS.
+
+`npm run build` passed (28 routes, no errors — the 28th route is the pre-existing untracked concurrent-work admin route, unrelated to this task). `npm run lint` reported only the 5 known pre-existing `scripts/*.cjs` errors, nothing new.
+
+**Existing-user legacy rows still requiring cleanup (not touched by this task):** existing users may still hold `School Board District 1`, `FL Senate District 27`, and possibly `FL House District 85` from the now-removed defaults. None were migrated or deleted. A separate, controlled cleanup is required once correct verified-district-assignment mechanisms exist for School Board and FL House/Senate, mirroring the City Council D1/D3 and disabled County Commission patterns.
+
+**Explicitly not done in this task:** no FL House/Senate or School Board verified-district-lookup flow was built; no candidates were imported; no existing `user_districts` row was migrated, deleted, or modified; the dead, unused `ballot_for_user` SQL view (`Reference Files/civicmarket_schema_v4.sql`) was not touched and still has the original conflation flaw — its disposition remains a separate, future, explicitly-approved database view change; no schema, RLS, grants, policies, functions, or migrations were changed.
+
+No Supabase write was performed. No `candidates`, `districts`, `elections`, `user_districts`, `current_officials`, or `officials_for_user` row/definition was created, modified, or deleted. No secret file was inspected. `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` and `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` both remain `false`, untouched. No deployment occurred.
 
