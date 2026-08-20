@@ -1,6 +1,6 @@
 # Candidate Import Package A — Execution-Ready
 
-Status: **Preflight PASS. Not executed. Awaiting explicit write authorization.**
+Status: **Executed 08-20-2026. Post-write verification PASS.**
 
 Date: 08-20-2026
 
@@ -252,6 +252,31 @@ No rollback path touches `user_districts` or `current_officials` — Package A n
 
 No SQL was executed. No `INSERT`/`UPDATE`/`DELETE`/`POST`/`PATCH` request was made against Supabase — every request in §3 was a read-only `GET`/`HEAD`. No service-role key or other secret was read; only the public `NEXT_PUBLIC_SUPABASE_ANON_KEY` already compiled into the client bundle was used. No `districts`, `elections`, `candidates`, `user_districts`, or `current_officials` row was created, modified, or deleted. No schema, RLS, grant, policy, function, or migration was changed. `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` and `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` are unrelated to this workstream and were not inspected or changed. `CIVICMARKET_CURRENT_STATE.md` was intentionally not edited by this document, per instruction, because another session owns its current changes. No deployment occurred.
 
-## 9. Next step
+## 9. Execution result (08-20-2026)
 
-The only remaining boundary is explicit authorization to execute the Package A transaction (§4) against the live Supabase database. That authorization has not been given. This document does not constitute that authorization.
+Package A (§4) was executed by the project owner in the Supabase SQL Editor (no Supabase CLI/psql/DB-execution tool is available to this session — consistent with every prior real write in this project). Reported result: **Success. No rows returned.**
+
+**PACKAGE A POST-WRITE VERIFICATION = PASS**
+
+Verified read-only, immediately after, using the same anon-key PostgREST method as the §3 preflight — no writes performed during verification.
+
+- `districts`: 15 total (12 baseline + 3 new) — matches expected +3 exactly.
+- `elections`: 17 total (7 baseline + 10 new) — matches expected +10 exactly.
+- `candidates`: 21 total (11 baseline + 10 new) — matches expected +10 exactly.
+- `current_officials`: 9 — unchanged from baseline.
+- `user_districts`: not independently countable via the anon key (owner-scoped RLS, same limitation as the §3 preflight) — the executed transaction contained no statement referencing this table, so it is structurally unaffected regardless.
+- All 10 Package A candidate rows verified exactly at their approved `44444444-...` fixed IDs — names, offices, `is_incumbent`, `district_id`, `election_id` all match; all 10 have `appeared_on_ballot = true` and `archived_at = null`.
+- Rick Meltzer correction: PASS — `6a7f3cca-...` now `name = 'Rick Meltzer'`; no duplicate "Fredric Meltzer" row remains.
+- Steven Harrington correction: PASS — `6e14b71f-...` now `appeared_on_ballot = false`.
+- Harrington `archived_at`: remained `null` — confirmed not archived by Package A, per Correction 1.
+- Donna Mills: absent (0 rows).
+- Ben "Zag" Zagrobelny: absent (0 rows).
+- Statewide candidates: absent (0 rows — all 10 new offices are County Commissioner D2/D4 or State Representative D84/D85).
+- Duplicate `name`+`district_id` check across all active candidates: 0.
+- `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` and `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE`: both remain `false`, confirmed by direct source read, both untouched by this work.
+- Deployment: none occurred.
+- Rollback (§7): not required — no defect found.
+
+## 10. Next step
+
+Package A is complete and verified. **Next action: prepare Package B post-certification reconciliation** (§P4 of the source artifact — Mayor, City Council D1, City Council D3, County Commission D4 DEM line, School Board D1, School Board D5, and the newly-added School Board D3 Mills/Zagrobelny action). No Package B action may execute before the relevant certification: county canvassing board certification is expected no later than noon, August 26, 2026 (Fla. Stat. § 102.112); the County Commission D4 Democratic primary (276-vote margin) warrants specific extra caution per the source artifact's own risk note. No result-dependent write should be prepared for execution — only reviewed and preflighted — before its certification requirement is met.
