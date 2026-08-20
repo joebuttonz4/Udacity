@@ -1,15 +1,16 @@
 # Current Task State
 
 ## Completed
-- Gate I45 candidate_positions aggregation design finished: schema inspected (one row per candidate, not per candidate+dimension; zero rows exist for any candidate), `compute-match-scores` inspected (nulls skipped not zeroed, no minimum-dimension threshold, no code change needed), aggregation rule designed and applied to Shannon Martin (`growth_development +1`, `taxation_spending +2`, `environment +2`, `public_safety +2`, other 3 stay NULL), provenance strategy recommended (documentation-only, deterministic regeneration, no schema change), future write package drafted (not executed).
-- Full detail: `docs/internal_beta_gate_i45_candidate_position_aggregation_design.md`.
+- Gate I45: candidate_positions aggregation design (commit 56067f1).
+- Gate I46: Shannon Martin candidate_positions write-approval package created — pre-write state re-verified live (0 Shannon row, 0 system-wide, same 5 unchanged evidence rows), schema re-verified live via PostgREST OpenAPI, exact INSERT/verification/rollback SQL drafted, match-score consequence documented (write alone does not populate match_scores; that needs its own separate future approval).
+- Full detail: `docs/internal_beta_gate_i46_shannon_candidate_positions_write_approval.md`.
 
 ## Current findings
-- Baseline aggregation rule from the task prompt assessed as compatible with current app behavior — adopted as-is, no changes required.
-- Writing Shannon's row would make her the only candidate system-wide with any unlocked match ring (zero other candidates have any `candidate_positions` row).
+- User has explicitly approved the single-candidate pilot asymmetry for design purposes (Shannon becoming the only unlocked candidate) — this is a recorded product decision, not an open question anymore.
+- No technical blocker remains for the candidate_positions write itself.
 
 ## Blockers
-- One open **product** decision (not technical): whether the single-candidate-asymmetry above is acceptable before any write-approval gate. No code or schema blocker exists.
+- None technical. The only remaining gate is explicit user approval to execute the actual Gate I46 INSERT (not yet given).
 
 ## Next action
-- If the product decision above is approved, next gate designs the explicit write-approval package (Gate I46) using the SQL already drafted in Gate I45 Part 7. Not started.
+- If the user gives the exact Gate I46 approval statement, execute: pre-write recheck → INSERT → read-only verification → (rollback only if verification fails). Do not recompute match_scores as part of that execution — that is a separate, later approval.

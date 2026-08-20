@@ -3331,3 +3331,19 @@ Status: **Design + read-only verification complete.** No Supabase write. Full re
 
 No `candidate_positions` row was created or modified. No `match_scores` row was created or modified. No Anthropic or Gemini API call was made. No Supabase write was performed. Two temporary read-only diagnostic scripts were created, inspected for zero mutation calls, run once each, and deleted; `git status` confirmed neither remains in the working tree. No deployment occurred.
 
+## Gate I46 — Shannon Martin `candidate_positions` Write Approval Package
+
+Date: 08-20-2026
+
+Timestamp: 04:23 pm EST
+
+Status: **Documentation only. Creating this document is not approval. NO WRITE EXECUTED.** Full record: `docs/internal_beta_gate_i46_shannon_candidate_positions_write_approval.md`.
+
+**Product decision recorded:** the user explicitly approved the single-candidate pilot asymmetry for design purposes — Shannon Martin may become the only candidate with a `candidate_positions` row / unlocked match ring during this controlled pilot. This approval covers designing the write package only, not executing it.
+
+Pre-write state re-verified live immediately before drafting: Shannon's `candidate_positions` row still absent, system-wide row count still 0, the same 5 `candidate_position_evidence` rows from Gate I44 unchanged, single `methodology_version` present (no staleness). Schema re-verified live via PostgREST's OpenAPI description for `candidate_positions` specifically (all 7 dimension columns nullable numeric, only `id` NOT NULL, verified defaults); `UNIQUE(candidate_id)` and the RLS/policy state remain schema-source verified only (not exposed by the OpenAPI endpoint).
+
+Packaged exact unexecuted `INSERT` SQL (`growth_development=1, taxation_spending=2, education=NULL, environment=2, public_safety=2, housing=NULL, transparency=NULL`, insert-only per the safest-behavior rule since no existing row was found), read-only post-write verification SQL, and a `candidate_id`-scoped rollback (safe by construction under `UNIQUE(candidate_id)`, unlike the evidence-table rollback which needed exact-ID scoping). Documented explicitly that a `candidate_positions` write alone does **not** populate `match_scores` — that requires a separate, later, explicitly-approved `compute-match-scores` invocation for a specific test user, out of scope here.
+
+No `candidate_positions` row was created or modified. No `match_scores` row was created or modified. No Anthropic or Gemini API call was made. No Supabase write was performed. Two temporary read-only diagnostic scripts were created, inspected for zero mutation calls, run once each, and deleted; `git status` confirmed neither remains in the working tree. No deployment occurred.
+
