@@ -3309,3 +3309,25 @@ The user gave explicit approval matching the exact Gate I43 approval statement v
 
 Shannon Martin is the first candidate with human-reviewed campaign-evidence rows in the system. **`candidate_positions` and `match_scores` were not modified** — converting these evidence rows into an actual candidate-position dimension score (and from there into ballot match scores) remains a separate, not-yet-designed, future gate. No schema, RLS, grant, policy, or migration change occurred. No other candidate's evidence was touched. No Anthropic or Gemini API call was made. No deployment occurred.
 
+## Gate I45 — Candidate-Position Aggregation Design
+
+Date: 08-20-2026
+
+Timestamp: 04:11 pm EST
+
+Status: **Design + read-only verification complete.** No Supabase write. Full record: `docs/internal_beta_gate_i45_candidate_position_aggregation_design.md`.
+
+**Schema correction:** `candidate_positions` is a wide table — one row per candidate (`UNIQUE(candidate_id)`), with all seven dimensions as individual nullable `numeric(4,2)` columns on that single row, not one row per candidate+dimension. No confidence/source/provenance columns exist on it. Live read-only queries confirmed the table has **zero rows for any candidate system-wide** (not just Shannon).
+
+**`compute-match-scores` fully inspected:** a missing `candidate_positions` row skips the candidate entirely (locked ring); a `null` dimension column is skipped from the alignment average (never treated as 0); no minimum-dimension-count threshold exists — a single non-null dimension is sufficient to produce a match score. No code change is required to support a partial (4-of-7) `candidate_positions` row.
+
+**Aggregation rule designed and adopted:** eligible = `extraction_status = 'human_reviewed'` only; same-sign rows aggregate to the strongest (highest-magnitude) score present, never summed; mixed-strength same-sign rows use strongest-evidence-wins (matches the project's own Gate I40/I41 precedent); opposite-sign rows block automatic aggregation entirely (`BLOCKED_PENDING_HUMAN_ADJUDICATION`, no averaging — mirrors the evidence-layer `crossCheckConflicts` philosophy); confidence never alters the numeric score; duplicate corroborating evidence never inflates the score above the strongest supported value; different `methodology_version` values never mix automatically.
+
+**Applied to Shannon Martin (no write performed):** `growth_development = +1`, `taxation_spending = +2`, `environment = +2`, `public_safety = +2`; `education`/`housing`/`transparency` would remain `NULL` (no eligible evidence) — confirmed by applying the rule to the live, current evidence set, matching the expected result exactly.
+
+**Provenance recommendation:** documentation-only for beta, backed by deterministic regeneration from `candidate_position_evidence` (the rule is fully deterministic and the evidence rows are immutable) — no schema change, no new linkage table, for a single-candidate pilot.
+
+**Status: READY FOR CANDIDATE_POSITIONS WRITE-DESIGN, WITH ONE OPEN PRODUCT DECISION.** The aggregation design itself is complete and code-compatible. The one unresolved item, requiring an explicit human product decision (not a technical fix) before any write-approval gate: writing this row would make Shannon Martin the **only candidate in the entire system** with any unlocked match ring, while every other real candidate remains fully locked per the established Gate I12–I18 policy — an honest but stark asymmetry that should be a deliberate choice, not a side effect. A minor, non-blocking naming mismatch was also noted (`candidate_positions.data_completeness`'s legacy enum has no value describing "campaign-evidence-derived" data, but the column is read by zero current application code, so this has no functional consequence).
+
+No `candidate_positions` row was created or modified. No `match_scores` row was created or modified. No Anthropic or Gemini API call was made. No Supabase write was performed. Two temporary read-only diagnostic scripts were created, inspected for zero mutation calls, run once each, and deleted; `git status` confirmed neither remains in the working tree. No deployment occurred.
+
