@@ -1,51 +1,65 @@
 # Shannon Martin Candidate-Evidence Pilot — Return Handoff
 
 Date: 08-20-2026
-Timestamp: 01:07 pm EST (documentation authored while user was away from the computer)
+Timestamp: 04:54 pm EST
 
-## What was completed while you were away
+## 1. Final status
 
-Continuing the Shannon Martin candidate-evidence pilot from where it stood (final human-reviewed 5-row evidence set already documented in Gate I41):
+**FIRST FULL CAMPAIGN-EVIDENCE PILOT END-TO-END RUN PASSED.**
 
-1. **Reviewer identity resolved** — profile UUID `f1fde6f9-07c3-4c76-ae81-ebb2f461a5c3`, `is_admin: true`. Confirmed via three converging live, read-only Supabase queries (sole admin profile, `auth.admin.listUsers()` match on your email, direct profile lookup). No ambiguity.
-2. **Duplicate check** — 0 existing `candidate_position_evidence` rows for Shannon Martin (`candidate_id d44ff05a-...`). Clean slate; no duplicate risk found.
-3. **Live schema verification** — confirmed live via PostgREST's own API description: table columns, both foreign keys (`reviewed_by → profiles.id`, `candidate_id → candidates.id`), `reviewed_at` type, `extraction_status` default. `CHECK`-constraint-level details (exact enum values, the precise reviewed_by/reviewed_at pairing rule) could not be retrieved this way — those remain at the same "previously verified" status Gate I37 established; nothing was overstated.
-4. **Gate I42 created** — `docs/internal_beta_gate_i42_shannon_martin_evidence_insert_design.md` — full verification results, the exact five-row package, and unexecuted draft SQL (insert transaction, read-only verification, exact-ID rollback).
-5. **Gate I43 created** — `docs/internal_beta_gate_i43_shannon_martin_evidence_write_approval.md` — the same package repackaged as an approval-ready document with a copy/paste approval statement.
-6. **Build verified** — `npm run build` passed, 28 routes, no errors. Extraction route re-confirmed unchanged: `ENABLE_CAMPAIGN_EVIDENCE_EXTRACTION = false`, `max_tokens: 6000`, `thinking: disabled`, all guardrails/canonicalization intact, zero mutation calls.
-7. **CIVICMARKET_CURRENT_STATE.md updated** with Gate I42/I43 summaries.
-8. Two temporary read-only diagnostic scripts were created, inspected for zero mutations, run once each, and deleted — confirmed gone from `git status`.
+The pilot has completed its entire intended path for one candidate and one test user: campaign source verification → extraction → parser/thinking/token hardening → human review → deterministic validation → final `candidate_position_evidence` rows → deterministic aggregation → `candidate_positions` → `compute-match-scores` → verified test-user match score. Every step is documented and auditable; nothing was left partially done.
 
-## Reviewer UUID
+## 2. Final commits
 
-`f1fde6f9-07c3-4c76-ae81-ebb2f461a5c3` (`is_admin: true`)
+| Commit | Description |
+|---|---|
+| `21c09d7` | Shannon Martin evidence write execution (5 `candidate_position_evidence` rows) |
+| `56067f1` | `candidate_positions` aggregation design |
+| `4ac78be` | `candidate_positions` write approval package |
+| `847ee5a` | `candidate_positions` write execution |
+| `754a7ed` | Match-score test approval package |
+| `d6cc50e` | Match-score execution result (latest pilot commit) |
 
-## Duplicate-check result
+## 3. Database state
 
-0 existing Shannon Martin evidence rows. 0 existing `campaign_evidence_v1_2026-08` rows. No duplicates.
+- Shannon Martin (`candidate_id d44ff05a-14af-45c2-9f2f-6d530a8a051e`) has **5** `human_reviewed` `candidate_position_evidence` rows.
+- Shannon has **1** `candidate_positions` row: `growth_development=1, taxation_spending=2, education=NULL, environment=2, public_safety=2, housing=NULL, transparency=NULL`.
+- Test user `civicmarket.test.01@example.com` (`ec59ea92-470f-447f-8873-ab2dbde52aca`) has **1** `match_scores` row for Shannon: **score = 66**.
+- **No other candidate currently has a `candidate_positions` row** — Shannon remains the only candidate system-wide with one, per the explicitly approved pilot-scope decision.
+- **No other user's `match_scores` changed** during Gate I47 — confirmed via post-write verification.
 
-## Build result
+## 4. Candidate-position aggregation rule (summary)
 
-`npm run build` — **passed**, 28 routes, no errors.
+Full design: `docs/internal_beta_gate_i45_candidate_position_aggregation_design.md`. In brief: only `human_reviewed` evidence is eligible; same-sign rows aggregate to the strongest (highest-magnitude) score present, never summed; opposite-sign rows block automatic aggregation entirely (requires human adjudication, never averaged); missing-evidence dimensions stay `NULL`, never defaulted to 0; confidence never alters the numeric score; corroborating duplicates never inflate the score; different `methodology_version` values never auto-mix. This rule is what produced Shannon's 4 populated / 3 null dimensions from her 5 evidence rows.
 
-## Supabase writes this session
+## 5. Match-score verification
 
-**0.** No insert, update, upsert, or delete was executed at any point.
+- `compute-match-scores` result: `{ inserted: 1, skipped: 11, total_candidates: 12 }`
+- Expected score (hand-calculated from live data before execution): **66**
+- Actual score (from the executed route): **66**
+- **Verification: PASS** — exact match, plus `candidate_positions`, `candidate_position_evidence`, and the test user's `civic_dna` all confirmed unchanged post-execution.
 
----
+## 6. Safety state
 
-## Exact next action (only if you want to proceed)
+- No rollback was required at any step.
+- No schema changes.
+- No RLS changes.
+- No function changes.
+- No deployment.
+- The extraction write guard (`ENABLE_CAMPAIGN_EVIDENCE_EXTRACTION`) remains **disabled** (`false`).
+- **No further Supabase write is authorized merely by the existence of this handoff document.** Every prior write in this pilot required its own separate, explicit, verbatim user approval statement — that pattern continues for any future write.
 
-Nothing executes automatically. If you want the five-row Shannon Martin evidence set actually written to the database, review `docs/internal_beta_gate_i43_shannon_martin_evidence_write_approval.md` and, if you approve, give this exact statement in a new session:
+## 7. Remaining beta work (not resolved by this pilot)
 
-> I explicitly approve Gate I43 to execute only the documented five-row Shannon Martin candidate_position_evidence insert using reviewer UUID f1fde6f9-07c3-4c76-ae81-ebb2f461a5c3, with reviewed_at=now(), followed immediately by the documented read-only verification. I approve the documented exact-ID rollback only if verification fails. Do not modify candidate_positions, match_scores, schema, or any other table.
+- The **Gemini migration remains REQUIRED before beta launch** — untouched by this pilot, still outstanding.
+- The Shannon-only `candidate_positions`/match-score unlock is a **controlled pilot asymmetry**, explicitly accepted for this pilot only — not a general policy.
+- **Every other candidate remains locked** until their own evidence and `candidate_positions` rows are created through this same gated process.
+- Broader candidate-evidence automation or scaling to more candidates is **separate future work**, not started.
 
-That statement authorizes exactly the pre-built SQL in Gate I42/I43 — nothing more, nothing improvised.
+## 8. Next recommended action
 
-## Reminder — not part of this gate
+Review the controlled beta launch plan/current beta blockers and decide whether to scale the candidate-evidence pipeline to the remaining beta candidates or address another higher-priority beta blocker first.
 
-The Gemini migration remains **required before beta launch** per the project's broader roadmap, but was **not** touched, started, or performed in this session. It's a separate, future piece of work.
+## 9. Fresh-session resume instruction
 
-## Git / commit status
-
-Committed as `3ebcc45` ("Complete Shannon Martin candidate evidence pilot preparation") and pushed to `origin/master` (`aee56e9..3ebcc45`). This handoff document is committed separately, immediately after.
+Read CLAUDE.md and docs/internal_beta_shannon_candidate_evidence_return_handoff.md. Continue from Next Action. Do not reconstruct prior conversation history.

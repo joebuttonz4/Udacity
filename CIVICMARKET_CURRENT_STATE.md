@@ -3391,3 +3391,9 @@ The user gave explicit approval matching the Gate I47 approval statement verbati
 
 No `candidate_positions`/`candidate_position_evidence`/`civic_dna` row was modified. No other user's data was touched. No schema, RLS, grant, or function change occurred. No Anthropic or Gemini API call was made. No deployment occurred.
 
+## Shannon Martin Candidate-Evidence Pilot — Complete
+
+Date: 08-20-2026
+
+**End-to-end pilot complete.** Match score 66 for test user `ec59ea92-470f-447f-8873-ab2dbde52aca` (`compute-match-scores` result: `inserted: 1, skipped: 11, total_candidates: 12`). Verification passed on every check; no rollback used at any step. Full final-state handoff: `docs/internal_beta_shannon_candidate_evidence_return_handoff.md`. Next: review the controlled beta launch plan and decide whether to scale this pipeline to remaining beta candidates or prioritize another beta blocker (Gemini migration remains outstanding).
+

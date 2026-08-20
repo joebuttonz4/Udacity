@@ -1,17 +1,15 @@
 # Current Task State
 
 ## Completed
-- Gate I45: candidate_positions aggregation design (commit 56067f1).
-- Gate I46: Shannon Martin candidate_positions write executed and verified (commit 847ee5a).
-- Gate I47: match-score test executed with explicit user approval. `POST /api/compute-match-scores` invoked for `civicmarket.test.01@example.com` via a credential-free admin-minted session (no password touched). Result: `{ inserted: 1, skipped: 11, total_candidates: 12 }`. Shannon's match_scores row: score=66, exactly matching the pre-computed expected value. All post-write checks passed (candidate_positions/candidate_position_evidence/civic_dna unchanged, zero other users affected).
-- Full detail: `docs/internal_beta_gate_i47_shannon_match_score_test_execution_result.md`.
-- **This completes the first full end-to-end run of the campaign-evidence pilot** (extraction → human review → aggregation → candidate_positions → match_scores) for one candidate and one test user.
+- **Shannon Martin candidate-evidence pilot: COMPLETE, end-to-end.** Extraction → human review → aggregation → candidate_positions → match_scores, all executed and verified. Latest commit: d6cc50e.
+- Return handoff document finalized: `docs/internal_beta_shannon_candidate_evidence_return_handoff.md`.
 
 ## Current findings
-- Shannon Martin's match ring is now genuinely unlocked (66%) for exactly one test user — the explicitly approved, temporary pilot scope.
+- Shannon has 5 human_reviewed evidence rows, 1 candidate_positions row, 1 match_scores row (score 66) for test user ec59ea92-470f-447f-8873-ab2dbde52aca.
+- No other candidate has candidate_positions; no other user's match_scores changed.
 
 ## Blockers
-- None.
+- None for this pilot.
 
 ## Next action
-- No further action requested. Possible future work (not started, not requested): expanding the pilot to more candidates, or the still-outstanding Gemini migration required before beta launch (separate from this pilot).
+- Review the controlled beta launch plan/current beta blockers and decide whether to scale the candidate-evidence pipeline to the remaining beta candidates or address another higher-priority beta blocker first (e.g. the still-outstanding Gemini migration).
