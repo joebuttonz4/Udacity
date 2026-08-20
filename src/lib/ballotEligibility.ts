@@ -32,7 +32,7 @@
 // eligibility statement only — it never creates a representation row of
 // the other type, and never affects officials_for_user.
 
-export type BallotEligibilityMode = 'exact' | 'citywide' | 'countywide'
+export type BallotEligibilityMode = 'exact' | 'citywide' | 'countywide' | 'statewide'
 
 type DistrictJurisdiction = {
   type: string
@@ -43,7 +43,7 @@ type DistrictJurisdiction = {
 type JurisdictionRule = {
   city: string
   state: string
-  mode: 'citywide' | 'countywide'
+  mode: 'citywide' | 'countywide' | 'statewide'
   // Every district.type that shares this ballot-eligibility family for this
   // (city, state). Holding a district whose type appears here makes every
   // OTHER type listed here ballot-eligible too, for the same (city, state).
@@ -87,6 +87,25 @@ const BALLOT_ELIGIBILITY_RULES: JurisdictionRule[] = [
   // FL House and FL Senate (district.type 'state') intentionally have no
   // rule here — they fall through to the 'exact' default below. Florida
   // legislative ballot eligibility is exact-geographic-district only.
+  {
+    // Package C1 statewide model (Option A, architecture approved). Florida's
+    // four statewide constitutional offices (Governor/Lt. Governor, Attorney
+    // General, CFO, Commissioner of Agriculture) are elected by every Florida
+    // voter, not by any city or county subdivision. A single "Florida
+    // Statewide" anchor district (type 'statewide') is held by every onboarded
+    // Florida user, exactly like the Mayor and County Commission At-Large
+    // anchors — holding it expands ballot eligibility to every other district
+    // of the same type. Deliberately a distinct type from 'state' (FL
+    // House/Senate), which stays exact-geographic-district only per the rule
+    // above — the two type families never overlap here or in any rule.
+    // Inert until Package C1's district rows exist live (see
+    // docs/candidate_import_package_c1_statewide_certification_independent.md).
+    city: 'Statewide',
+    state: 'FL',
+    mode: 'statewide',
+    types: ['statewide'],
+    reason: 'Florida statewide constitutional offices are elected by every Florida voter (official Florida Division of Elections source).',
+  },
 ]
 
 function findRule(district: DistrictJurisdiction): JurisdictionRule | undefined {
