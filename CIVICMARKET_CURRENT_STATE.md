@@ -3219,3 +3219,81 @@ Status: **Confirmed and corrected. No database writes. No deployment. Candidate 
 
 No `user_districts`, `officials_for_user`, `src/lib/officials.ts`, `CurrentOfficialsSection.tsx`, or onboarding file was modified. No schema, RLS, grants, policies, functions, or migrations were changed. `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` and `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` both remain `false`, untouched. No secret file was inspected. No deployment occurred. Candidate import remains pending.
 
+## Gate I39 — Candidate-Evidence Dimension Definitions Review
+
+Date: 08-20-2026
+
+Status: **Documentation-only review and re-evaluation complete.** No Anthropic call. No Supabase write. No deployment. Full record: `docs/internal_beta_gate_i39_candidate_evidence_dimension_definitions_review.md`.
+
+**Numbering note:** this claims the "Gate I39" slot Gate I38's "Recommended next gate" note reserved. The live extraction pilot that note anticipated actually ran informally in a separate working session (a JSON-fence-parsing fix, response-diagnostics/multi-text-block hardening, a truncation root-cause diagnosis traced to unrequested adaptive extended thinking on `claude-sonnet-5` consuming the `max_tokens` budget, a fix — `thinking: { type: 'disabled' }` plus `max_tokens: 6000` — and one successful live call returning 8 validated Shannon Martin evidence rows, 0 rejected) but was never persisted here. This entry is the first of that sequence to be recorded, and covers only the definitions-review step that followed human review of those 8 rows.
+
+**Trigger:** of the 8 validated rows, only 3 were approved as scored (`taxation_spending +2` ×2, `public_safety +2`); 5 contained legitimate evidence but were rejected because the current evidence-scoring polarity definitions (a downstream, additive concern separate from the locked Civic DNA quiz — `Reference Files/CIVICMARKET_PATCH_MAY12.md` and the seven locked dimension keys were **not** touched) were too narrow, ambiguous, or vulnerable to false inference from boilerplate/generic language.
+
+**Outcome, all seven dimensions reviewed:** `growth_development` redefined around permissive-vs-restrictive *development-approval policy*, with single-parcel conservation actions explicitly excluded (they belong to `environment`). `taxation_spending` kept as one combined dimension (the seven keys are locked; splitting would need its own schema-level gate) but tightened to a net-fiscal-posture rule with an explicit "don't average, hold at 0 and escalate" rule for same-row tax-cut-plus-spending-increase evidence. `environment` broadened from "regulation" to protection/conservation/public investment generally. `public_safety` broadened to resources/staffing/facilities/technology, with a sharp new exclusion for generic "supports law enforcement"/outcome-ranking rhetoric. `transparency` split into a scoreable Tier A (disclosure/access/records policy) and an excluded Tier B (generic constituent engagement/outreach alone). `education` and `housing` definitions were reviewed and tightened but remain untested — no real evidence exists yet for either dimension for any candidate reviewed so far.
+
+**Shannon Martin row-by-row re-evaluation (no new model call):** growth_development +1 → null (boilerplate, no concrete commitment); growth_development -1 → null under this dimension (conservation evidence mis-mapped — belongs to `environment`, not fabricated as a new row here); both `taxation_spending +2` rows kept unchanged; `environment +1` revised to **+2** (multiple concrete, named, funded commitments under the broadened definition); `public_safety +1` → null (generic branding/outcome rhetoric, no named resource); `public_safety +2` kept unchanged (the strongest, least ambiguous row in the set); `transparency +1` → null (generic constituent engagement, no disclosure-policy commitment). No duplicate rows were averaged. All post-revision `conflict_flag` values are `false` — the growth_development conflict was found **not genuine**: it dissolved into one under-specified claim (null) plus one mis-mapped claim (null), not a real simultaneous pro/anti-growth position.
+
+**Unresolved, requiring separate explicit approval before use in any real scoring:** the `taxation_spending` combined-axis mitigation remains untested against an actual conflicting-evidence case; no mechanism exists yet to re-route mis-mapped evidence (e.g., the Rosser Lakes Preserve quote) to its correct dimension; the new "outcome claims are not policy claims" exclusion rule; the untested `education`/`housing` definitions; a new `education` confidence-capping rule for City-level candidates discussing School-Board-controlled funding. Nothing in this document is self-approving — it proposes, it does not adopt.
+
+No `candidate_position_evidence` row was created. No `candidate_positions` or `match_scores` row was created or modified. No Anthropic/Claude API call was made. No Supabase write was performed. `ENABLE_CAMPAIGN_EVIDENCE_EXTRACTION`, `ENABLE_CITY_COUNCIL_DISTRICT_WRITE`, and `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` all remain `false`, untouched. No application source code was changed. No deployment occurred. No commit or push was performed by this gate.
+
+## Gate I40 — Shannon Martin Evidence Human Review
+
+Date: 08-20-2026
+
+Status: **Human source-grounded review complete.** Documentation only. Full record: `docs/internal_beta_gate_i40_shannon_martin_evidence_human_review.md`.
+
+Since Gate I39, the extraction route gained two code-level fixes not yet persisted here in their own sections: (1) a deterministic validation-layer guardrail rejecting a negative `growth_development` score whenever the evidence is only parcel-specific preservation/conservation without a general restrictive-development-policy signal, and (2) conflict-flag canonicalization — every surviving row's `conflict_flag`/`conflict_notes` are reset to `false`/`null` at validation time and recomputed solely by `crossCheckConflicts()` over the final validated set, so a rejected row can never leave a stale conflict claim on a survivor. A live run confirmed both working end-to-end: the Rosser Lakes -1 row was rejected with the exact expected reason, and the surviving `growth_development +1` row correctly ended `conflict_flag: false` despite the model's own raw output having self-reported a conflict against the now-rejected row.
+
+**This gate reviewed the 5 rows that survived that run** against the two live campaign pages, read in full (not sampled). **3 of 5 are clean approvals** (`taxation_spending +2` ×2, `public_safety +2`) — every claim verified verbatim/near-verbatim against the cited page, correct dimension mapping, proportionate score, appropriate confidence, `source_published_at` correctly `null`, `conflict_flag` correctly `false`. **2 of 5 require revision, not rejection:**
+- `growth_development +1` (cited `about-shannon-martin/`) — a new class of defect: the rationale blends genuine content from **two different approved pages** ("reducing red tape," confirmed on the cited page, plus "Southern Grove Jobs Corridor," confirmed instead on `biography/`) but cites only one `source_url`. Revision: keep score/confidence/source_url, correct the rationale to only what the cited page actually contains.
+- `environment +1` (`biography/`) — the evidence (Naturally PSL program, 280+ acres, named water-quality/septic-to-sewer investment) is the same multi-part concrete pattern Gate I39 already documented as meeting the **+2** threshold, not +1. Revision: score +1 → +2, rationale/confidence/source_url unchanged. This is the second consecutive live run where the model itself scored this exact evidence pattern +1 rather than +2 despite the guardrail text — noted as an open question about whether the prompt needs sharper wording or this remains a standing human-review correction.
+
+The rejected Rosser Lakes `growth_development -1` row is recorded in the human-review document as **REJECTED BY DETERMINISTIC VALIDATION** (reason: "Negative growth_development score lacks evidence of a general restrictive development policy; parcel-specific preservation/conservation alone is insufficient.") for audit-trail completeness — it was never part of the human-review decision set.
+
+**Unresolved:** no validation-layer check currently catches the row-1-style cross-page content merge (the existing `source_url` check only confirms the URL is on the approved list, not that every rationale claim appears on that specific page) — a possible future gate. Neither revision (row 1 or row 4) has been applied anywhere; this gate documents the corrected values only. No insert/persistence mechanism exists yet.
+
+No `candidate_position_evidence` row was created. No `candidate_positions` or `match_scores` row was created or modified. No candidates were compared or ranked. No user match score was calculated. No Anthropic/Claude API call was made. No Supabase write was performed. `ENABLE_CAMPAIGN_EVIDENCE_EXTRACTION` remains `false`, untouched. No application source code was changed. No deployment occurred. No commit or push was performed by this gate.
+
+## Gate I41 — Final Human-Reviewed Shannon Martin Evidence Set
+
+Date: 08-20-2026
+
+Status: **Documentation / review-state only.** Full record: `docs/internal_beta_gate_i41_shannon_martin_final_evidence_set.md`.
+
+Applied both Gate I40-approved revisions and established the authoritative final five-row Shannon Martin evidence set that any future insert gate must use, with every `candidate_position_evidence` field specified per row (`candidate_id`, `dimension`, `score`, `rationale`, `source_type`, `source_url`, `source_published_at`, `source_account_url`, `confidence`, `extraction_status`, `reviewed_by`, `reviewed_at`, `conflict_flag`, `conflict_notes`, `methodology_version`). Row 1 (`growth_development +1`)'s rationale was rewritten to contain only claims confirmed present on its own cited page (`about-shannon-martin/`) — red tape, targeted investments, attracting quality employers, economic growth — with the Southern Grove Jobs Corridor claim removed since that lives on `biography/` instead; score, confidence, and source_url unchanged. Row 4 (`environment`) score corrected `+1` → `+2` per the already-documented Gate I39 threshold; rationale, confidence, and source_url unchanged. Rows 2, 3, and 5 carried forward unchanged. The rejected Rosser Lakes `growth_development -1` row is recorded separately as **REJECTED BY DETERMINISTIC VALIDATION** and explicitly excluded from the final set.
+
+**`extraction_status` was deliberately left unresolved**, not guessed: since `reviewed_by`/`reviewed_at` remain `PENDING` on every row (no reviewer identity or timestamp was invented), and the table's own `reviewed_by`/`reviewed_at` consistency `CHECK` constraint (Gate I37) plausibly requires those fields to accompany a `human_reviewed` state, flipping `extraction_status` now would risk violating that constraint. All five rows remain conceptually `draft` pending a future, separately-approved gate that supplies an actual reviewer identity/timestamp and flips the status atomically with them.
+
+No SQL was generated. No API insert route was created. No code was changed — the extraction route itself was inspected and needed no comment correction.
+
+No `candidate_position_evidence` row was created. No `candidate_positions` or `match_scores` row was created or modified. No Anthropic/Claude API call was made. No Supabase write was performed. `ENABLE_CAMPAIGN_EVIDENCE_EXTRACTION` remains `false`, untouched. No application source code was changed. No deployment occurred. No commit or push was performed by this gate.
+
+## Gate I42 — Shannon Martin Reviewer-Metadata Resolution and Insert Design
+
+Date: 08-20-2026
+
+Timestamp: 01:07 pm EST
+
+Status: **Read-only verification + documentation complete. NO DATABASE WRITE EXECUTED.** Full record: `docs/internal_beta_gate_i42_shannon_martin_evidence_insert_design.md`.
+
+Two temporary, read-only-only Node scripts (using the existing `createServiceClient()` pattern, inspected for zero mutation calls before running, deleted immediately after one run each, `git status` confirmed clean afterward) resolved the reviewer identity and duplicate state live:
+
+- **Reviewer profile UUID: `f1fde6f9-07c3-4c76-ae81-ebb2f461a5c3`, `is_admin: true`** — resolved via three converging live checks (sole admin profile in `public.profiles`, `auth.admin.listUsers()` match on the known admin email, direct profile lookup by that id). No ambiguity.
+- **Duplicate check: 0 existing `candidate_position_evidence` rows for Shannon Martin** (`candidate_id d44ff05a-...`), 0 with `methodology_version = campaign_evidence_v1_2026-08`. No duplicate risk at time of check.
+- **Live schema verification** via PostgREST's OpenAPI description (`GET /rest/v1/`): confirmed live the table's 18 columns, `reviewed_by → profiles.id` FK, `reviewed_at` type `timestamp with time zone`, `extraction_status` default `'draft'`, and the exact NOT NULL column set. `CHECK`-constraint-level facts (exact `extraction_status` enum, the precise `reviewed_by`/`reviewed_at` pairing logic, and whether `human_reviewed` itself requires reviewer metadata) remain **PREVIOUSLY VERIFIED / SCHEMA-SOURCE VERIFIED only (Gate I37)** — PostgREST's OpenAPI output does not expose `CHECK` expression text, and no relationship beyond what Gate I37 documented was claimed or assumed.
+
+Produced the exact, unexecuted five-row `BEGIN;...INSERT...RETURNING...COMMIT;` transaction (using the resolved reviewer UUID, `extraction_status='human_reviewed'`, `reviewed_at=now()` evaluated at future execution time, table-default `gen_random_uuid()` for `id`), read-only post-insert verification SQL, and exact-ID-only rollback SQL (never a bare `candidate_id`/`methodology_version`/`dimension` delete). All three SQL blocks are drafts only.
+
+## Gate I43 — Shannon Martin Evidence Write Approval Package
+
+Date: 08-20-2026
+
+Timestamp: 01:07 pm EST
+
+Status: **Documentation only. Creating this document is not approval.** Full record: `docs/internal_beta_gate_i43_shannon_martin_evidence_write_approval.md`.
+
+Packages Gate I42's exact design (reviewer UUID, pre-write row counts, five rows, transaction/verification/rollback SQL, expected post-write state, explicit no-change boundaries for `candidate_positions`/`match_scores`/deployment/schema) into a single approval-ready document, including a copy/paste approval statement naming the exact reviewer UUID `f1fde6f9-07c3-4c76-ae81-ebb2f461a5c3`. No write has occurred; nothing executes until a human explicitly gives that approval in a future session.
+
+No `candidate_position_evidence` row was created. No `candidate_positions` or `match_scores` row was created or modified. No Anthropic or Gemini API call was made. No Supabase write was performed. `ENABLE_CAMPAIGN_EVIDENCE_EXTRACTION` remains `false`, untouched. `npm run build` passed (28 routes, no errors) after these gates. No application source code was changed. No deployment occurred.
+
