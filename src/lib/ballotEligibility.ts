@@ -1,4 +1,4 @@
-// Ballot Eligibility vs. Representation (Phase 1)
+// Ballot Eligibility vs. Representation (Phase 1, corrected)
 //
 // CivicMarket has two separate civic questions that must never be answered
 // by the same lookup:
@@ -13,11 +13,24 @@
 //      that decides when to expand a held district into "every race that
 //      shares its jurisdiction" instead of matching only the exact row.
 //
-// Rules are scoped per (city, state, district type) — never a bare
-// district.type check — so a future city's identically-typed district
-// is never silently assumed to follow Port St. Lucie's voting method.
-// An unmodeled jurisdiction/type combination fails closed to 'exact',
-// the strictest mode, rather than guessing.
+// Rules are scoped per (city, state) — never a bare district.type check —
+// so a future city's identically-typed district is never silently assumed
+// to follow Port St. Lucie's voting method. An unmodeled jurisdiction/type
+// combination fails closed to 'exact', the strictest mode, rather than
+// guessing.
+//
+// Post-Phase-1 correction: a countywide/citywide rule now names every
+// district.type that belongs to the SAME ballot-eligibility family, not
+// just the type of the district that triggered it. Without this, a fresh
+// user who only holds a County Commission anchor row (and correctly holds
+// no School Board representation row at all, since none should be assigned
+// without a verified lookup) would never become eligible for School Board
+// ballot races — there would be no held school_board-type row to expand
+// from. County Commission and School Board are both elected countywide in
+// St. Lucie County, so they belong to the same family: holding a district
+// of either type establishes ballot eligibility for both. This is a ballot
+// eligibility statement only — it never creates a representation row of
+// the other type, and never affects officials_for_user.
 
 export type BallotEligibilityMode = 'exact' | 'citywide' | 'countywide'
 
@@ -27,60 +40,83 @@ type DistrictJurisdiction = {
   state: string | null
 }
 
-type JurisdictionRule = DistrictJurisdiction & {
-  mode: BallotEligibilityMode
+type JurisdictionRule = {
+  city: string
+  state: string
+  mode: 'citywide' | 'countywide'
+  // Every district.type that shares this ballot-eligibility family for this
+  // (city, state). Holding a district whose type appears here makes every
+  // OTHER type listed here ballot-eligible too, for the same (city, state).
+  types: string[]
   reason: string
 }
 
-// Official-source-verified rules only. Do not add a rule without a
-// confirmed source for how that office is actually voted on.
+// Official-source-verified rules only. Do not add a rule, or add a type to
+// an existing rule's family, without a confirmed source for how that office
+// is actually voted on.
 const BALLOT_ELIGIBILITY_RULES: JurisdictionRule[] = [
   {
     // Mayor and City Council District races share district.type
-    // 'city_council' in the schema. Official City of Port St. Lucie source:
-    // council members must reside in the district they represent, but
-    // residents throughout the city vote for every City Council seat.
-    type: 'city_council',
+    // 'city_council' in the schema — there is only one type in this family
+    // today, but the family shape is kept so a future distinct type (e.g.
+    // if Mayor were ever modeled separately) could join it without
+    // restructuring this rule table.
     city: 'Port St. Lucie',
     state: 'FL',
     mode: 'citywide',
+    types: ['city_council'],
     reason: 'Port St. Lucie Mayor and City Council seats are elected citywide (official City source).',
   },
   {
     // Official St. Lucie County source: County Commissioners represent a
-    // residency district but are elected countywide.
-    type: 'county',
+    // residency district but are elected countywide. Official St. Lucie
+    // County Supervisor of Elections source: School Board candidates run
+    // for a designated district seat, but all registered county voters are
+    // eligible to elect School Board members. Both are therefore the same
+    // "St. Lucie County voter" ballot-eligibility family — holding either
+    // type's district (e.g. the County Commission At-Large row every PSL
+    // user holds) makes both families' races ballot-eligible, without ever
+    // creating a School Board representation row.
     city: 'Port St. Lucie',
     state: 'FL',
     mode: 'countywide',
-    reason: 'St. Lucie County Commission seats are elected countywide (official County source).',
-  },
-  {
-    // Official St. Lucie County Supervisor of Elections source: School
-    // Board candidates run for a designated district seat, but all
-    // registered county voters are eligible to elect School Board members.
-    type: 'school_board',
-    city: 'Port St. Lucie',
-    state: 'FL',
-    mode: 'countywide',
-    reason: 'St. Lucie School Board seats are elected countywide (official Supervisor of Elections source).',
+    types: ['county', 'school_board'],
+    reason:
+      'St. Lucie County Commission and School Board seats are both elected countywide (official County and Supervisor of Elections sources).',
   },
   // FL House and FL Senate (district.type 'state') intentionally have no
   // rule here — they fall through to the 'exact' default below. Florida
   // legislative ballot eligibility is exact-geographic-district only.
 ]
 
+function findRule(district: DistrictJurisdiction): JurisdictionRule | undefined {
+  if (!district.city || !district.state) return undefined
+  return BALLOT_ELIGIBILITY_RULES.find(
+    (r) => r.city === district.city && r.state === district.state && r.types.includes(district.type)
+  )
+}
+
 /**
  * Determines whether a held district should be matched exactly, or expanded
- * to every district sharing its (city, state, type) jurisdiction, for ballot
- * (not representation) purposes.
+ * to every district sharing its ballot-eligibility family, for ballot (not
+ * representation) purposes.
  */
 export function getBallotEligibilityMode(district: DistrictJurisdiction): BallotEligibilityMode {
-  if (!district.city || !district.state) return 'exact'
+  return findRule(district)?.mode ?? 'exact'
+}
 
-  const rule = BALLOT_ELIGIBILITY_RULES.find(
-    (r) => r.type === district.type && r.city === district.city && r.state === district.state
-  )
+/**
+ * For a held district in citywide/countywide mode, returns every
+ * (city, state, type) combination that should be expanded into — every
+ * type in the same ballot-eligibility family, not only the held district's
+ * own type. Returns an empty array for a district in 'exact' mode (nothing
+ * to expand; the caller should keep the exact district_id instead).
+ */
+export function getExpansionJurisdictions(
+  district: DistrictJurisdiction
+): { city: string; state: string; type: string }[] {
+  const rule = findRule(district)
+  if (!rule || !district.city || !district.state) return []
 
-  return rule?.mode ?? 'exact'
+  return rule.types.map((type) => ({ city: district.city as string, state: district.state as string, type }))
 }

@@ -4,6 +4,8 @@ Date: 08-20-2026
 
 Status: **Implemented and verified. No deployment. No database writes.**
 
+**Update 08-20-2026 (later same day): School Board anchor gap found and corrected — see "Post-Phase-1 correction" section near the end of this document.** The original implementation below is left as written for the historical record; the correction section documents exactly what changed and why.
+
 ## Official-source facts this implementation is based on
 
 1. **Port St. Lucie City Council** (official City of Port St. Lucie source): council members must reside in the district they represent, but residents throughout Port St. Lucie vote for every City Council seat, regardless of district. 2026 seats on the ballot: Mayor, District 1, District 3.
@@ -117,3 +119,51 @@ None of these were touched, deleted, or migrated by this task, per explicit inst
 ## No-change confirmation
 
 No Supabase write was performed. No `candidates`, `districts`, `elections`, `user_districts`, `current_officials`, or `officials_for_user` row/definition was created, modified, or deleted. No schema, RLS, grants, policies, functions, or migrations were changed. No secret file was inspected. `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` and `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` both remain `false`, untouched. No deployment occurred. The unrelated untracked concurrent-work file `src/app/api/admin/extract-shannon-martin-evidence/route.ts` was left untouched.
+
+---
+
+## Post-Phase-1 correction — School Board anchor gap (08-20-2026)
+
+Status: **Confirmed and corrected. No database writes. No deployment. Candidate import remains pending.**
+
+### The gap
+
+The original Phase 1 implementation expanded a held district only into *other districts of its own `type`*. A fresh PSL user correctly holds only `Mayor` (`type = city_council`) and `County Commission At-Large` (`type = county`) — there was never a held `school_board`-type row, by design, since no School Board representation default should exist without a verified lookup. Because the expansion logic only ever looked at the held district's own type, the `school_board` countywide rule was never triggered for anyone: County Commission expansion worked (the user holds a `county`-type anchor), City Council expansion worked (the user holds a `city_council`-type anchor via Mayor), but School Board had no anchor of its own type to expand from. Future School Board D1/D3/D5 candidates would have remained invisible to every fresh user despite being genuinely countywide-eligible races. Confirmed real by direct code inspection of `src/lib/ballotEligibility.ts` and `src/lib/candidates.ts` before any change was made.
+
+### Design options considered
+
+- **Anchor-by-district-ID (rejected):** hardcode "holding district `...0003` also unlocks `school_board`." Works, but ties the rule to a specific magic UUID, is one-directional (a future School Board representation row wouldn't reciprocally unlock County Commission), and doesn't generalize cleanly to "future counties can use different election rules."
+- **Type-family rule (implemented):** redefine each jurisdiction rule as covering a *set* of `district.type` values that together form one ballot-eligibility family for a `(city, state)`. Holding a district of *any* type in the family expands eligibility to *all* types in the family. Symmetric, no hardcoded IDs, stays scoped exactly as strictly as the original per-`(city, state)` design already required.
+
+### Exact correction
+
+`src/lib/ballotEligibility.ts` — each `JurisdictionRule` now carries a `types: string[]` array instead of a single `type` field. The St. Lucie County rule's family is `['county', 'school_board']` — both offices are elected countywide per their respective official sources, so they now share one rule. A new exported `getExpansionJurisdictions(district)` returns every `(city, state, type)` in the matched rule's family (not just the held district's own type).
+
+`src/lib/candidates.ts` — `resolveBallotDistrictIds` now calls `getExpansionJurisdictions(d)` for every held district in citywide/countywide mode, and queues an expansion query for every jurisdiction it returns, instead of only the held district's own `(city, state, type)`.
+
+Neither change touches `user_districts`, `officials_for_user`, `src/lib/officials.ts`, or `CurrentOfficialsSection.tsx`. No School Board `user_districts` row is created anywhere by this fix — the expansion happens entirely inside the read-time ballot query.
+
+### Test results (verified live, read-only, against the actual database)
+
+| Test | Result |
+|---|---|
+| School Board District 1 reachable from the County Commission At-Large anchor alone | **PASS** — live query of `districts` filtered on `type=school_board, city=Port St. Lucie, state=FL` (the exact query the corrected code now issues) returns District 1; a fresh user holding zero `school_board`-type rows now has it in their eligible set. |
+| Future School Board D3/D5 rows become eligible with no app-code change | **PASS by code trace** — the expansion query is a live, unfiltered-by-id `districts` lookup on `(type, city, state)`; any future District 3/5 row inserted with the same `type/city/state` is automatically included the next time this query runs, with zero code changes required. |
+| County Commission expansion unaffected | **PASS** — live query confirms the same 6 County Commission district rows (At-Large + District 1–5) still resolve, unchanged. |
+| City Council / Mayor expansion unaffected | **PASS** — live query confirms Mayor + City Council D1 + City Council D3 still resolve from holding Mayor alone, unchanged; the full fresh-user candidate query against the combined eligible set still returns exactly the same 11 currently-seeded candidates as before this fix (no School Board candidates exist yet to add to the count). |
+| FL House / FL Senate remain absent without an exact assignment | **PASS** — `type = 'state'` still has no rule in `BALLOT_ELIGIBILITY_RULES`; unchanged from Phase 1. |
+| No School Board representation row created | **PASS** — confirmed no `user_districts` write of any kind occurs anywhere in this fix; `src/app/onboarding/zip/page.tsx` was not touched. |
+| Current Officials isolation | **PASS** — `officials_for_user`, `src/lib/officials.ts`, and `CurrentOfficialsSection.tsx` were not modified. Live-verified that `current_officials` has a School Board District 1 row (Debbie Hawley) tied to that exact district id — confirming the representation *data* exists and is reachable *only* by a user who actually holds that exact `district_id`, which a fresh PSL user does not and will not as a result of this ballot-eligibility fix. |
+
+`npm run build`: passed, 28 routes, no errors. `npm run lint`: only the same 5 known pre-existing `scripts/*.cjs` errors, nothing new.
+
+### Fresh-user ballot eligibility set, final
+
+Holding only `Mayor` + `County Commission At-Large`:
+- **Citywide:** Mayor, City Council District 1, City Council District 3.
+- **Countywide:** every County Commission district race on the ballot, every School Board district race on the ballot (currently only District 1 exists; District 2–5 will appear automatically once added).
+- **Not included:** FL House 84/85, FL Senate 29/31 — both remain absent until a verified district assignment exists; no ZIP or heuristic guess is made for either.
+
+### No-change confirmation — this correction
+
+No Supabase write was performed. No `candidates`, `districts`, `elections`, `user_districts`, `current_officials`, or `officials_for_user` row/definition was created, modified, or deleted. No schema, RLS, grants, policies, functions, or migrations were changed. No onboarding file was modified — `src/app/onboarding/zip/page.tsx` is unchanged from Phase 1. No secret file was inspected. `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` and `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` both remain `false`, untouched. No deployment occurred. Candidate import remains pending. The unrelated untracked concurrent-work file `src/app/api/admin/extract-shannon-martin-evidence/route.ts` was left untouched.

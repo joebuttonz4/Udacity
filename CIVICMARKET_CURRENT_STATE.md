@@ -1,6 +1,6 @@
 # CivicMarket Current State
 
-Last updated: August 20, 2026 (Ballot Eligibility vs. Representation Phase 1 implemented — new src/lib/ballotEligibility.ts jurisdiction rule table; getCandidatesForDistricts now expands citywide/countywide-voted races; School Board District 1, FL House District 85, and FL Senate District 27 removed from ZIP_MANAGED_DISTRICTS; representation (officials_for_user) unchanged; both write guards remain false; no deployment)
+Last updated: August 20, 2026 (Ballot Eligibility Phase 1 correction — School Board countywide anchor gap fixed via type-family jurisdiction rules in src/lib/ballotEligibility.ts; fresh PSL user now ballot-eligible for School Board without any School Board representation row; representation unchanged; both write guards remain false; no deployment; candidate import still pending)
 
 ## Authoritative order
 
@@ -3202,4 +3202,20 @@ The delete-then-insert write remains scoped to this same (now-smaller) array, so
 **Explicitly not done in this task:** no FL House/Senate or School Board verified-district-lookup flow was built; no candidates were imported; no existing `user_districts` row was migrated, deleted, or modified; the dead, unused `ballot_for_user` SQL view (`Reference Files/civicmarket_schema_v4.sql`) was not touched and still has the original conflation flaw — its disposition remains a separate, future, explicitly-approved database view change; no schema, RLS, grants, policies, functions, or migrations were changed.
 
 No Supabase write was performed. No `candidates`, `districts`, `elections`, `user_districts`, `current_officials`, or `officials_for_user` row/definition was created, modified, or deleted. No secret file was inspected. `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` and `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` both remain `false`, untouched. No deployment occurred.
+
+## Ballot Eligibility Phase 1 — School Board Anchor Correction
+
+Date: 08-20-2026
+
+Status: **Confirmed and corrected. No database writes. No deployment. Candidate import remains pending.** Full record: `docs/ballot_eligibility_representation_phase_1.md` ("Post-Phase-1 correction" section).
+
+**Gap found:** the Phase 1 expansion logic only expanded a held district into other districts of its own `type`. A fresh PSL user correctly holds no `school_board`-type row (by design — no School Board representation default should exist without a verified lookup), so the countywide School Board rule was never triggered by anything, even though City Council (via the Mayor anchor) and County Commission (via the At-Large anchor) both worked correctly. Confirmed real by direct code inspection before any change was made.
+
+**Correction:** `src/lib/ballotEligibility.ts` rules now name a `types: string[]` family instead of a single `type` — the St. Lucie County rule's family is `['county', 'school_board']`, since both are elected countywide per their respective official sources. Holding a district of either type now expands ballot eligibility to both. A new `getExpansionJurisdictions()` function returns every type in the matched family; `src/lib/candidates.ts`'s `resolveBallotDistrictIds` uses it instead of only the held district's own type. Considered and rejected a simpler "anchor by specific district ID" alternative — the type-family model avoids hardcoding a magic UUID and is symmetric/generalizable to future counties.
+
+**Verified live (read-only):** School Board District 1 is now reachable in the eligible set from the County Commission At-Large row alone, with zero School Board `user_districts` row created; the same query is unfiltered by district id, so future School Board District 3/5 rows will become eligible automatically with no further app-code change; County Commission and City Council/Mayor expansion remain unaffected (same 11 candidates resolve as before); FL House/Senate remain absent (no rule exists for `type = 'state'`); `current_officials` for School Board District 1 (Debbie Hawley) is confirmed reachable only by a user holding that exact `district_id`, which a fresh user does not hold — representation isolation intact.
+
+`npm run build` passed (28 routes, no errors). `npm run lint` reported only the 5 known pre-existing `scripts/*.cjs` errors, nothing new.
+
+No `user_districts`, `officials_for_user`, `src/lib/officials.ts`, `CurrentOfficialsSection.tsx`, or onboarding file was modified. No schema, RLS, grants, policies, functions, or migrations were changed. `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` and `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` both remain `false`, untouched. No secret file was inspected. No deployment occurred. Candidate import remains pending.
 

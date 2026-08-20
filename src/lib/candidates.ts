@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import { getBallotEligibilityMode } from './ballotEligibility'
+import { getBallotEligibilityMode, getExpansionJurisdictions } from './ballotEligibility'
 
 type CandidateRow = {
   id: string
@@ -121,9 +121,15 @@ async function resolveBallotDistrictIds(districtIds: string[]): Promise<string[]
     const mode = getBallotEligibilityMode(d)
     if (mode === 'exact') {
       eligibleIds.add(d.id)
-    } else if (d.city && d.state) {
-      const jurisdictionKey = d.city + '::' + d.state + '::' + d.type
-      expansionJurisdictions.set(jurisdictionKey, { city: d.city, state: d.state, type: d.type })
+    } else {
+      // Expand to every district.type in the same ballot-eligibility family
+      // as this held district — not only its own type. This is what lets a
+      // County Commission At-Large row also make School Board races
+      // ballot-eligible, without the user ever holding a school_board row.
+      for (const jurisdiction of getExpansionJurisdictions(d)) {
+        const jurisdictionKey = jurisdiction.city + '::' + jurisdiction.state + '::' + jurisdiction.type
+        expansionJurisdictions.set(jurisdictionKey, jurisdiction)
+      }
     }
   }
 
