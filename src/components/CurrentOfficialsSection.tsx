@@ -28,7 +28,7 @@ function formatDate(dateStr: string | null): string | null {
 
 function OfficialCard({ official }: { official: CurrentOfficial }) {
   const card = (
-    <div className="bg-[#F8FAFC] border border-[#EEF2F7] rounded-2xl px-4 py-4">
+    <div className="bg-[#F8FAFC] border border-[#EEF2F7] rounded-2xl px-4 py-3.5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <p className="text-[#0D1117] text-[15px] font-semibold leading-tight truncate [font-family:var(--font-syne)]">
@@ -146,12 +146,15 @@ export default function CurrentOfficialsSection({ userId }: { userId: string }) 
 
   return (
     <section className="bg-white rounded-[24px] shadow-sm p-4">
-      <h2 className="text-[#6B7280] text-[11px] font-semibold uppercase tracking-widest mb-3 [font-family:var(--font-syne)]">
+      <h2 className="text-[#6B7280] text-[11px] font-semibold uppercase tracking-widest mb-1 [font-family:var(--font-syne)]">
         My Current Officials
       </h2>
+      <p className="text-[#94A3B8] text-xs mb-3 [font-family:var(--font-instrument-sans)]">
+        Officials who currently represent you.
+      </p>
 
       {loading && (
-        <div className="flex flex-col gap-2.5 animate-pulse">
+        <div className="flex flex-col gap-2 animate-pulse">
           {[1, 2].map((i) => (
             <div key={i} className="h-24 bg-[#F8FAFC] rounded-2xl" />
           ))}
@@ -175,7 +178,7 @@ export default function CurrentOfficialsSection({ userId }: { userId: string }) 
       )}
 
       {!loading && !error && officials.length > 0 && (
-        <div className="flex flex-col gap-2.5">
+        <div className="flex flex-col gap-2">
           {officials.map((official) => (
             <OfficialCard key={official.id} official={official} />
           ))}

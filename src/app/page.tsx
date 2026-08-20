@@ -183,12 +183,12 @@ export default function HomePage() {
                   </p>
                 </div>
               ) : (
-                <div className="flex flex-col gap-2.5">
+                <div className="flex flex-col gap-2">
                   {previewCandidates.map((candidate, idx) => (
                     <Link
                       key={candidate.id}
                       href={`/candidates/${candidate.id}`}
-                      className="bg-[#F8FAFC] border border-[#EEF2F7] rounded-2xl px-4 py-4 flex items-center gap-3 active:scale-[0.98] transition-transform"
+                      className="bg-[#F8FAFC] border border-[#EEF2F7] rounded-2xl px-4 py-3.5 flex items-center gap-3 active:scale-[0.98] transition-transform"
                     >
                       <span className="text-[#CBD5E1] text-xs font-bold w-4 text-center flex-shrink-0 [font-family:var(--font-syne)]">
                         {idx + 1}
@@ -205,6 +205,15 @@ export default function HomePage() {
                         <p className="text-[#94A3B8] text-xs mt-0.5 truncate [font-family:var(--font-instrument-sans)]">
                           {candidate.office} &middot; {candidate.district_name}
                         </p>
+                        {candidate.match_score === null ? (
+                          <p className="text-[#B8C4D0] text-[11px] mt-0.5 [font-family:var(--font-instrument-sans)]">
+                            Match score not available yet
+                          </p>
+                        ) : (
+                          <p className="text-[#00C9A7] text-[11px] font-semibold mt-0.5 [font-family:var(--font-instrument-sans)]">
+                            {candidate.match_score}% match
+                          </p>
+                        )}
                       </div>
                       <MatchScoreRing score={candidate.match_score} size="sm" />
                     </Link>
@@ -215,19 +224,25 @@ export default function HomePage() {
               {candidates.length > 0 && (
                 <Link
                   href="/ballot"
-                  className="mt-4 block w-full text-center bg-[#00C9A7] text-[#0D1117] font-bold py-3.5 rounded-2xl text-sm active:scale-[0.98] transition-transform [font-family:var(--font-syne)]"
+                  className="mt-3 block w-full text-center bg-[#00C9A7] text-[#0D1117] font-bold py-3.5 rounded-2xl text-sm active:scale-[0.98] transition-transform [font-family:var(--font-syne)]"
                 >
                   View Full Ballot{candidates.length > 3 ? ` — ${candidates.length} candidates` : ''}
                 </Link>
               )}
             </section>
 
-            {/* Your districts */}
+            {/* My current officials */}
+            {userId && <CurrentOfficialsSection userId={userId} />}
+
+            {/* Your ballot races */}
             {districts.length > 0 && (
               <section className="bg-white rounded-[24px] shadow-sm p-4">
-                <h2 className="text-[#6B7280] text-[11px] font-semibold uppercase tracking-widest mb-3 [font-family:var(--font-syne)]">
-                  Your districts
+                <h2 className="text-[#6B7280] text-[11px] font-semibold uppercase tracking-widest mb-1 [font-family:var(--font-syne)]">
+                  Your ballot races
                 </h2>
+                <p className="text-[#94A3B8] text-xs mb-3 [font-family:var(--font-instrument-sans)]">
+                  Races you&apos;re eligible to vote in — not the same as your current officials.
+                </p>
                 <div className="flex flex-wrap gap-2">
                   {districts.map((name) => (
                     <span
@@ -241,19 +256,16 @@ export default function HomePage() {
               </section>
             )}
 
-            {/* My current officials */}
-            {userId && <CurrentOfficialsSection userId={userId} />}
-
-            {/* Civic feed */}
+            {/* CivicMarket status */}
             <section className="bg-white rounded-[24px] shadow-sm p-4">
               <h2 className="text-[#6B7280] text-[11px] font-semibold uppercase tracking-widest mb-3 [font-family:var(--font-syne)]">
-                Civic feed
+                CivicMarket status
               </h2>
-              <div className="flex flex-col gap-2.5">
+              <div className="flex flex-col gap-2">
                 {CIVIC_FEED.map((item) => (
                   <div
                     key={item.id}
-                    className="bg-[#F8FAFC] border border-[#EEF2F7] rounded-2xl px-4 py-3.5"
+                    className="bg-[#F8FAFC] border border-[#EEF2F7] rounded-2xl px-4 py-3"
                   >
                     <p className="text-[#0D1117] text-sm font-semibold leading-snug [font-family:var(--font-syne)]">
                       {item.title}

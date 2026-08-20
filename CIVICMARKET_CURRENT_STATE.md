@@ -1,6 +1,6 @@
 # CivicMarket Current State
 
-Last updated: August 20, 2026 (Home "My Current Officials" completeness audit — read-only; no data or query bug found; root cause is a UI labeling issue where the Home "Your districts" chips reflect ballot-eligibility-expanded races, not held representation districts; one pre-existing Mayor current_officials data gap remains, unaffected; no writes, no deployment)
+Last updated: August 20, 2026 (Home layout UX improvement implemented — reordered My Current Officials above the ballot-race chip section, relabeled "Your districts" to "Your ballot races" and "Civic feed" to "CivicMarket status", added explicit Top Matches locked/scored text; UI/copy/layout only, no representation/ballot-eligibility/match-score logic changed, no writes, no deployment)
 
 ## Authoritative order
 
@@ -3427,4 +3427,21 @@ Investigated a reported inconsistency: Home shows only 3 "My Current Officials" 
 **Recommended fix (not implemented this session, per task scope):** presentation-only — reorder Home sections (Local Elections → Top Matches/Ballot → My Current Officials → civic actions/updates → demoted "Your Representation" → beta note), relabel "Your districts" so it isn't read as a representation claim, optionally cap `CurrentOfficialsSection` with "View all X officials" for future-proofing. No `officials.ts`, `candidates.ts`, `ballotEligibility.ts`, or database change is implicated. Full Phase 1-7 audit detail, tables, and UX recommendation in the linked document.
 
 No `user_districts`, `current_officials`, `districts`, or `officials_for_user` row was created, modified, or deleted. No schema, RLS, or function change occurred. No secret file was inspected (only the public `NEXT_PUBLIC_` Supabase URL/anon key were read for an earlier, ultimately-unused anonymous RLS-restricted probe; the actual audit used the existing `createServiceClient()` service-role pattern already established by prior gates, read-only). No deployment occurred.
+
+## Home Layout UX Improvement
+
+Date: 08-20-2026
+Timestamp: 07:52 pm EST
+
+Status: **Implemented and live-verified. UI/copy/layout only.** Full record: `docs/internal_beta_home_layout_ux_improvement.md`.
+
+Implemented the prior audit's recommendation in `src/app/page.tsx` and `src/components/CurrentOfficialsSection.tsx`: reordered Home so **My Current Officials now renders immediately after Top Matches, above the ballot-race chip section** (previously the reverse); relabeled "Your districts" → **"Your ballot races"** with helper text ("Races you're eligible to vote in — not the same as your current officials."); relabeled "Civic feed" → **"CivicMarket status"** (its content was already internal beta/status messaging, not real local civic news); added visible Top Matches text — **"Match score not available yet"** for locked candidates, **"XX% match"** for scored ones (previously percentage was only inside the ring graphic, and the lock state had no visible text); added "Officials who currently represent you." helper text under My Current Officials; tightened row/card padding and list gaps for density (no touch-target regressions observed).
+
+No representation, ballot-eligibility, or match-score logic was touched — `src/lib/officials.ts`, `officials_for_user`, `src/lib/candidates.ts`, and `compute-match-scores` all remain exactly as before. `src/lib/ballotEligibility.ts` has an unrelated, pre-existing uncommitted change from concurrent work (Package C1 statewide model prep) that was left completely untouched.
+
+`npm run build` passed (28 routes, no errors). `npm run lint` reported only the 5 known pre-existing `scripts/*.cjs` errors. Live-verified against an already-authenticated pre-existing local session for `civicmarket.test.01@example.com` (no credentials entered): correct new section order; officials list unchanged (Debbie Hawley, Stephanie Morgan, Toby Overdorf); Anthony Bonna, Larry Leet, and Jamie Fowler correctly still absent from My Current Officials; ballot-race chips still present under the new label; locked/scored Top Matches text renders correctly; no navigation regression; no clipping at native width or a 200% CSS-zoom mobile approximation.
+
+**Deferred, each needing its own scoped task:** a "Based on N Civic DNA dimensions" disclosure (dimension count isn't persisted in `match_scores`); a Mayor-gap informational state on Home (would need new data passed into `CurrentOfficialsSection`, and the underlying Mayor `current_officials` row remains source-blocked, unaffected by this session); a "View all X officials" cap (not yet needed at current officials counts).
+
+No Supabase write. No schema/RLS/function change. No deployment.
 
