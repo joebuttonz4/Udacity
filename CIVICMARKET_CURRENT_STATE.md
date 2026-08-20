@@ -3397,3 +3397,13 @@ Date: 08-20-2026
 
 **End-to-end pilot complete.** Match score 66 for test user `ec59ea92-470f-447f-8873-ab2dbde52aca` (`compute-match-scores` result: `inserted: 1, skipped: 11, total_candidates: 12`). Verification passed on every check; no rollback used at any step. Full final-state handoff: `docs/internal_beta_shannon_candidate_evidence_return_handoff.md`. Next: review the controlled beta launch plan and decide whether to scale this pipeline to remaining beta candidates or prioritize another beta blocker (Gemini migration remains outstanding).
 
+## Beta Launch Priority Review
+
+Date: 08-20-2026
+
+Status: **Read-only review complete.** Full record: `docs/internal_beta_launch_priority_review.md`.
+
+Reconciled `docs/controlled_psl_beta_readiness.md` (Milestone 2B) against everything since: the concurrent ballot-eligibility fix (citywide/countywide voting-scope correction, live-verified) and today's executed Package A candidate import (21 candidates now live, up from 11; Package B time-gated to county certification ≤ Aug 26, 2026; Package C statewide remains draft-only). Corrections-mailbox deliverability, previously open, is confirmed already resolved. **Single most important blocker: no deploy target/domain exists yet** — it blocks the entire P0 list (Supabase Auth URL config, real invite-code/email-confirmation verification). Gemini migration is scoped as SMALL (one isolated block in the extraction route) and should happen before scaling candidate-evidence coverage, to avoid duplicate extraction work across two providers. Candidate coverage (1 of 21 candidates scored) is classified SAFE TO CONTINUE DURING INTERNAL BETA, not a P0 blocker — the locked-ring design already handles partial coverage safely. Full P0–P3 blocker matrix and 7-milestone recommended sequence in the linked document.
+
+No Supabase write. No schema/RLS/function change. No deployment. No Anthropic/Gemini call.
+
