@@ -3297,3 +3297,15 @@ Packages Gate I42's exact design (reviewer UUID, pre-write row counts, five rows
 
 No `candidate_position_evidence` row was created. No `candidate_positions` or `match_scores` row was created or modified. No Anthropic or Gemini API call was made. No Supabase write was performed. `ENABLE_CAMPAIGN_EVIDENCE_EXTRACTION` remains `false`, untouched. `npm run build` passed (28 routes, no errors) after these gates. No application source code was changed. No deployment occurred.
 
+## Gate I44 — Shannon Martin Evidence Write: Executed and Verified
+
+Date: 08-20-2026
+
+Status: **EXECUTED. VERIFICATION PASSED. Rollback was not required and was not used.** Full record: `docs/internal_beta_gate_i44_shannon_martin_evidence_write_execution_result.md`.
+
+The user gave explicit approval matching the exact Gate I43 approval statement verbatim. A temporary, one-time execution script (inspected for exactly one `.insert(` call and zero `.update(`/`.upsert(`/`.delete(` calls, deleted immediately after its one run) performed the defensive pre-write check (confirmed 0 existing rows), the single atomic insert of the five documented rows, and the immediate read-only verification — all exactly as designed in Gate I42/I43, no deviation.
+
+**5 `candidate_position_evidence` rows now exist for Shannon Martin** (`candidate_id d44ff05a-...`, `methodology_version campaign_evidence_v1_2026-08`): `growth_development = 1` (id `d138ba1e-e65f-4560-bdb5-2ca959d60c61`), `taxation_spending = 2` ×2 (ids `e36ce940-5285-4daa-839e-72b420e6c821`, `33474fe8-68ef-4f9b-b786-da0a2936c6f2`), `environment = 2` (id `836fc7ab-c14d-45b8-957f-e03010ee6957`), `public_safety = 2` (id `a2dac241-8156-453a-8066-5c82d9304ed5`). All five: `extraction_status = 'human_reviewed'`, `reviewed_by = 'f1fde6f9-07c3-4c76-ae81-ebb2f461a5c3'`, `reviewed_at` non-null, `source_type = 'campaign_website'`, `conflict_flag = false`, `conflict_notes` null. Verification confirmed the absence of the rejected Rosser Lakes `growth_development -1` row and of any `transparency`/`education`/`housing` row.
+
+Shannon Martin is the first candidate with human-reviewed campaign-evidence rows in the system. **`candidate_positions` and `match_scores` were not modified** — converting these evidence rows into an actual candidate-position dimension score (and from there into ballot match scores) remains a separate, not-yet-designed, future gate. No schema, RLS, grant, policy, or migration change occurred. No other candidate's evidence was touched. No Anthropic or Gemini API call was made. No deployment occurred.
+
