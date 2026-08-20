@@ -3377,3 +3377,17 @@ Packaged pre-write verification, the exact execution method (the existing `POST 
 
 No `match_scores` row was created. No `candidate_positions`/`candidate_position_evidence`/`civic_dna` row was modified. No Anthropic or Gemini API call was made. No deployment occurred.
 
+## Gate I47 — Shannon Martin Match-Score Test: Executed and Verified
+
+Date: 08-20-2026
+
+Status: **EXECUTED. VERIFICATION PASSED. Rollback not required, not used.** Full record: `docs/internal_beta_gate_i47_shannon_match_score_test_execution_result.md`.
+
+The user gave explicit approval matching the Gate I47 approval statement verbatim. A temporary, one-time script invoked **only** the real, existing, unmodified `POST /api/compute-match-scores` route (no reimplemented logic) — authenticated as the test user via Supabase's own admin `generateLink`/`verifyOtp` pattern (a genuine, credential-free session; no password ever touched), confirmed the resulting session's user id before use, then immediately signed it out after the one call.
+
+**Route response: `{ inserted: 1, skipped: 11, total_candidates: 12 }`** — exactly matching Gate I47's predicted blast radius. **Shannon's `match_scores` row: `score = 66`**, exactly matching the value pre-computed by hand-reproducing the app's formula in Gate I47. Post-write verification confirmed: `candidate_positions`, `candidate_position_evidence`, and the test user's `civic_dna` all unchanged; zero other users' `match_scores` affected.
+
+**This completes the first full end-to-end run of the campaign-evidence pilot** — extraction → human review → deterministic aggregation → `candidate_positions` → `match_scores` — for one candidate (Shannon Martin) and one test user, fully auditable back through Gates I38–I47.
+
+No `candidate_positions`/`candidate_position_evidence`/`civic_dna` row was modified. No other user's data was touched. No schema, RLS, grant, or function change occurred. No Anthropic or Gemini API call was made. No deployment occurred.
+
