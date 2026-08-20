@@ -3361,3 +3361,19 @@ The user gave explicit approval matching the Gate I46 approval statement verbati
 
 No `candidate_position_evidence` row was modified. No `match_scores` row was created or modified. No other candidate's `candidate_positions` row was touched. No schema, RLS, grant, or function change occurred. No Anthropic or Gemini API call was made. No deployment occurred.
 
+## Gate I47 — Shannon Martin Match-Score Test-User Recomputation Approval
+
+Date: 08-20-2026
+
+Timestamp: 04:36 pm EST
+
+Status: **Documentation only. NO match-score computation was invoked.** Full record: `docs/internal_beta_gate_i47_shannon_match_score_test_approval.md`.
+
+Selected the project's established, repeatedly-reused test account, `civicmarket.test.01@example.com` (`ec59ea92-470f-447f-8873-ab2dbde52aca`) — live-verified to have a `civic_dna` row and the Mayor district in `user_districts` (making Shannon eligible), with 0 existing `match_scores` rows. `compute-match-scores` fully inspected: scoped to the authenticated caller only, delete-then-insert restricted to that caller's own eligible-candidate set, skips any candidate without a `candidate_positions` row, skips (never zeroes) null dimensions.
+
+**Expected Shannon score calculated by reproducing the app's exact formula against live data: `66`** (alignments 100/87.5/75/0 across `growth_development`/`taxation_spending`/`environment`/`public_safety`, averaged, rounded). Blast radius live-confirmed: of 12 candidates now eligible for this user (grew due to unrelated concurrent candidate-import work), only Shannon has a `candidate_positions` row, so exactly **one** new `match_scores` row would be created; the delete-scoped-to-this-user step affects 0 rows since none currently exist.
+
+Packaged pre-write verification, the exact execution method (the existing `POST /api/compute-match-scores` route, no new code), post-write verification (expecting `score = 66`), and a rollback scoped to the exact `(user_id, candidate_id)` pair, safe by construction since the pre-write state is confirmed empty.
+
+No `match_scores` row was created. No `candidate_positions`/`candidate_position_evidence`/`civic_dna` row was modified. No Anthropic or Gemini API call was made. No deployment occurred.
+
