@@ -1,6 +1,6 @@
 # CivicMarket Current State
 
-Last updated: August 21, 2026 (City Council write enablement readiness review complete — Recommendation B, ready only after one blocking copy fix in the verification page's static "saving disabled" text; auth/RPC/mutation-scope all PASS, prior Gate I34 evidence re-confirmed valid at HEAD; ENABLE_CITY_COUNCIL_DISTRICT_WRITE NOT changed, remains false; read-only review, no writes, no deployment)
+Last updated: August 21, 2026 (Gemini candidate-evidence migration specialized-reviewer outcome recorded — Mission PASS WITH CONDITIONS, Data Integrity PASS WITH CONDITIONS, Security PASS, Release Gate PASS WITH CONDITIONS, no blocking issues; reviewed implementation is pre-existing commit b510ef2, already pushed to origin/master; the route file's git-status flag is a CRLF/LF line-ending artifact only, no content diff; four follow-up conditions tracked, required before scaling extraction beyond Shannon Martin; documentation-only update, no application code, database, or deployment change)
 
 ## Authoritative order
 
@@ -3684,4 +3684,39 @@ Status: **Read-only review complete. `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` NOT ch
 Fresh-account impact confirmed read-only: the production fresh account (`faa39dd7-...`) still has zero City Council rows; verifying District 1 would resolve Stephanie Morgan, District 3 would resolve Anthony Bonna, Sr. (both already have live `current_officials` rows) — neither assignment was guessed, and nothing was written. Operational risk classified **LOW** (atomic transaction semantics prevent partial-failure states; repeated or district-changing calls are both safe).
 
 No Supabase write, schema, RLS, function, or write-guard change occurred. No deployment occurred. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` was not touched or re-examined (out of scope, confirmed still `false` by inspection only). No unrelated Gemini-migration work was touched.
+
+## Gemini Candidate-Evidence Migration — Specialized Review Outcome
+
+Date: 08-21-2026
+
+Status: **Read-only specialized review complete. No blocking issues found.** Full reviewer outputs: `.tmp/reviews/gemini-migration/{mission,data-integrity,security,release-gate}.txt` (local, gitignored, not part of version control).
+
+### What was reviewed
+
+The Gemini candidate-evidence provider migration in `src/app/api/admin/extract-shannon-martin-evidence/route.ts` and its `src/lib/candidateEvidence/` dependencies (provider abstraction, Gemini adapter, relocated Anthropic adapter). **This is a pre-existing, already-committed change — commit `b510ef2` ("Implement Gemini candidate evidence provider"), confirmed already pushed to `origin/master`.** It was not implemented, committed, or pushed by this review.
+
+**Working-tree flag clarified:** `git status` shows this file as modified, but `git diff` against `HEAD` is empty, and a byte-level checksum comparison (normalizing line endings) confirms the working copy is content-identical to the committed version. The flag is a CRLF/LF line-ending artifact only — there is no uncommitted content change. This was independently confirmed by all four specialized reviewers.
+
+### Review results
+
+- **Mission: PASS WITH CONDITIONS** — neutrality-critical prompt logic, the closed source allowlist, anti-fabrication validation, and the human-review/draft-status framing are all unchanged and provider-agnostic; no partisan or ideological skew introduced by the provider swap; no blocking issue.
+- **Data Integrity: PASS WITH CONDITIONS** — infrastructure/provider swap only, no candidate/district/election/evidence/scoring data or schema touched; `ENABLE_CAMPAIGN_EVIDENCE_EXTRACTION` unchanged (`false`); server-side validation is identical and provider-agnostic; no blocking issue.
+- **Security: PASS** — auth/admin gating unchanged; API keys read server-side only via `process.env`, never `NEXT_PUBLIC_`, confirmed absent from the client bundle; closed hardcoded source list eliminates SSRF; no key-leak path found in provider error handling; no blocking issue.
+- **Release Gate: PASS WITH CONDITIONS** — Implementation PASS, Mission/Data Integrity PASS WITH CONDITIONS, Security PASS, UX NOT REQUIRED (admin/API-only change, no user-facing UI), Tests PASS (52/52, fresh run), Build PASS (fresh run); no blocking issues.
+
+### Four follow-up conditions tracked (required before scaling beyond Shannon Martin where noted)
+
+1. **Provider provenance (required before scaling beyond Shannon Martin).** Add a persisted field such as `source_model`, `extraction_provider`, or a provider-specific `methodology_version` to `candidate_position_evidence` before extraction is used for any candidate beyond Shannon Martin — no stored field currently distinguishes which provider produced a given draft row.
+2. **Additional Gemini spot-checks (required before scaling beyond Shannon Martin).** Run several additional real Gemini spot-check extractions against `HUMAN_REVIEW_CHECKLIST` before relying on Gemini for other candidates. Current live parity evidence is n=1, on Shannon Martin only.
+3. **Model/pricing reconfirmation (required at each further beta milestone before additional scaling).** Reconfirm `gemini-3.6-flash` availability and pricing against official Google documentation — the model catalog already changed once mid-migration (`gemini-2.5-flash` → 404 → `gemini-3.6-flash`), and pricing was never independently re-verified.
+4. **Coverage-gap monitoring (required if extraction expands to additional candidates).** Monitor whether the previously accepted borderline `growth_development` coverage gap (Gemini omitting one borderline-confidence row vs. the accepted Anthropic baseline, "ACCEPT GAP FOR BETA") recurs systematically once more candidates are scored.
+
+### Classification
+
+- **No current blocker.** All four conditions above are scaling/future-work gates, not defects in the reviewed implementation.
+- **Not production validation.** This is a read-only specialized review of existing code plus a fresh local `npm run build` / `npm run test` run — it is not a production or deployment validation, and no live end-to-end run against a new candidate occurred.
+- **No database write performed.** No `candidate_position_evidence`, `candidate_positions`, `match_scores`, or any other table was written to by this review.
+- **No deployment performed.** No deployment occurred as part of this review; production's own provider/model environment configuration is unaffected.
+
+No application source code, the Gemini route, schema, RLS, secrets, or configuration were changed by this review or by this documentation update. `ENABLE_CAMPAIGN_EVIDENCE_EXTRACTION` remains `false`, untouched.
 
