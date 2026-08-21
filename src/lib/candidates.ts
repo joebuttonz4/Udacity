@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
 import { getBallotEligibilityMode, getExpansionJurisdictions } from './ballotEligibility'
+import { DIMENSIONS } from './dna'
 
 type CandidateRow = {
   id: string
@@ -69,6 +70,12 @@ export type CandidateWithContext = {
   election_name: string
   election_date: string
   match_score: number | null
+  // Count of non-null candidate_positions dimensions that contributed to
+  // match_score, for the "Based on N Civic DNA dimensions" disclosure.
+  // Always null when match_score is null (no fake count for locked
+  // candidates). Also null if a scored candidate's candidate_positions row
+  // could not be retrieved — never inferred or defaulted to 7.
+  dimension_count: number | null
 }
 
 // Gate I7/I8 data-completeness rule: a candidate is only shown to real beta
@@ -187,6 +194,7 @@ export async function getCandidatesForDistricts(
       election_name: row.elections?.name ?? '',
       election_date: row.elections?.election_date ?? '',
       match_score: null as number | null,
+      dimension_count: null as number | null,
     }))
     .filter(hasRequiredCandidateFields)
 
@@ -204,7 +212,36 @@ export async function getCandidatesForDistricts(
   const scoreMap = new Map(
     (scores as { candidate_id: string; score: number }[]).map((s) => [s.candidate_id, s.score])
   )
-  return candidates.map((c) => ({ ...c, match_score: scoreMap.get(c.id) ?? null }))
+
+  // Coverage disclosure: for each scored candidate, count how many of the
+  // seven candidate_positions dimensions are non-null (the same fields
+  // compute-match-scores averages over). A 0 value counts as scored — only
+  // NULL is treated as missing. Never inferred, never defaulted to 7.
+  const scoredCandidateIds = candidateIds.filter((id) => scoreMap.has(id))
+  const dimensionCountMap = new Map<string, number>()
+  if (scoredCandidateIds.length > 0) {
+    const { data: positionRows } = await supabase
+      .from('candidate_positions')
+      .select(`candidate_id, ${DIMENSIONS.join(', ')}`)
+      .in('candidate_id', scoredCandidateIds)
+
+    for (const row of (positionRows ?? []) as unknown as Record<string, unknown>[]) {
+      const count = DIMENSIONS.reduce(
+        (n, dim) => (row[dim] !== null && row[dim] !== undefined ? n + 1 : n),
+        0
+      )
+      dimensionCountMap.set(row.candidate_id as string, count)
+    }
+  }
+
+  return candidates.map((c) => {
+    const match_score = scoreMap.get(c.id) ?? null
+    return {
+      ...c,
+      match_score,
+      dimension_count: match_score !== null ? dimensionCountMap.get(c.id) ?? null : null,
+    }
+  })
 }
 
 export async function autoFollowCandidates(

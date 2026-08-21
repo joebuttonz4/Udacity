@@ -210,9 +210,20 @@ export default function HomePage() {
                             Match score not available yet
                           </p>
                         ) : (
-                          <p className="text-[#00C9A7] text-[11px] font-semibold mt-0.5 [font-family:var(--font-instrument-sans)]">
-                            {candidate.match_score}% match
-                          </p>
+                          <>
+                            <p className="text-[#00C9A7] text-[11px] font-semibold mt-0.5 [font-family:var(--font-instrument-sans)]">
+                              {candidate.match_score}% match
+                            </p>
+                            {candidate.dimension_count !== null && candidate.dimension_count > 0 && (
+                              <p
+                                className="text-[#B8C4D0] text-[10px] mt-0.5 [font-family:var(--font-instrument-sans)]"
+                                title="Match scores use only candidate positions supported by available reviewed evidence."
+                              >
+                                Based on {candidate.dimension_count} Civic DNA dimension
+                                {candidate.dimension_count === 1 ? '' : 's'}
+                              </p>
+                            )}
+                          </>
                         )}
                       </div>
                       <MatchScoreRing score={candidate.match_score} size="sm" />

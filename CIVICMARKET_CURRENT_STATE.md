@@ -1,6 +1,6 @@
 # CivicMarket Current State
 
-Last updated: August 20, 2026 (Home layout UX improvement implemented — reordered My Current Officials above the ballot-race chip section, relabeled "Your districts" to "Your ballot races" and "Civic feed" to "CivicMarket status", added explicit Top Matches locked/scored text; UI/copy/layout only, no representation/ballot-eligibility/match-score logic changed, no writes, no deployment)
+Last updated: August 20, 2026 (Home match-score dimension coverage disclosure added — Top Matches now shows "Based on N Civic DNA dimensions" for scored candidates, generically computed from non-null candidate_positions fields, verified 4 for Shannon Martin; no scoring formula change, no writes, no deployment)
 
 ## Authoritative order
 
@@ -3441,7 +3441,22 @@ No representation, ballot-eligibility, or match-score logic was touched — `src
 
 `npm run build` passed (28 routes, no errors). `npm run lint` reported only the 5 known pre-existing `scripts/*.cjs` errors. Live-verified against an already-authenticated pre-existing local session for `civicmarket.test.01@example.com` (no credentials entered): correct new section order; officials list unchanged (Debbie Hawley, Stephanie Morgan, Toby Overdorf); Anthony Bonna, Larry Leet, and Jamie Fowler correctly still absent from My Current Officials; ballot-race chips still present under the new label; locked/scored Top Matches text renders correctly; no navigation regression; no clipping at native width or a 200% CSS-zoom mobile approximation.
 
-**Deferred, each needing its own scoped task:** a "Based on N Civic DNA dimensions" disclosure (dimension count isn't persisted in `match_scores`); a Mayor-gap informational state on Home (would need new data passed into `CurrentOfficialsSection`, and the underlying Mayor `current_officials` row remains source-blocked, unaffected by this session); a "View all X officials" cap (not yet needed at current officials counts).
+**Deferred, each needing its own scoped task:** a "Based on N Civic DNA dimensions" disclosure (dimension count isn't persisted in `match_scores`) — **implemented below**; a Mayor-gap informational state on Home (would need new data passed into `CurrentOfficialsSection`, and the underlying Mayor `current_officials` row remains source-blocked, unaffected by this session); a "View all X officials" cap (not yet needed at current officials counts).
 
 No Supabase write. No schema/RLS/function change. No deployment.
+
+## Home Match-Score Dimension Coverage Disclosure
+
+Date: 08-20-2026
+Timestamp: 08:01 pm EST
+
+Status: **Implemented and live-verified. UI + data-layer read only.** Full record: `docs/internal_beta_home_match_dimension_disclosure.md`.
+
+`src/lib/candidates.ts` (`getCandidatesForDistricts`) gained a generic `dimension_count` field on `CandidateWithContext`: for every candidate with a non-null `match_score`, one additional scoped `candidate_positions` query (only for scored candidate ids) counts how many of the seven `DIMENSIONS` fields (shared with `compute-match-scores`) are non-null — a `0` value counts as scored, only `NULL` is excluded. Locked candidates and any scored candidate whose position row can't be retrieved get `dimension_count: null` (never inferred, never defaulted to 7). `src/app/page.tsx` Top Matches now shows **"Based on N Civic DNA dimension(s)"** below the existing "{score}% match" line for scored candidates only, visually secondary (smaller, muted), with a trivial `title` attribute explaining the methodology — no modal or new screen added.
+
+Live-verified for `civicmarket.test.01@example.com`: network capture confirmed the new query fires scoped to exactly Shannon Martin's candidate id (this account's only scored candidate); an independent temporary read-only script re-confirmed her row (`growth_development=1, taxation_spending=2, environment=2, public_safety=2` non-null; `education/housing/transparency` null) computes to exactly **4**, matching the implemented logic. `compute-match-scores` was not modified — scoring formula, dimension list, and rounding are unchanged. `npm run build` passed (28 routes); `npm run lint` had only the 5 known pre-existing errors.
+
+Two separate unrelated concurrent-work diffs were encountered in the working tree during this and the prior session and were left completely untouched both times: `src/lib/ballotEligibility.ts` (Package C1 statewide mode, since self-committed by its own session) and `src/app/onboarding/zip/page.tsx` (Package C1 "Florida Statewide" onboarding anchor, still uncommitted).
+
+No `match_scores`, `candidate_positions`, or `candidate_position_evidence` row was created, modified, or deleted. No schema/RLS/function change. No deployment.
 
