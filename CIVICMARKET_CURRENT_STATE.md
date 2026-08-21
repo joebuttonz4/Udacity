@@ -1,6 +1,6 @@
 # CivicMarket Current State
 
-Last updated: August 20, 2026 (Gemini candidate-evidence extraction cutover — gemini-3.6-flash is now the default provider after human parity review PASS; Anthropic retained as an explicit override; no district write guard touched, no Supabase write, no deployment)
+Last updated: August 21, 2026 (Mayor current_official seed EXECUTED and verified — Shannon Martin inserted into current_officials for the Mayor district, candidate_id linked, live-verified on Home/Profile; the long-open Mayor representation gap is now closed; no user_districts/schema/RLS/function change, no deployment needed since production reads live Supabase data)
 
 ## Authoritative order
 
@@ -3656,4 +3656,16 @@ Model configuration unchanged from the already-live-tested setup: `DEFAULT_GEMIN
 `src/lib/candidateEvidence/__tests__/providers.test.ts`'s provider-resolution suite was rewritten for the new default and expanded (explicit anthropic/gemini overrides, case-insensitivity, fail-closed on an unknown value, model-default assertions, two new structural tests proving no provider file or the test suite itself references Supabase). All 52 offline tests pass (up from 46). `npm run build` passed (28 routes). `npm run lint` — only known pre-existing `scripts/*.cjs` errors (plus one unrelated, untracked, concurrent-session temp script with the same error class). Secret scan: no key value or `NEXT_PUBLIC_*` Gemini/Anthropic variable in the client bundle, any `.tsx` file, or the git diff.
 
 **Not done, not authorized by this task:** deployment (the production environment's own provider/model env vars are unaffected until an actual deploy happens); enabling `ENABLE_CAMPAIGN_EVIDENCE_EXTRACTION`; any `candidate_position_evidence` write for any candidate; touching either district write guard (`ENABLE_CITY_COUNCIL_DISTRICT_WRITE`, `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE`, both still `false`, untouched); removing the Anthropic path (deferred per the migration sequence's own step 6, no timeline set).
+
+## Mayor Current Official — Seed Executed and Verified
+
+Date: 08-21-2026
+
+Status: **EXECUTED. VERIFICATION PASSED. Rollback prepared but not needed.** Full record: `docs/internal_beta_mayor_current_official_source_and_seed_approval.md`.
+
+After explicit, row-level user approval (with one correction — an exact, uninterrupted `source_url` string), the previously-prepared single-row insert was executed: `current_officials` now contains **Shannon Martin, Mayor**, `district_id = 11111111-0000-0000-0000-000000000006`, `candidate_id` linked to her existing `candidates` row (`d44ff05a-14af-45c2-9f2f-6d530a8a051e`), `is_on_next_ballot = true` (she is a verified declared 2026 candidate for her own seat), all other optional fields `NULL` per established convention and verified-source limits.
+
+All 6 pre-write checks passed immediately before the insert (no duplicate, correct district/candidate ids, exactly 3 existing Mayor-district holders). Post-write verification confirmed exactly 1 Mayor `current_officials` row, `source_url` exact-string-matched (no corruption), and `officials_for_user` resolving for the same 3 users as before the insert — no unexpected blast radius. Live-verified on both Home and Profile (already-authenticated local session sharing the same live database as production): Shannon Martin now appears under My Current Officials with an "On your next ballot" pill, and clicking her card correctly navigates to her real candidate profile via the linked `candidate_id`, with zero code changes required.
+
+**This closes the long-standing "Current Officials — Mayor district gap"** documented repeatedly throughout this project. No `user_districts`, schema, RLS, function, or write-guard change occurred. No deployment was needed or performed — production reads live Supabase data directly, so this fix is already live for `https://civicmarket.vercel.app`. The remaining open remediation path (enabling `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` for real users) is untouched and still requires its own separate approval.
 

@@ -151,8 +151,47 @@ DELETE FROM current_officials WHERE id = '9b10d3fb-88b5-42f0-82cb-aad1720efa34';
 - **With `candidate_id` linked**, Shannon Martin's `OfficialCard` becomes tappable — it would route to `/candidates/d44ff05a-14af-45c2-9f2f-6d530a8a051e` (her existing candidate profile: bio, funding, voting record, and her already-computed match score), the same behavior the component already implements for any official whose `candidate_id` is set. No code change is required for this — the existing `OfficialCard` logic already handles it.
 - The empty-state copy from the immediately prior task ("Your current officials will appear as your representation districts are verified.") would correctly stop rendering for these 3 users specifically (since `officials.length` would become 1, not 0), while remaining correct and unchanged for any user who does not hold the Mayor district.
 
-## Approval boundary
+## Approval boundary (Stage A)
 
 **STAGE B (the INSERT) is not executed by this task and will not be executed unless the user gives explicit, row-level approval of the exact proposed values above** — matching this project's established write-approval pattern (as used for every prior `current_officials` seed in this project). Approval must cover: the exact `id` UUID, all 15 proposed column values (including the two deliberate non-convention choices — `is_on_next_ballot = true` and `candidate_id = 'd44ff05a-14af-45c2-9f2f-6d530a8a051e'`, both re-verified and explained above), the exact INSERT statement, and acknowledgment of the verification/rollback plan above.
+
+## Stage B — Execution Result
+
+Date: 08-21-2026
+
+Status: **EXECUTED. VERIFICATION PASSED. Rollback not required, not used.**
+
+The user gave explicit, row-level approval of the exact proposed row, with one instruction: store `source_url` as the exact uninterrupted string `https://www.cityofpsl.com/Government/Your-City-Government/Mayor-City-Council` with no embedded whitespace/newline.
+
+**Pre-write checks (re-run immediately before the insert, all passed):**
+
+| Check | Result |
+|---|---|
+| Proposed UUID `9b10d3fb-88b5-42f0-82cb-aad1720efa34` does not already exist | PASS — 0 rows |
+| Mayor district still has zero `current_officials` rows | PASS — 0 rows |
+| Shannon Martin still has zero `current_officials` rows anywhere | PASS — 0 rows |
+| `candidate_id` still resolves exactly to Shannon Martin / Mayor | PASS |
+| `district_id` still resolves exactly to the Port St. Lucie Mayor district | PASS (`type: city_council`, city: Port St. Lucie, state: FL) |
+| Exactly 3 users currently hold the Mayor district | PASS — count = 3 |
+
+**Execution:** a temporary, one-time script (inspected for exactly one `.insert()` call and zero `.update()`/`.upsert()`/`.delete()` calls, deleted immediately after its single run) performed a defensive re-check, then the single insert, then immediate verification — all in one script invocation, no separate write step.
+
+**Post-write verification, all passed:**
+
+- `SELECT * FROM current_officials WHERE id = '9b10d3fb-...'` → exactly 1 row, every field matched the approved values exactly, including `source_url` (programmatically confirmed via exact string equality — `sourceUrlExactMatch: true`, length 76 characters, no whitespace/newline corruption).
+- `SELECT count(*) FROM current_officials WHERE district_id = '...0006'` → **1**.
+- `officials_for_user` for the Mayor district → **exactly 3 rows**, all `name: "Shannon Martin"`, all correctly carrying `candidate_id: 'd44ff05a-...'` — for users `3b223f8c-...`, `ec59ea92-...`, and `faa39dd7-...` (the fresh production account).
+- `candidates` join on the linked `candidate_id` → resolves to `Shannon Martin / Mayor`, confirmed.
+
+**Live product verification** (already-authenticated local session for `civicmarket.test.01@example.com` / `ec59ea92-...`, one of the 3 Mayor-holding users — the fresh production account itself was not signed into, consistent with every prior task in this workstream):
+
+- Home "My Current Officials" now shows **Shannon Martin — Mayor · Mayor — CITY — "On your next ballot" — Current official — Source: official government record**, alongside Debbie Hawley, Stephanie Morgan, and Tobin Rogers "Toby" Overdorf (this specific account holds all four corresponding districts from its accumulated test history — not a leak, and not evidence of over-expansion for any other account).
+- Profile "My Current Officials" shows the identical result — confirmed live, same four officials, same wording.
+- **Clicking Shannon Martin's card navigated correctly to `/candidates/d44ff05a-14af-45c2-9f2f-6d530a8a051e`** — her real candidate profile, showing "YOUR MATCH SCORE 66," confirming the `candidate_id` link works exactly as designed, with zero code changes required.
+- No `user_districts` row was created, modified, or deleted by this task — the only write executed was the single `current_officials` insert (confirmed by direct inspection of the execution script's contents before running, and structurally guaranteed since `officials_for_user`'s Mayor-district row count matched the pre-write holder count exactly: 3 before, 3 after).
+
+**Rollback:** prepared and available (`DELETE FROM current_officials WHERE id = '9b10d3fb-88b5-42f0-82cb-aad1720efa34';`) but **not executed** — no verification failure occurred.
+
+No schema, RLS, function, `user_districts`, ballot-eligibility, or write-guard change occurred. No deployment occurred — production reads live Supabase data directly, so this data-only change is already live for `https://civicmarket.vercel.app` without any redeploy. No unrelated Gemini-migration work was touched.
 
 No schema, RLS, function, `user_districts`, ballot-eligibility, or write-guard change was made or is proposed. No deployment occurred. No unrelated Gemini-migration work was touched.
