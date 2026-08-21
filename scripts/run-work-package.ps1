@@ -10,7 +10,11 @@
       3. Verifies CLAUDE.md, docs/AGENT_WORKFLOW.md, and docs/CURRENT_WORK_PACKAGE.md exist.
       4. Verifies the `claude` CLI is available on PATH.
       5. Prints the repository path, current git branch, and a concise `git status --short`.
-      6. Invokes `claude -p` (non-interactive print mode) with a prompt built from the
+      6. Runs a safety preflight on docs/CURRENT_WORK_PACKAGE.md: refuses to launch Claude if
+         the file still contains blank-template placeholder text, or is missing any of its
+         required sections (## Status, ## Objective, ## Scope, ## Required Reviews,
+         ## Commit / Push Authorization, ## Work Instructions).
+      7. Invokes `claude -p` (non-interactive print mode) with a prompt built from the
          contents of docs/CURRENT_WORK_PACKAGE.md plus a fixed instruction block that tells
          Claude to follow docs/AGENT_WORKFLOW.md as the governing safety/process contract.
 
@@ -107,10 +111,48 @@ Write-Host "Git status (short):"
 & git status --short
 Write-Host ""
 
-# 7. Build the prompt: contents of docs/CURRENT_WORK_PACKAGE.md plus the fixed instruction block.
+# 7. Read the current work package.
 $workPackagePath = Join-Path -Path $repoRoot -ChildPath 'docs/CURRENT_WORK_PACKAGE.md'
 $workPackageContent = Get-Content -LiteralPath $workPackagePath -Raw
 
+# 7a. Safety preflight: refuse to launch Claude if the work package is still the blank
+# READY template. Checked before Claude is invoked in any way.
+$placeholderStrings = @(
+    'Replace this section with the approved work objective.',
+    'Replace with approved work items.',
+    'Replace this section with the actual approved instructions.'
+)
+
+foreach ($placeholder in $placeholderStrings) {
+    if ($workPackageContent.Contains($placeholder)) {
+        Write-Host "CivicMarket work package is not configured."
+        Write-Host "Fill in docs/CURRENT_WORK_PACKAGE.md before running this command."
+        exit 1
+    }
+}
+
+# 7b. Safety preflight: verify the work package has all required sections.
+$requiredSections = @(
+    '## Status',
+    '## Objective',
+    '## Scope',
+    '## Required Reviews',
+    '## Commit / Push Authorization',
+    '## Work Instructions'
+)
+
+$missingSections = @()
+foreach ($section in $requiredSections) {
+    if (-not $workPackageContent.Contains($section)) {
+        $missingSections += $section
+    }
+}
+
+if ($missingSections.Count -gt 0) {
+    Fail "docs/CURRENT_WORK_PACKAGE.md is missing required section(s): $($missingSections -join ', '). Cannot start the work package runner."
+}
+
+# 8. Build the prompt: contents of docs/CURRENT_WORK_PACKAGE.md plus the fixed instruction block.
 $instruction = @'
 Read CLAUDE.md, CIVICMARKET_CURRENT_STATE.md, docs/AGENT_WORKFLOW.md,
 docs/agent_handoff.json, and docs/CURRENT_WORK_PACKAGE.md.
