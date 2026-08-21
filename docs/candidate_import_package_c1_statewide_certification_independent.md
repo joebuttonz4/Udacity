@@ -1,6 +1,6 @@
 # Candidate Import Package C1 — Statewide Ballot Model, Certification-Independent Subset
 
-Status: **Architecture approved this session. Design, code (inert), and draft SQL complete. NOT AUTHORIZED FOR DATABASE EXECUTION.** No database write performed. No deployment. Both existing write guards (`ENABLE_CITY_COUNCIL_DISTRICT_WRITE`, `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE`) remain `false`, untouched — this workstream introduces no new guard because it introduces no new write-capable API route.
+Status: **Architecture approved. §6a executed and verified PASS (`docs/candidate_import_package_c1_6a_execution_result.md`). Fresh-user onboarding activation applied and verified (§12). §6b existing-user backfill remains NOT AUTHORIZED / NOT EXECUTED.** Both existing write guards (`ENABLE_CITY_COUNCIL_DISTRICT_WRITE`, `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE`) remain `false`, untouched — this workstream introduces no new guard because it introduces no new write-capable API route.
 
 Date: 08-20-2026
 
@@ -301,6 +301,27 @@ The onboarding code change (§5) should be applied together with, or immediately
 
 **This document does not constitute approval to execute §6a or §6b. That has not occurred.**
 
-## 11. No-change confirmation
+## 12. Fresh-user onboarding activation — applied, 08-20-2026
 
-The only application source-code change made this session is `src/lib/ballotEligibility.ts` (§4) — confirmed inert (§7: no `city = 'Statewide'` district row exists live). No other file under `src/` was modified. No database write was performed. No `districts`, `elections`, `candidates`, `user_districts`, or `current_officials` row was created, modified, or deleted. No schema, RLS, grant, policy, function, migration, or seed was changed. `src/app/onboarding/zip/page.tsx` was inspected but not modified (§5). `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` and `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` are unrelated to this workstream and were not inspected or changed. No deployment occurred. Package B (`docs/candidate_import_package_b_post_certification.md`) and Package C (`docs/candidate_import_package_c_statewide.md`) were not modified. All ID-collision and count checks in §7 used only read-only `GET` requests against the public PostgREST API with the `sb_publishable_...` key extracted from this session's own freshly-built `.next/static` client bundle — `.env.local` and every other file matching the project's secret-file exclusion list were never opened or read.
+Status: **Applied and verified live. Existing-user backfill (§6b) remains not executed.**
+
+Following §6a's execution (`docs/candidate_import_package_c1_6a_execution_result.md`, PASS — 5 districts, 4 elections, 14 candidates live), the §5 onboarding change was approved and applied to `src/app/onboarding/zip/page.tsx`: `ZIP_MANAGED_DISTRICTS` gained a third entry, `{ id: '11111111-0000-0000-0000-00000000000b', name: 'Florida Statewide', scope: 'state' }`, alongside the unchanged County Commission At-Large and Mayor entries. The delete-then-insert write already scoped to this array now also covers the anchor, with no other logic change.
+
+**Verified before relying on the anchor:** live read confirmed the Florida Statewide district row exists (`id ...000b, type statewide, city Statewide, state FL`) and that exactly 5 `type='statewide'` rows exist total — matching §6a's execution result exactly.
+
+**Verified by code trace + live read (no live browser onboarding run performed):**
+- **Statewide ballot resolution:** a fresh user holding only the anchor would have `getBallotEligibilityMode` resolve `'statewide'` (rule added in §4, committed `b7282b1`) and `getExpansionJurisdictions` expand to all 5 live `type='statewide'` districts; `getCandidatesForDistricts`'s `.in('district_id', eligibleDistrictIds)` would then match the 4 office districts, live-confirmed to hold exactly 14 candidates (11 Governor/Lt. Governor, 2 Attorney General, 1 Commissioner of Agriculture — Chief Financial Officer holds 0, as designed).
+- **PSL citywide/countywide unaffected:** the existing `city_council` and `county`/`school_board` rules in `ballotEligibility.ts` were not modified by this or the prior commit — only a new, additive rule was appended.
+- **FL House/Senate remain excluded:** `ZIP_MANAGED_DISTRICTS` still contains no `type: 'state'` entry; no rule exists for it in `ballotEligibility.ts`, so it still falls through to `'exact'`.
+- **City Council D1/D3 remain excluded:** not present in `ZIP_MANAGED_DISTRICTS`, unchanged from Gate I36.
+- **School Board District 1 / FL House 85 / FL Senate 27 remain excluded:** not present in `ZIP_MANAGED_DISTRICTS`, unchanged from the Ballot Eligibility Phase 1 work.
+- **Current Officials unaffected:** live read confirmed zero `current_officials` rows reference any of the 5 new district IDs (anchor or any of the 4 offices); `current_officials` total count unchanged (9 before and after §6a, reconfirmed here).
+- **Existing users unaffected:** this change only alters what a *future* onboarding submission writes; it performs no `user_districts` mutation itself, and the existing-user backfill (§6b) remains separately gated and not executed.
+
+`npm run build` passed (same route count as baseline, no errors). `npm run lint` reported only the same 5 known pre-existing `scripts/*.cjs` errors, nothing new.
+
+No live end-to-end browser onboarding test was performed this session (no test account/session was provisioned for this turn) — the verification above is code-trace plus live read-only database confirmation, consistent with this project's standard practice when a live UI test isn't set up in-session. A future gate may still want a live onboarding smoke test with a fresh account, mirroring Milestone 1's pattern, before Controlled PSL Beta.
+
+## 13. No-change confirmation (updated through §12)
+
+`src/lib/ballotEligibility.ts` (§4, commit `b7282b1`) and `src/app/onboarding/zip/page.tsx` (§12) are the only application source-code changes made across this document's sessions — both confirmed live/inert as documented in §4/§7 and §12 respectively. No other file under `src/` was modified. §6a's database write (5 districts, 4 elections, 14 candidates) was explicitly approved and executed separately — see `docs/candidate_import_package_c1_6a_execution_result.md`; no other database write was performed by this document's own work. No `user_districts` or `current_officials` row was created, modified, or deleted (§12 confirms this live). No schema, RLS, grant, policy, function, migration, or seed was changed. §6b (the existing-user backfill) remains **not executed**. `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` and `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` are unrelated to this workstream and were not inspected or changed. No deployment occurred. Package B (`docs/candidate_import_package_b_post_certification.md`) and Package C (`docs/candidate_import_package_c_statewide.md`) were not modified. No unrelated concurrent-session file (e.g. `src/lib/candidates.ts`, other in-progress `src/app/page.tsx` edits) was touched. All ID-collision, count, and code-trace checks used only read-only `GET` requests against the public PostgREST API with a `sb_publishable_...` key extracted from a freshly-built `.next/static` client bundle — `.env.local` and every other file matching the project's secret-file exclusion list were never opened or read directly.

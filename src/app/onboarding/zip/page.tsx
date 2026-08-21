@@ -31,9 +31,21 @@ const PSL_ZIPS = ['34952', '34953', '34983', '34984', '34986', '34987', '34988']
 // District 1 / FL House District 85 / FL Senate District 27 row already held by an
 // existing user is left untouched by a future ZIP resubmission — those require a
 // separate, controlled cleanup once correct verified-assignment flows exist.
+//
+// Florida Statewide anchor (Package C1, Option A): ballot eligibility only, for
+// Florida's four statewide constitutional offices (Governor/Lt. Governor, Attorney
+// General, CFO, Commissioner of Agriculture). Never referenced by any
+// current_officials row, so it creates no representation claim — same isolation
+// already proven for the Mayor and County Commission At-Large anchors below. Added
+// only after the anchor district row was confirmed live (see
+// docs/candidate_import_package_c1_statewide_certification_independent.md and
+// docs/candidate_import_package_c1_6a_execution_result.md). Applies to fresh
+// onboarding only — existing users are covered by a separate, not-yet-approved
+// backfill (Package C1 §6b), intentionally not part of this change.
 const ZIP_MANAGED_DISTRICTS = [
   { id: '11111111-0000-0000-0000-000000000003', name: 'St. Lucie County Commission At-Large', scope: 'county' },
   { id: '11111111-0000-0000-0000-000000000006', name: 'Mayor', scope: 'city' },
+  { id: '11111111-0000-0000-0000-00000000000b', name: 'Florida Statewide', scope: 'state' },
 ];
 
 export default function ZipPage() {
