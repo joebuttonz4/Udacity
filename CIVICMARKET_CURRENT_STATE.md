@@ -1,6 +1,6 @@
 # CivicMarket Current State
 
-Last updated: August 21, 2026 (Mayor current_official seed EXECUTED and verified — Shannon Martin inserted into current_officials for the Mayor district, candidate_id linked, live-verified on Home/Profile; the long-open Mayor representation gap is now closed; no user_districts/schema/RLS/function change, no deployment needed since production reads live Supabase data)
+Last updated: August 21, 2026 (City Council write enablement readiness review complete — Recommendation B, ready only after one blocking copy fix in the verification page's static "saving disabled" text; auth/RPC/mutation-scope all PASS, prior Gate I34 evidence re-confirmed valid at HEAD; ENABLE_CITY_COUNCIL_DISTRICT_WRITE NOT changed, remains false; read-only review, no writes, no deployment)
 
 ## Authoritative order
 
@@ -3668,4 +3668,20 @@ After explicit, row-level user approval (with one correction — an exact, unint
 All 6 pre-write checks passed immediately before the insert (no duplicate, correct district/candidate ids, exactly 3 existing Mayor-district holders). Post-write verification confirmed exactly 1 Mayor `current_officials` row, `source_url` exact-string-matched (no corruption), and `officials_for_user` resolving for the same 3 users as before the insert — no unexpected blast radius. Live-verified on both Home and Profile (already-authenticated local session sharing the same live database as production): Shannon Martin now appears under My Current Officials with an "On your next ballot" pill, and clicking her card correctly navigates to her real candidate profile via the linked `candidate_id`, with zero code changes required.
 
 **This closes the long-standing "Current Officials — Mayor district gap"** documented repeatedly throughout this project. No `user_districts`, schema, RLS, function, or write-guard change occurred. No deployment was needed or performed — production reads live Supabase data directly, so this fix is already live for `https://civicmarket.vercel.app`. The remaining open remediation path (enabling `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` for real users) is untouched and still requires its own separate approval.
+
+## City Council District Write Enablement Readiness Review
+
+Date: 08-21-2026
+
+Timestamp: 03:48 pm EST
+
+Status: **Read-only review complete. `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` NOT changed — remains `false`.** Full record: `docs/internal_beta_city_council_write_enablement_readiness.md`.
+
+**Recommendation: B — ready only after one specific code fix.** Every safety-relevant layer of the write path (`POST /api/set-city-council-district`, `src/app/api/set-city-council-district/route.ts`, calling the `set_psl_city_council_district` RPC) was re-inspected against current HEAD and passed: unauthenticated/invalid-token rejection, server-derived identity only (no client-supplied user id, no cross-user write possible), closed district-label allow-list with a second independent id check inside the RPC itself, required attestation, atomic delete-then-insert scoped only to City Council District 1/3 (never Mayor, School Board, County Commission, FL House/Senate, or Florida Statewide), and `SECURITY INVOKER` with correctly restricted grants (anon rejected with `42501`, re-confirmed live this session). Gate I34's prior real D1→D3→D1 test-write evidence remains valid — the route/RPC source files are unchanged since commit `8927098`, and that test account still holds exactly one City Council row (District 1, no drift) today.
+
+**The one blocking issue:** `src/app/profile/city-council-district/page.tsx` has two static, unconditional text blocks ("Preview only — saving is currently disabled" and a fuller disclaimer claiming "nothing is saved") that would become actively false if the write guard were enabled without also fixing them — a genuine user-facing correctness defect, not a cosmetic one. No other fix is required.
+
+Fresh-account impact confirmed read-only: the production fresh account (`faa39dd7-...`) still has zero City Council rows; verifying District 1 would resolve Stephanie Morgan, District 3 would resolve Anthony Bonna, Sr. (both already have live `current_officials` rows) — neither assignment was guessed, and nothing was written. Operational risk classified **LOW** (atomic transaction semantics prevent partial-failure states; repeated or district-changing calls are both safe).
+
+No Supabase write, schema, RLS, function, or write-guard change occurred. No deployment occurred. `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` was not touched or re-examined (out of scope, confirmed still `false` by inspection only). No unrelated Gemini-migration work was touched.
 
