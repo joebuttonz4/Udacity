@@ -1,4 +1,4 @@
-import { GoogleGenAI } from '@google/genai'
+import { GoogleGenAI, ThinkingLevel } from '@google/genai'
 import {
   EvidenceExtractionRequest,
   EvidenceProvider,
@@ -34,16 +34,17 @@ import {
 // of a cent per run either way) and instruction-heavy (many guardrails
 // against hallucination/misclassification — the Flash-Lite tier is
 // documented by Google as tuned for high-throughput document parsing, a
-// lighter-weight task than this one). gemini-2.5-flash was chosen over the
-// newer gemini-3.x Flash line for this default specifically because it is
-// the most consistently, unambiguously confirmed GA/stable model across
-// every source checked during this migration, including pricing docs,
-// model-list docs, and the per-model doc page — the newest 3.x names
-// surfaced only inconsistently across fetches in the same research pass
-// that also surfaced the incorrect `interactions.create()` API shape above.
-// A newer model may be substituted via GEMINI_EVIDENCE_MODEL once confirmed
-// live (Task 9 in docs/gemini_candidate_evidence_migration.md).
-export const DEFAULT_GEMINI_EVIDENCE_MODEL = 'gemini-2.5-flash'
+// lighter-weight task than this one). gemini-2.5-flash was the original
+// documentation-based default choice, but a live parity test (08-20-2026)
+// found the live API rejects it for this key with a 404: "This model
+// models/gemini-2.5-flash is no longer available to new users. Please
+// update your code to use models/gemini-3.6-flash." — a case where the live
+// API's own ground truth overrode multiple doc-scraping fetches that had
+// described gemini-2.5-flash as GA/stable. gemini-3.6-flash is now the
+// default, per that same live error message's own recommendation, confirmed
+// working live. See docs/gemini_candidate_evidence_migration.md for the
+// full live-test record.
+export const DEFAULT_GEMINI_EVIDENCE_MODEL = 'gemini-3.6-flash'
 
 export function createGeminiEvidenceProvider(model: string = DEFAULT_GEMINI_EVIDENCE_MODEL): EvidenceProvider {
   return {
@@ -71,11 +72,17 @@ export function createGeminiEvidenceProvider(model: string = DEFAULT_GEMINI_EVID
             temperature: 0,
             maxOutputTokens: request.maxOutputTokens,
             responseMimeType: 'application/json',
-            // thinkingBudget: 0 disables Gemini's reasoning-token generation
-            // for this call, mirroring `thinking: { type: 'disabled' }` on
-            // the Anthropic adapter — both exist to keep the full
-            // maxOutputTokens budget available to the actual JSON answer.
-            thinkingConfig: { thinkingBudget: 0 },
+            // thinkingLevel: 'MINIMAL' keeps Gemini's reasoning-token usage
+            // to a minimum for this call, mirroring `thinking: { type:
+            // "disabled" }` on the Anthropic adapter — both exist to keep
+            // the maxOutputTokens budget available to the actual JSON
+            // answer. NOTE: `thinkingConfig: { thinkingBudget: 0 }` was
+            // tried first and is rejected outright by gemini-3.6-flash with
+            // a 400 INVALID_ARGUMENT (confirmed live, 08-20-2026) — unlike
+            // the Anthropic model, this model family does not accept a
+            // fully-disabled thinking budget. `thinkingLevel: 'MINIMAL'` is
+            // the confirmed-working equivalent for this model.
+            thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL },
           },
         })
       } catch (err) {

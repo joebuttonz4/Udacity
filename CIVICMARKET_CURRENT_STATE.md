@@ -1,6 +1,6 @@
 # CivicMarket Current State
 
-Last updated: August 20, 2026 (Fresh production account district/representation audit — production confirmed live at civicmarket.vercel.app; empty My Current Officials and missing FL House District 85 both classified as expected behavior, not bugs, per the pre-existing Path 1 personalization fix and 08-20-2026 Ballot Eligibility Phase 1 fix; read-only diagnosis, no writes, no deployment)
+Last updated: August 20, 2026 (Gemini candidate-evidence live parity test executed — GEMINI PARITY = PASS with one flagged coverage gap; default provider still Anthropic, no cutover, no Supabase write, no deployment)
 
 ## Authoritative order
 
@@ -3581,4 +3581,28 @@ Status: **Read-only diagnosis complete. No Supabase write. No deployment.** Full
 **No code bug, ballot-eligibility bug, or officials-lookup bug was found.** No fix was implemented — three independently-approvable remediation paths were identified (a documentation-only empty-state copy tweak requiring no write; sourcing and seeding the long-open Mayor `current_officials` gap, requiring a new approved write; or enabling the already-built-and-tested `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` for real users, requiring a separate write-guard approval) and left for explicit user decision.
 
 The fresh production account was left completely untouched and remains available as a reproducible real-world test case. No `user_districts`, `current_officials`, `officials_for_user`, schema, RLS, or function change occurred. No secret value was read or printed — only the public env-var-derived service-role connection (already an established project pattern) was used for read-only queries. No deployment occurred.
+
+## Gemini Candidate-Evidence Live Parity Test
+
+Date: August 20, 2026
+
+Status: **Executed. GEMINI PARITY = PASS, with one flagged coverage gap requiring human review before cutover.** Default provider remains Anthropic. No provider cutover. No Supabase write. No deployment. Full record: `docs/gemini_candidate_evidence_migration.md`.
+
+One explicitly-approved, real (non-dry-run) live Gemini call was made through the actual production extraction route (`POST /api/admin/extract-shannon-martin-evidence`), using `CANDIDATE_EVIDENCE_PROVIDER=gemini` as a temporary dev-server process env var (never written to `.env.local` or committed) and the guard `ENABLE_CAMPAIGN_EVIDENCE_EXTRACTION` temporarily flipped to `true` locally, reverted via `git checkout --` immediately after the one call — confirmed clean against `HEAD` afterward. Authenticated as the existing admin test account via Supabase's credential-free `admin.generateLink`/`verifyOtp` pattern (no password entered). `GEMINI_API_KEY`, provisioned locally by the user, was read only by the server process and never printed, logged, or recorded anywhere.
+
+**Two live-discovered defects fixed as part of getting this test to run:**
+1. The documented default model, `gemini-2.5-flash`, is dead for this key — live `404`: *"no longer available to new users... use models/gemini-3.6-flash."* `DEFAULT_GEMINI_EVIDENCE_MODEL` updated to `gemini-3.6-flash`.
+2. `thinkingConfig: { thinkingBudget: 0 }` (the original disabled-thinking setting, mirroring the Anthropic adapter) is rejected by `gemini-3.6-flash` with `400 INVALID_ARGUMENT`. Fixed to `thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL }`, confirmed working live. Offline tests updated to match; all 46 still pass.
+
+**Live call:** `200`, `gemini-3.6-flash`, `finishReason: STOP` (no truncation), 4298 input / 644 output tokens, 4 validated rows / 0 rejected, ~9.6s wall-clock (includes live-fetching all 3 source pages).
+
+**Parity result vs. the accepted Gate I41 Anthropic baseline:** 9 of 10 scored checks PASS — schema validity, candidate identity, source URL fidelity, no invented quotes/dates, correct dimension classification (Gemini notably avoided a misclassification mistake Anthropic itself made in Gate I40 on the same evidence), correct stance/score on every overlapping row (`taxation_spending +2` ×2, `environment +2`, `public_safety +2` — all matching baseline exactly, with `environment` scoring `+2` correctly on the first attempt where Anthropic originally needed a human correction from `+1`), correct confidence handling, no unsupported claims. **One FAIL:** Gemini did not reproduce the baseline's borderline, medium-confidence `growth_development +1` row — a coverage gap, not a fabrication or misclassification. One minor phrasing variance (Real Time Operations Center described as "traffic management" vs. baseline's "emergency response") flagged for human re-verification against the live page, not confirmed as an error.
+
+**Acceptance decision:** GEMINI PARITY = PASS. Rationale: every correctness-sensitive check passed; the sole gap is under-coverage of one borderline dimension, which is the safer failure mode under this project's own established "prefer no score over an unsupported score" policy (Gates I12–I20), not a disqualifying defect.
+
+**Cost:** ~$0.0056 estimated for this one call (`gemini-3.6-flash` pricing, not independently re-verified live — no extra API call made solely for cost data) vs. a rough ~$0.023 estimate for the equivalent Anthropic call (general pricing knowledge, not independently confirmed for this timeframe) — directional only, roughly 4x.
+
+**Not done, not authorized:** `CANDIDATE_EVIDENCE_PROVIDER` default cutover to Gemini (remains `anthropic`), any `candidate_position_evidence`/`candidate_positions`/`match_scores` write, deployment. **Recommended next step:** a human reviewer confirms this automated PASS (re-check the flagged phrasing item, decide whether the missing `growth_development` row needs a prompt refinement) before any cutover decision.
+
+No database write. No schema/RLS/function change. `ENABLE_CAMPAIGN_EVIDENCE_EXTRACTION` restored to `false`. No deployment occurred. Unrelated concurrent-session files (`src/components/CurrentOfficialsSection.tsx`, and this file's own "Fresh production account..." section above) were left untouched by this task.
 

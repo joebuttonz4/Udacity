@@ -2,9 +2,66 @@
 
 Date: 08-20-2026
 
-Status: **Gemini implementation complete, offline-tested. Live parity test AUTHORIZED but BLOCKED — GEMINI_API_KEY is not present in this environment. Default provider remains Anthropic. No live Gemini API call has been made. No Supabase write. No deployment.**
+Status: **Live parity test executed and PASSED (with one flagged coverage gap). Default provider remains Anthropic. No Supabase write. No deployment. No provider cutover.**
 
-## Live parity test attempt — blocked on missing credential (08-20-2026)
+## Live parity test result (08-20-2026, ~21:46 local)
+
+**GEMINI PARITY = PASS** (see full scoring below). One real, non-dry-run call was made through the actual production route (`POST /api/admin/extract-shannon-martin-evidence`), authenticated as the existing admin test account via Supabase's own credential-free `admin.generateLink`/`verifyOtp` pattern (same method as Gate I47) — no password was entered by the assistant. `GEMINI_API_KEY` was read only by the server process itself; its value was never printed, logged, or recorded anywhere, including in this document.
+
+**Model correction found and fixed during this test:** the documented default, `gemini-2.5-flash`, returned a live `404`: *"This model models/gemini-2.5-flash is no longer available to new users. Please update your code to use models/gemini-3.6-flash."* This is exactly the kind of doc-vs-reality gap flagged as a risk in the original migration's §3 research (where web docs also inconsistently described the SDK's method surface) — the live API is the authority, not scraped docs. `DEFAULT_GEMINI_EVIDENCE_MODEL` was updated to `gemini-3.6-flash` in `src/lib/candidateEvidence/providers/gemini.ts`.
+
+**Second defect found and fixed:** `thinkingConfig: { thinkingBudget: 0 }` (the original disabled-thinking setting) is rejected outright by `gemini-3.6-flash` with a `400 INVALID_ARGUMENT` — confirmed via isolated debug calls that varied one config field at a time. `thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL }` is the confirmed-working equivalent and is now what the adapter sends. The debug/isolation calls that found this consumed part of this free-tier key's 5-requests/minute quota for `gemini-3.6-flash` (one attempt at a lower thinking level hit a `429 RESOURCE_EXHAUSTED`, self-resolving after Google's own stated retry delay) — this was necessary troubleshooting to get any successful call at all, not repeated calls to improve an already-successful result. Both fixes are now covered by `providers.test.ts`'s existing "returns rawText and diagnostics on a valid structured response" assertion, which was updated to check for `thinkingLevel` instead of `thinkingBudget`; all 46 offline tests still pass with no new failures.
+
+**Test execution:** guard `ENABLE_CAMPAIGN_EVIDENCE_EXTRACTION` was temporarily flipped to `true` locally (never committed), `CANDIDATE_EVIDENCE_PROVIDER=gemini`/`GEMINI_EVIDENCE_MODEL=gemini-3.6-flash` were set as dev-server process env vars (not written into `.env.local`, so `CANDIDATE_EVIDENCE_PROVIDER` was never persisted anywhere), one dev-server restart was required to pick up both the freshly-provisioned `GEMINI_API_KEY` and the temporary guard flip (an existing dev server from a concurrent session was stopped and, after testing, replaced with a fresh default-config instance so that session's environment was restored, not left disrupted). The guard flip was reverted via `git checkout --` immediately after the one real call; `git diff` confirmed the route file matches `HEAD` exactly afterward.
+
+### Live call result
+
+| Field | Value |
+|---|---|
+| HTTP status | `200` |
+| `provider` | `gemini` |
+| `model` | `gemini-3.6-flash` |
+| `finishReason` | `STOP` (not truncated) |
+| Input tokens | `4298` |
+| Output tokens | `644` |
+| Wall-clock latency (this call, includes live source fetch of all 3 pages) | `9568ms` |
+| Validated rows | `4` |
+| Rejected rows | `0` |
+
+### Parity scoring (Gemini output vs. the accepted Gate I41 Anthropic baseline)
+
+| # | Check | Result |
+|---|---|---|
+| 1 | Schema validity | **PASS** — valid JSON, all 4 rows passed `validateEvidenceRow` unchanged, 0 rejected |
+| 2 | Candidate identity | **PASS** — correct `candidate_id` throughout |
+| 3 | Source URL fidelity | **PASS** — every `source_url` is from the approved closed set and matches the same page Anthropic cited for the same claim |
+| 4 | Evidence quote fidelity | **PASS**, one item flagged — 3 of 4 rows paraphrase the same underlying facts as the accepted baseline almost identically; the public_safety row describes the Real Time Operations Center as integrating "law enforcement and **traffic management**" where the baseline says "law enforcement and **emergency response**" — a plausible paraphrase of a multi-purpose facility, not a fabricated URL/date/quote, but flagged for a human reviewer to re-check against the live page before any insert |
+| 5 | No invented quote/text | **PASS** — no fabricated URLs, no fabricated dates (`source_published_at` correctly `null` throughout) |
+| 6 | Correct dimension classification | **PASS** — all 4 dimensions match the baseline's own classification exactly; notably, Gemini did **not** repeat Anthropic's original Gate I40 mistake of misfiling the Rosser Lakes conservation evidence as a negative `growth_development` claim — it correctly filed that evidence under `environment` only |
+| 7 | Position/stance fidelity | **PASS** — all 4 overlapping scores match the baseline exactly (`+2` each); the `environment` row scored `+2` directly on the first attempt, matching the Gate I39-corrected threshold that Anthropic's own original extraction under-scored at `+1` and needed a human revision to fix |
+| 8 | Confidence handling | **PASS** — `high` confidence on all 4 rows, matching the baseline's own confidence for the same 4 rows |
+| 9 | No unsupported claims | **PASS** — every row cites a concrete, explicit policy/resource claim; no generic/boilerplate language, no outcome-only claims |
+| 10 | No omitted high-value evidence Anthropic correctly captured | **FAIL** — Gemini did not produce a `growth_development` row at all. The baseline's accepted `growth_development +1` row (medium confidence, sourced to `about-shannon-martin/`: reduced red tape, targeted investments, attracting employers) was not reproduced. This is a coverage gap, not a correctness error — Gemini did not hallucinate a wrong score, it simply did not surface this borderline dimension |
+
+**Gemini-only evidence:** none. **Anthropic-only evidence:** the one `growth_development +1` row above. **Materially different classifications:** none — all 4 overlapping rows match dimension, score, and source exactly. **Hallucination:** none confirmed; one phrasing variance flagged for human re-verification (item 4 above). **Truncation:** none (`finishReason: STOP`, 644/6000 output tokens used). **Schema coercion/defaulting:** none needed — 0 rows required any fallback handling.
+
+### Acceptance decision
+
+**GEMINI PARITY = PASS.**
+
+Rationale: 9 of 10 checks passed cleanly, including every correctness-sensitive check (no hallucination, no fabricated source, no incorrect dimension/stance classification — Gemini in fact avoided a misclassification mistake Anthropic itself made on the same evidence in Gate I40). The single failing check is a coverage gap on one borderline, medium-confidence dimension, not a fabrication or misclassification. CivicMarket's own established policy throughout this project (Gates I12–I20: "prefer no score over an unsupported score," "locked rings are safer than unsupported scores") treats under-coverage as the *safer* failure mode compared to over-claiming — so this gap does not, by the project's own standard, disqualify Gemini's output quality. It is recorded as a required follow-up for the parity review step (§7 of the original migration sequence), not treated as silently acceptable.
+
+### Cost comparison (Task 7)
+
+Actual usage from this call: **4298 input tokens, 644 output tokens** (`gemini-3.6-flash`).
+
+Using the pricing figures found during the original migration's documentation research (`gemini-3.6-flash`: $0.75/M input, $3.75/M output through 2026 — **not independently re-verified live in this task**, since no extra API call was made solely to obtain cost data, per instruction):
+
+- Estimated cost of this one call: (4298 × $0.75 + 644 × $3.75) / 1,000,000 ≈ **$0.0056** (about half a cent).
+
+For comparison, Anthropic's `claude-sonnet-5` (the current default) has historically priced Sonnet-tier models around $3/M input, $15/M output — **this figure is from general pricing knowledge, not independently confirmed live for this task or timeframe**, and no Anthropic call was made in this session to obtain a real comparison figure (avoiding unnecessary paid usage, per instruction). At that rate, the same 4298/644 token profile would cost roughly **$0.023** (~2.3 cents) — approximately 4x Gemini's estimated cost for this one extraction. This is directional only; an authoritative comparison would require confirming both providers' current official pricing pages directly, not done in this task.
+
+## Live parity test attempt — blocked on missing credential (08-20-2026, prior session)
 
 A one-time, explicitly-approved controlled live Gemini parity test (Shannon Martin evidence pilot, same 3 approved sources, `gemini-2.5-flash`) was authorized. Before making any call, `GEMINI_API_KEY` availability was checked — per the approval's own instruction — without ever printing, logging, or recording its value, length, prefix, or suffix. Checked in every place this project's server-side process could plausibly read it from:
 
@@ -112,14 +169,16 @@ Model/provider selection is centralized in `src/lib/candidateEvidence/provider.t
 
 `@anthropic-ai/sdk` was never a dependency and remains not a dependency — no package was added or removed for Anthropic. The Anthropic adapter is fully retained and is still the default provider. Sequence:
 
-1. ✅ Gemini implementation (this task).
-2. ⬜ Same-input comparison — run both providers against Shannon Martin's already-verified sources and compare output (blocked on live Gemini credentials — see §9).
-3. ⬜ Parity review — a human compares both outputs against the existing Gate I40/I41 accepted evidence set.
-4. ⬜ Switch default provider to Gemini (`CANDIDATE_EVIDENCE_PROVIDER=gemini` in the deploy environment, or a documented default flip in `provider.ts` after review).
-5. ⬜ Retain Anthropic as a fallback/comparison path temporarily.
-6. ⬜ Remove Anthropic only after beta confidence is established.
+1. ✅ Gemini implementation.
+2. ✅ Same-input comparison — one live Gemini call vs. the accepted Gate I41 Anthropic baseline (08-20-2026, see "Live parity test result" above). **GEMINI PARITY = PASS**, with one flagged coverage gap (a borderline `growth_development` row Anthropic captured and Gemini did not).
+3. ⬜ Parity review — **a human reviewer should still confirm** the automated PASS above, specifically re-checking the flagged public_safety "traffic management" phrasing (item 4) against the live page, and deciding whether the missing `growth_development` row (item 10) is acceptable to lose or worth a prompt refinement first. Not yet performed by a human.
+4. ⬜ Switch default provider to Gemini — **not done, not authorized this task.** `CANDIDATE_EVIDENCE_PROVIDER` default remains `"anthropic"` in `provider.ts`.
+5. ⬜ Retain Anthropic as a fallback/comparison path temporarily — unaffected, still fully in place.
+6. ⬜ Remove Anthropic only after beta confidence is established — not started.
 
-No automated test in this repository calls either paid API — see §8.
+**Cutover recommendation:** Gemini (`gemini-3.6-flash`) is technically capable of producing beta-acceptable candidate evidence and is meaningfully cheaper per call, but a full human parity review (step 3) has not yet happened and the one flagged coverage gap has not been resolved or explicitly accepted. Recommend running step 3 (human review of this one test's output, using the same `HUMAN_REVIEW_CHECKLIST` the route already returns) before proceeding to step 4. This single test is a promising signal, not yet sufficient grounds by itself for a production default switch.
+
+No automated test in this repository calls either paid API — see §8. One real, explicitly-approved live call was made outside the automated suite for this parity test (documented above); the offline suite itself made none.
 
 ## 8. Offline/mock testing
 

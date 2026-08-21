@@ -17,6 +17,7 @@ vi.mock('@google/genai', () => ({
   GoogleGenAI: vi.fn().mockImplementation(function MockGoogleGenAI(this: { models: { generateContent: typeof generateContentMock } }) {
     this.models = { generateContent: generateContentMock }
   }),
+  ThinkingLevel: { MINIMAL: 'MINIMAL', LOW: 'LOW', MEDIUM: 'MEDIUM', HIGH: 'HIGH' },
 }))
 
 const ORIGINAL_ENV = { ...process.env }
@@ -149,7 +150,7 @@ describe('Gemini provider', () => {
         config: expect.objectContaining({
           systemInstruction: 's',
           responseMimeType: 'application/json',
-          thinkingConfig: { thinkingBudget: 0 },
+          thinkingConfig: { thinkingLevel: 'MINIMAL' },
         }),
       })
     )
