@@ -1,0 +1,33 @@
+{
+  "project": "CivicMarket",
+  "status": "PASS",
+  "updated_at": "2026-08-21T19:57:10Z",
+  "commit": null,
+  "branch": "master",
+  "work_package": "Agent handoff workflow setup",
+  "summary": "Repository-side handoff mechanism created.",
+  "files_changed": [
+    "docs/AGENT_WORKFLOW.md",
+    "docs/agent_handoff.json"
+  ],
+  "tests": {
+    "build": "NOT_RUN",
+    "lint": "NOT_RUN",
+    "other": [
+      "Documentation-only change; npm run build/lint not applicable, JSON syntax validated with node -e JSON.parse"
+    ]
+  },
+  "database": {
+    "writes_performed": false,
+    "schema_changed": false
+  },
+  "deployment": {
+    "performed": false
+  },
+  "security": {
+    "secrets_changed": false,
+    "rls_changed": false
+  },
+  "blockers": [],
+  "recommended_next_step": "Verify ChatGPT can inspect the committed workflow through GitHub."
+}
