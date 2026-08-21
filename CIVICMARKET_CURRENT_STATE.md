@@ -1,6 +1,6 @@
 # CivicMarket Current State
 
-Last updated: August 20, 2026 (Deploy target and domain plan complete — repo confirmed directly Vercel-deployable with zero code changes, env-var inventory and Supabase Auth URL plan documented, no BLOCKER risks found; planning only, no deployment, no secrets accessed)
+Last updated: August 20, 2026 (Fresh production account district/representation audit — production confirmed live at civicmarket.vercel.app; empty My Current Officials and missing FL House District 85 both classified as expected behavior, not bugs, per the pre-existing Path 1 personalization fix and 08-20-2026 Ballot Eligibility Phase 1 fix; read-only diagnosis, no writes, no deployment)
 
 ## Authoritative order
 
@@ -3565,4 +3565,20 @@ Confirmed by source inspection that the repository is **directly deployable to V
 An 11-step interactive deployment sequence was documented (sign into Vercel → import repo → configure project → add env vars → deploy → capture URL → configure Supabase Auth → test signup → attach custom domain → re-test → mobile smoke test), with an explicit stop boundary: this task does not read `.env.local` or request secret values in chat — the user enters environment-variable values directly into Vercel (step 4) and Supabase dashboard credentials directly into Supabase (step 7).
 
 No deployment occurred. No Supabase write. No schema/RLS/function change. No secret file was inspected or its values printed.
+
+## Fresh Production Account District/Representation Initialization Audit
+
+Date: 08-20-2026
+Timestamp: 09:36 pm EST
+
+Status: **Read-only diagnosis complete. No Supabase write. No deployment.** Full record: `docs/internal_beta_fresh_account_district_initialization_audit.md`.
+
+**Production is confirmed live at `https://civicmarket.vercel.app`** — the deploy plan from earlier this day was executed by the user between sessions. A real first-production onboarding test (fresh account, ZIP 34953, invite-code signup through Civic DNA quiz completion, all steps working) surfaced two apparent anomalies, both diagnosed via read-only Supabase queries (temporary, zero-mutation service-role scripts, deleted immediately after use) and classified as **expected behavior, not bugs**:
+
+1. **Empty "My Current Officials"** — the fresh account's 3 auto-assigned `user_districts` rows (Mayor, County Commission At-Large, Florida Statewide — exactly matching current `ZIP_MANAGED_DISTRICTS` in `src/app/onboarding/zip/page.tsx`) are all districts structurally guaranteed to never have a directly-tied `current_officials` row (confirmed live: zero such rows exist for any of the three). The previously-verified `ec59ea92-...` test account only ever showed officials because of (a) a one-time, explicitly-approved test write to City Council District 1 (Gate I34, 08-08-2026) and (b) School Board District 1 / FL House District 85 rows created via a ZIP resubmission on 08-16-2026, *before* those two districts were removed from automatic assignment. **With current write guards and data state, every real fresh signup will see this same empty state** — this is the single most consequential finding of this audit.
+2. **Missing FL House District 85** — confirmed as the intended, already-committed result of the "Ballot Eligibility Phase 1 — School Board Anchor Correction" work recorded above (dated 08-20-2026, one day before this fresh account's signup): FL House District 85, FL Senate District 27, and School Board District 1 were all deliberately removed from `ZIP_MANAGED_DISTRICTS` because none was a safe ZIP-based default (PSL splits across FL House 84/85; FL Senate 27 is confirmed wrong entirely; School Board was an unverified representation claim). No verified-lookup flow exists for any of the three yet.
+
+**No code bug, ballot-eligibility bug, or officials-lookup bug was found.** No fix was implemented — three independently-approvable remediation paths were identified (a documentation-only empty-state copy tweak requiring no write; sourcing and seeding the long-open Mayor `current_officials` gap, requiring a new approved write; or enabling the already-built-and-tested `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` for real users, requiring a separate write-guard approval) and left for explicit user decision.
+
+The fresh production account was left completely untouched and remains available as a reproducible real-world test case. No `user_districts`, `current_officials`, `officials_for_user`, schema, RLS, or function change occurred. No secret value was read or printed — only the public env-var-derived service-role connection (already an established project pattern) was used for read-only queries. No deployment occurred.
 
