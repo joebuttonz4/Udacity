@@ -1,6 +1,6 @@
 # CivicMarket Current State
 
-Last updated: August 20, 2026 (Package C1 statewide ballot model complete — 5 statewide district rows, 4 election rows, and 14 certification-independent candidates live; fresh-user onboarding activation and the 8-user existing-user backfill both executed and verified; statewide ballot eligibility now works for both fresh and existing Florida users with no Current Officials representation impact; both write guards remain false; no deployment)
+Last updated: August 20, 2026 (Home Top Matches now sorts scored candidates first — Shannon Martin ranks #1 showing 66% match / Based on 4 Civic DNA dimensions, locked candidates follow alphabetically; Home-only change, /ballot ordering unchanged; no match-score math change, no writes, no deployment)
 
 ## Authoritative order
 
@@ -3492,4 +3492,19 @@ Read-only blast-radius capture found 8 eligible existing users and 0 already anc
 - Package B's local post-Primary reconciliation (`docs/candidate_import_package_b_post_certification.md`) remains deferred pending county certification.
 - The 25 Package C statewide certification-dependent candidates (Governor/Lt. Governor REP+DEM, Chief Financial Officer REP+DEM, Commissioner of Agriculture REP+DEM — see `docs/candidate_import_package_c_statewide.md` §4-§6) remain deferred pending an official results source and certification.
 - No result-dependent write (won/lost distinction, `is_incumbent` refinement, or any certification-dependent candidate insert) will be made until official certification evidence is separately verified and approved.
+
+## Home Top Matches Sorting
+
+Date: 08-20-2026
+Timestamp: 08:31 pm EST
+
+Status: **Implemented and live-verified. Home-only.** Full record: `docs/internal_beta_home_top_matches_sorting.md`.
+
+Root cause: Home's Top Matches preview (`src/app/page.tsx`) used `candidates.slice(0, 3)` with no sort — since the underlying `getCandidatesForDistricts` query orders alphabetically by name, the preview was effectively "first 3 candidates alphabetically." With the candidate pool now at 33 (Package C1 statewide import), the first 3 alphabetically were all locked, hiding Shannon Martin's real 66 match score entirely from "Top Matches."
+
+Fix: added a `topMatchesComparator` (scored candidates first, sorted by `match_score` descending, ties/locked candidates by name ascending, with a strict `isScored()` null/undefined check so a `0` score is never mistaken for locked) applied to a **copy** of the candidates array before slicing to 3. `src/lib/candidates.ts` and `/ballot`'s district-grouped ordering were **not touched** — live-verified `/ballot` still shows Shannon Martin in her original alphabetical position within the Mayor group. Helper text updated to "Your strongest available Civic DNA matches."
+
+Live-verified (hard refresh, already-authenticated `civicmarket.test.01@example.com` session): Shannon Martin now ranks #1 on Home showing "66% match" and "Based on 4 Civic DNA dimensions"; locked candidates (Amr Metwally, Anthony Bonna) follow in alphabetical order below her; "View Full Ballot" still navigates correctly; no layout clipping. `npm run build` passed (28 routes); `npm run lint` had only the 5 known pre-existing errors.
+
+No `match_scores`, `candidate_positions`, or `candidate_position_evidence` row was created, modified, or deleted. No match-score formula change. No ballot-eligibility change. No schema/RLS/function change. No deployment.
 

@@ -33,6 +33,31 @@ function computeCountdown(): Countdown {
   }
 }
 
+// Home-only "Top Matches" ranking. Does not mutate or reorder the shared
+// `candidates` array from getCandidatesForDistricts — /ballot groups that
+// same array by district and depends on its existing (name-ascending) order,
+// which must stay untouched. This comparator is applied to a copy, only for
+// building the Home preview list.
+//
+// A candidate counts as scored only when match_score is a finite number —
+// 0 is a real score and must sort above locked (null/undefined) candidates,
+// never be treated as falsy/missing.
+function isScored(score: number | null | undefined): score is number {
+  return score !== null && score !== undefined
+}
+
+function topMatchesComparator(a: CandidateWithContext, b: CandidateWithContext): number {
+  const aScored = isScored(a.match_score)
+  const bScored = isScored(b.match_score)
+
+  if (aScored && !bScored) return -1
+  if (!aScored && bScored) return 1
+  if (aScored && bScored && a.match_score !== b.match_score) {
+    return (b.match_score as number) - (a.match_score as number)
+  }
+  return a.name.localeCompare(b.name)
+}
+
 
 export default function HomePage() {
   const router = useRouter()
@@ -88,7 +113,7 @@ export default function HomePage() {
     return () => clearInterval(id)
   }, [])
 
-  const previewCandidates = candidates.slice(0, 3)
+  const previewCandidates = [...candidates].sort(topMatchesComparator).slice(0, 3)
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -173,7 +198,7 @@ export default function HomePage() {
                 </Link>
               </div>
               <p className="text-[#94A3B8] text-xs mb-4 [font-family:var(--font-instrument-sans)]">
-                Higher scores mean stronger alignment with your Civic DNA.
+                Your strongest available Civic DNA matches.
               </p>
 
               {previewCandidates.length === 0 ? (

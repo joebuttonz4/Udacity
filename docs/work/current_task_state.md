@@ -1,15 +1,16 @@
 # Current Task State
 
 ## Completed
-- Home match-score dimension coverage disclosure: COMPLETE. `docs/internal_beta_home_match_dimension_disclosure.md`. `src/lib/candidates.ts` (`getCandidatesForDistricts`) now generically computes `dimension_count` (non-null `candidate_positions` fields among the 7 `DIMENSIONS`, scoped only to scored candidates) alongside `match_score`; `src/app/page.tsx` Top Matches renders "Based on N Civic DNA dimensions" under the percentage for scored candidates, nothing extra for locked ones. Verified live for Shannon Martin (count = 4, via network capture + independent read-only re-query). Build + lint clean.
-- Home layout UX improvement: COMPLETE (commit `56ea311`). Reordered Home, relabeled sections.
+- Home Top Matches sorting fix: COMPLETE. `docs/internal_beta_home_top_matches_sorting.md`. `src/app/page.tsx` now sorts Home's preview list (scored candidates first, by score descending, ties/locked candidates by name ascending, 0 correctly treated as a real score) on a copy of the candidates array — `src/lib/candidates.ts` and `/ballot`'s ordering/grouping are untouched. Helper text updated to "Your strongest available Civic DNA matches." Live-verified: Shannon Martin now ranks #1 on Home showing "66% match" / "Based on 4 Civic DNA dimensions", locked candidates follow alphabetically, `/ballot` ordering confirmed unchanged. Build + lint clean.
+- Home UX "not visible" diagnosis: COMPLETE, no code fix was needed that time — root cause was stale dev server/browser; fixed by restarting the dev server (now PID 24744).
+- Home match-score dimension coverage disclosure: COMPLETE (commit `c51e296`).
+- Home layout UX improvement: COMPLETE (commit `56ea311`).
 - Home "My Current Officials" completeness audit: COMPLETE (commit `46b9e93`).
-- Shannon Martin candidate-evidence pilot: COMPLETE, end-to-end.
 
 ## Current findings
-- `dimension_count` is also silently available on `/ballot` now (same shared `CandidateWithContext` type/function), but `/ballot`'s JSX was not modified — out of this task's scope. A future task could surface it there too if desired.
-- Two separate unrelated concurrent-work diffs are present in the working tree and were left untouched both times they were encountered: `src/lib/ballotEligibility.ts` (self-resolved by its own session between tasks) and `src/app/onboarding/zip/page.tsx` (Package C1 "Florida Statewide" onboarding anchor, still uncommitted as of this task's end).
-- No match-score formula, ballot-eligibility logic, or database state was changed by this task.
+- Home's Top Matches preview is now score-aware; `/ballot`'s per-district candidate ordering intentionally remains alphabetical (unchanged, out of this task's scope) — a future task could consider whether `/ballot` should also surface scored candidates first within each district group, if desired.
+- The candidate pool has grown to 33 (concurrent, unrelated Package C1 statewide import work) — unaffected by and irrelevant to this fix beyond being the reason locked alphabetical candidates previously crowded out Shannon Martin.
+- Dev server PID 24744 (started during the prior session) is still running and correctly serving the latest code via Turbopack HMR — confirmed by live hard-refresh verification this session.
 
 ## Blockers
 - P0: no deploy target/domain; Supabase Auth URL config; real invite-code/email-confirmation verification (all deploy-time, downstream of having a domain).
@@ -17,5 +18,5 @@
 - Mayor `current_officials` row remains source-blocked (no official source URL yet) — unaffected by this session.
 
 ## Next action
-- Optional follow-up: surface `dimension_count` on `/ballot` as well, for consistency with Home (not requested yet).
+- Optional follow-up: consider score-aware ordering within `/ballot`'s district groups too, for consistency (not requested yet).
 - Otherwise: Milestone 1 of the beta launch plan — choose/provision a real deploy target and domain. Full sequence in `docs/internal_beta_launch_priority_review.md`.
