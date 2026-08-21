@@ -89,10 +89,10 @@ Established conventions across all three existing rows: `photo_url`, `website`, 
 | `next_election_date` | `NULL` | Only the year is verified, not an exact date (Phase 4) |
 | `source_url` | `https://www.cityofpsl.com/Government/Your-City-Government/Mayor-City-Council` | Primary official source, per source policy |
 | `source_label` | `City of Port St. Lucie Mayor & City Council page` | Matches established `"City of Port St. Lucie <page>"` label pattern |
-| `candidate_id` | `NULL` | Matches established convention (all 3 existing rows are NULL); see discretionary note below |
+| `candidate_id` | `d44ff05a-14af-45c2-9f2f-6d530a8a051e` | **Revised from an earlier NULL draft after re-verification — see corrected note below** |
 | `is_on_next_ballot` | `true` | **Deviation from the "false" convention, deliberate and source-backed** — see note below |
 
-**Discretionary note on `candidate_id`:** Shannon Martin already has an existing `candidates` table row (`d44ff05a-14af-45c2-9f2f-6d530a8a051e`, Mayor race, `is_incumbent: true`) — unlike the other three seeded officials, who have no matching `candidates` row at all. Linking `candidate_id` to that row would make her `current_officials` card clickable through to her candidate profile (per `OfficialCard`'s existing logic in `src/components/CurrentOfficialsSection.tsx`) and would suppress the (already-NULL) website link in favor of that internal link. This task proposes `NULL` to match the established convention exactly and avoid making an unrequested product-behavior decision; linking it is a reasonable, separately-approvable future enhancement, not part of this proposed row.
+**Corrected note on `candidate_id` (re-verified, not assumed from convention):** re-checked read-only whether the "NULL convention" on the three existing rows was a *deliberate choice to leave a real match unlinked*, or simply an *absence of any match to link*. Result: **the convention was never actually tested** — a fresh, explicit cross-check of `candidates` by name found **zero** matching rows for Stephanie Morgan, Debbie Hawley, or Tobin Rogers. None of the three existing officials has ever had a linkable `candidates` row at all, so their `NULL` values reflect "nothing existed to link," not "a match existed and was deliberately excluded." Shannon Martin is the **first** case where a real, exact, unambiguous match exists: `candidates.id = d44ff05a-14af-45c2-9f2f-6d530a8a051e` — same name, `office: 'Mayor'`, `district_id` identical to the Mayor district above, `is_incumbent: true` — confirmed live, re-verified in this response. **Recommendation: link it.** `candidate_id` and the `OfficialCard` component's own existing conditional (`if (official.candidate_id) return <Link href="/candidates/${id}">...`) were clearly built for exactly this case — routing a current officeholder's card to their fuller, evidence-backed candidate profile (funding, voting record, computed match score) rather than only an external city-government link. This is not inventing data: it is applying an already-verified, already-approved foreign-key relationship between two rows that both independently passed their own separate verification gates. The (already-NULL) `website` field is unaffected either way, since `OfficialCard` only shows it when `candidate_id` is absent.
 
 **Note on `is_on_next_ballot = true`:** every existing seeded official has `false`, but none of them is a declared candidate for their own seat in this app's current tracked election cycle. Shannon Martin is directly verified — by both the official Elections source quoted in this task and the app's own already-approved `candidates` table — to be a declared candidate for Mayor in the current cycle. Setting `true` is a correct, source-backed use of the field's own stated meaning, not an invented value.
 
@@ -116,7 +116,7 @@ INSERT INTO current_officials (
   NULL,
   'https://www.cityofpsl.com/Government/Your-City-Government/Mayor-City-Council',
   'City of Port St. Lucie Mayor & City Council page',
-  NULL,
+  'd44ff05a-14af-45c2-9f2f-6d530a8a051e',
   true
 );
 ```
@@ -130,6 +130,9 @@ SELECT count(*) FROM current_officials WHERE district_id = '11111111-0000-0000-0
 
 SELECT * FROM officials_for_user WHERE district_id = '11111111-0000-0000-0000-000000000006';
 -- expect exactly 3 rows (one per user currently holding the Mayor district), all "Shannon Martin"
+
+SELECT id, name, office FROM candidates WHERE id = 'd44ff05a-14af-45c2-9f2f-6d530a8a051e';
+-- confirms the linked candidate_id still resolves to Shannon Martin / Mayor
 ```
 
 **Exact rollback DELETE, scoped to exactly one known row (NOT EXECUTED):**
@@ -145,10 +148,11 @@ DELETE FROM current_officials WHERE id = '9b10d3fb-88b5-42f0-82cb-aad1720efa34';
 - **County Commission At-Large and Florida Statewide remain unresolved** (zero `current_officials` rows tied to either, unaffected by this insert) — so no other officials are pulled in.
 - **Stephanie Morgan, Debbie Hawley, and Tobin Rogers "Toby" Overdorf would NOT appear** for the fresh account, because their respective districts (City Council District 1, School Board District 1, FL House District 85) are not in the fresh account's `user_districts` — confirmed by the fresh-account audit (commit `4b45238`) and unaffected by this task.
 - **Home and Profile share the identical result** — both render the same shared `CurrentOfficialsSection` component (confirmed in the prior empty-state-copy task, commit `9205ec7`), which calls the same `getOfficialsForUser(userId)` — no divergence possible.
+- **With `candidate_id` linked**, Shannon Martin's `OfficialCard` becomes tappable — it would route to `/candidates/d44ff05a-14af-45c2-9f2f-6d530a8a051e` (her existing candidate profile: bio, funding, voting record, and her already-computed match score), the same behavior the component already implements for any official whose `candidate_id` is set. No code change is required for this — the existing `OfficialCard` logic already handles it.
 - The empty-state copy from the immediately prior task ("Your current officials will appear as your representation districts are verified.") would correctly stop rendering for these 3 users specifically (since `officials.length` would become 1, not 0), while remaining correct and unchanged for any user who does not hold the Mayor district.
 
 ## Approval boundary
 
-**STAGE B (the INSERT) is not executed by this task and will not be executed unless the user gives explicit, row-level approval of the exact proposed values above** — matching this project's established write-approval pattern (as used for every prior `current_officials` seed in this project). Approval must cover: the exact `id` UUID, all 15 proposed column values (including the two deliberate non-convention choices — `is_on_next_ballot = true` and the `candidate_id = NULL` discretionary note), the exact INSERT statement, and acknowledgment of the verification/rollback plan above.
+**STAGE B (the INSERT) is not executed by this task and will not be executed unless the user gives explicit, row-level approval of the exact proposed values above** — matching this project's established write-approval pattern (as used for every prior `current_officials` seed in this project). Approval must cover: the exact `id` UUID, all 15 proposed column values (including the two deliberate non-convention choices — `is_on_next_ballot = true` and `candidate_id = 'd44ff05a-14af-45c2-9f2f-6d530a8a051e'`, both re-verified and explained above), the exact INSERT statement, and acknowledgment of the verification/rollback plan above.
 
 No schema, RLS, function, `user_districts`, ballot-eligibility, or write-guard change was made or is proposed. No deployment occurred. No unrelated Gemini-migration work was touched.
