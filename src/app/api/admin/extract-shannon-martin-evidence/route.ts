@@ -1,30 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase-server'
+import { getEvidenceProvider, resolveEvidenceProviderName } from '@/lib/candidateEvidence/provider'
+import { EvidenceProviderConfigError, EvidenceProviderRequestError } from '@/lib/candidateEvidence/types'
 
 // ============================================================================
 // Gate I40 — Shannon Martin draft-only campaign evidence extraction.
 //
-// verified URL -> fetch -> extract text -> Claude draft JSON -> validate ->
+// verified URL -> fetch -> extract text -> model draft JSON -> validate ->
 // return draft for human review. NO Supabase write of any kind occurs in
 // this file — not even behind a flag. The evidence-insert step is a
 // separate, not-yet-built, separately-approved future gate.
 //
 // While ENABLE_CAMPAIGN_EVIDENCE_EXTRACTION is false, this route fetches the
 // approved source pages and assembles the exact prompt that would be sent,
-// but never calls the Anthropic API. This mirrors the
+// but never calls a model provider. This mirrors the
 // ENABLE_CITY_COUNCIL_DISTRICT_WRITE / ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE
 // disabled-by-default pattern used elsewhere in this project — flip only
 // with explicit, separate approval, and only temporarily.
+//
+// Provider selection (Anthropic vs Gemini) is centralized in
+// src/lib/candidateEvidence/provider.ts — see
+// docs/gemini_candidate_evidence_migration.md. This route has no knowledge
+// of which provider is in use beyond the returned diagnostics; the prompt,
+// schema, and validation logic below are identical regardless of provider.
 // ============================================================================
 const ENABLE_CAMPAIGN_EVIDENCE_EXTRACTION = false
 
-const CANDIDATE_ID = 'd44ff05a-14af-45c2-9f2f-6d530a8a051e' // Shannon Martin
-const METHODOLOGY_VERSION = 'campaign_evidence_v1_2026-08'
-const SOURCE_TYPE = 'campaign_website'
-const ANTHROPIC_MODEL = 'claude-sonnet-5'
+export const CANDIDATE_ID = 'd44ff05a-14af-45c2-9f2f-6d530a8a051e' // Shannon Martin
+export const METHODOLOGY_VERSION = 'campaign_evidence_v1_2026-08'
+export const SOURCE_TYPE = 'campaign_website'
 
 // Closed set, per Gate I38's verified sources. Never derived from user input.
-const APPROVED_SOURCES = [
+export const APPROVED_SOURCES = [
   'https://martinforpslmayor.com/',
   'https://martinforpslmayor.com/about-shannon-martin/',
   'https://martinforpslmayor.com/biography/',
@@ -134,7 +141,7 @@ const DIMENSION_DEFINITIONS: Record<DimensionKey, { plus: string; minus: string;
   },
 }
 
-type EvidenceDraft = {
+export type EvidenceDraft = {
   candidate_id: string
   dimension: string
   score: number | null
@@ -149,7 +156,7 @@ type EvidenceDraft = {
   extraction_status: 'draft'
 }
 
-type FetchedSource = {
+export type FetchedSource = {
   url: string
   ok: boolean
   text: string
@@ -302,7 +309,7 @@ Return the JSON object as specified in the system prompt.`
 // returned unchanged so JSON.parse rejects it exactly as it did before this
 // fix — this function never widens what is accepted, only what is stripped.
 // ----------------------------------------------------------------------------
-function normalizeModelJson(text: string): string {
+export function normalizeModelJson(text: string): string {
   const trimmed = text.trim()
   const fenceCount = (trimmed.match(/```/g) ?? []).length
   if (fenceCount === 2) {
@@ -322,7 +329,7 @@ function normalizeModelJson(text: string): string {
 // repairs, or reflows JSON — it only classifies an already-failed
 // JSON.parse() for a clearer error message.
 // ----------------------------------------------------------------------------
-function looksLikelyTruncated(text: string): boolean {
+export function looksLikelyTruncated(text: string): boolean {
   const trimmed = text.trim()
   if (trimmed.length === 0) return false
   const openBraces = (trimmed.match(/\{/g) ?? []).length
@@ -398,7 +405,7 @@ function isUnsupportedParcelSpecificNegativeGrowthEvidence(rationale: string): b
 // Validation — Gate I39 §7 / Gate I40 §6. Server-side, independent of the
 // model's own claims. Any row failing any rule is rejected, not coerced.
 // ----------------------------------------------------------------------------
-function validateEvidenceRow(
+export function validateEvidenceRow(
   raw: unknown,
   fetchedByUrl: Map<string, FetchedSource>
 ): { valid: true; row: EvidenceDraft } | { valid: false; reason: string; raw: unknown } {
@@ -511,7 +518,7 @@ function validateEvidenceRow(
 // Defense in depth: even if the model didn't self-flag a conflict, catch any
 // two validated rows for the same dimension with opposite-sign non-null
 // scores and mark both as needing review, rather than silently keeping both.
-function crossCheckConflicts(rows: EvidenceDraft[]): EvidenceDraft[] {
+export function crossCheckConflicts(rows: EvidenceDraft[]): EvidenceDraft[] {
   const byDimension = new Map<string, EvidenceDraft[]>()
   for (const row of rows) {
     const list = byDimension.get(row.dimension) ?? []
@@ -594,15 +601,18 @@ export async function POST(req: NextRequest) {
   const systemPrompt = buildSystemPrompt()
   const userPrompt = buildUserPrompt(sources)
 
+  const providerName = resolveEvidenceProviderName()
+  const provider = getEvidenceProvider(providerName)
+
   if (!ENABLE_CAMPAIGN_EVIDENCE_EXTRACTION) {
     // --- Gate I40 dry-run boundary ---------------------------------------
-    // No Anthropic call occurs while this flag is false. Nothing below this
+    // No provider call occurs while this flag is false. Nothing below this
     // block may run. Do not remove or bypass this guard without a separate,
-    // explicit approval authorizing the live Anthropic call.
+    // explicit approval authorizing the live model call.
     // -----------------------------------------------------------------------
     return NextResponse.json({
       dryRun: true,
-      message: 'Anthropic call disabled pending explicit approval. No model call was made.',
+      message: 'Model call disabled pending explicit approval. No model call was made.',
       candidateId: CANDIDATE_ID,
       methodologyVersion: METHODOLOGY_VERSION,
       inScopeDimensions: IN_SCOPE_DIMENSIONS,
@@ -613,7 +623,8 @@ export async function POST(req: NextRequest) {
         extractedTextLength: s.text.length,
         extractedTextPreview: s.text.slice(0, 400),
       })),
-      model: ANTHROPIC_MODEL,
+      provider: provider.name,
+      model: provider.model,
       systemPrompt,
       userPrompt,
     })
@@ -623,78 +634,31 @@ export async function POST(req: NextRequest) {
   // BLOCKED PENDING APPROVAL: unreachable while ENABLE_CAMPAIGN_EVIDENCE_EXTRACTION
   // is false, per the guard above.
   // ---------------------------------------------------------------------------
-  if (!process.env.ANTHROPIC_API_KEY) {
-    return NextResponse.json({ error: 'ANTHROPIC_API_KEY is not configured.' }, { status: 500 })
-  }
-
-  let anthropicRes: Response
+  let combinedText: string
+  let responseDiagnostics: Record<string, unknown>
   try {
-    anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: ANTHROPIC_MODEL,
-        max_tokens: 6000,
-        // Gate I44 fix — claude-sonnet-5 runs adaptive (on-by-default)
-        // extended thinking when `thinking` is omitted, which is what
-        // produced the unrequested "thinking" content block Gate I43
-        // observed consuming part of the max_tokens budget. `{ type:
-        // "disabled" }` is an accepted value for this model (unlike some
-        // newer models where disabling thinking 400s) and is GA — no
-        // anthropic-beta header required.
-        thinking: { type: 'disabled' },
-        system: systemPrompt,
-        messages: [{ role: 'user', content: userPrompt }],
-      }),
-      signal: AbortSignal.timeout(60000),
-    })
+    const result = await provider.extract({ systemPrompt, userPrompt, maxOutputTokens: 6000 })
+    combinedText = result.rawText
+    responseDiagnostics = { ...result.diagnostics }
   } catch (err) {
+    if (err instanceof EvidenceProviderConfigError) {
+      return NextResponse.json({ error: err.message }, { status: 500 })
+    }
+    if (err instanceof EvidenceProviderRequestError) {
+      return NextResponse.json(
+        { error: err.message, status: err.status ?? null, detail: err.detail ?? null },
+        { status: 502 }
+      )
+    }
     return NextResponse.json(
-      { error: 'Anthropic request failed', detail: err instanceof Error ? err.message : String(err) },
+      { error: 'Provider request failed', detail: err instanceof Error ? err.message : String(err) },
       { status: 502 }
     )
   }
 
-  if (!anthropicRes.ok) {
-    const detail = await anthropicRes.text()
-    return NextResponse.json({ error: `Anthropic API error ${anthropicRes.status}`, detail }, { status: 502 })
-  }
-
-  const anthropicJson = (await anthropicRes.json()) as {
-    content?: { type: string; text?: string }[]
-    stop_reason?: string | null
-    stop_sequence?: string | null
-  }
-
-  // Gate I42 fix — the prior implementation used
-  // content?.find((c) => c.type === 'text')?.text, which silently discarded
-  // every text block after the first. Anthropic responses can contain more
-  // than one text-type content block; only non-text block types are
-  // excluded here, and text blocks are never reordered — only concatenated
-  // in the order Anthropic returned them.
-  const contentBlocks = anthropicJson.content ?? []
-  const textBlocks = contentBlocks.filter((block) => block.type === 'text').map((block) => block.text ?? '')
-  const combinedText = textBlocks.join('')
-
-  // Safe response diagnostics only. Never includes API keys, bearer tokens,
-  // auth cookies, or any other secret — every field here is derived solely
-  // from Anthropic's own response shape/metadata and block character counts.
-  const responseDiagnostics = {
-    stopReason: anthropicJson.stop_reason ?? null,
-    stopSequence: anthropicJson.stop_sequence ?? null,
-    contentBlockCount: contentBlocks.length,
-    contentBlockTypes: contentBlocks.map((block) => block.type),
-    textBlockLengths: textBlocks.map((text) => text.length),
-    combinedTextLength: combinedText.length,
-  }
-
-  if (textBlocks.length === 0) {
+  if (combinedText.trim().length === 0) {
     return NextResponse.json(
-      { error: 'Anthropic response contained no text content blocks.', responseDiagnostics },
+      { error: `${provider.name} response contained no text content.`, responseDiagnostics },
       { status: 502 }
     )
   }
@@ -756,7 +720,8 @@ export async function POST(req: NextRequest) {
     dryRun: false,
     candidateId: CANDIDATE_ID,
     methodologyVersion: METHODOLOGY_VERSION,
-    model: ANTHROPIC_MODEL,
+    provider: provider.name,
+    model: provider.model,
     responseDiagnostics,
     sourcesFetched: sources.map((s) => ({ url: s.url, ok: s.ok, error: s.error ?? null })),
     validatedEvidence: validated,
