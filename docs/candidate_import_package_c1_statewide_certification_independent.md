@@ -1,6 +1,6 @@
 # Candidate Import Package C1 — Statewide Ballot Model, Certification-Independent Subset
 
-Status: **Architecture approved. §6a executed and verified PASS (`docs/candidate_import_package_c1_6a_execution_result.md`). Fresh-user onboarding activation applied and verified (§12). §6b existing-user backfill remains NOT AUTHORIZED / NOT EXECUTED.** Both existing write guards (`ENABLE_CITY_COUNCIL_DISTRICT_WRITE`, `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE`) remain `false`, untouched — this workstream introduces no new guard because it introduces no new write-capable API route.
+Status: **Architecture approved. §6a executed and verified PASS (`docs/candidate_import_package_c1_6a_execution_result.md`). Fresh-user onboarding activation applied and verified (§12). §6b existing-user backfill EXECUTED and VERIFICATION PASSED (§15) — all 8 eligible existing users now hold the Florida Statewide anchor.** Both existing write guards (`ENABLE_CITY_COUNCIL_DISTRICT_WRITE`, `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE`) remain `false`, untouched — this workstream introduces no new guard because it introduces no new write-capable API route.
 
 Date: 08-20-2026
 
@@ -467,3 +467,50 @@ COMMIT;
 2. A separate, explicit approval to execute §6b's `INSERT` (§14.6) — this document only prepares that approval, it does not grant it.
 
 No `user_districts`, `districts`, `elections`, `candidates`, `current_officials`, schema, RLS, grant, policy, or function was modified by this capture. Both write guards remain `false`. No deployment occurred. The temporary read-only capture script was deleted immediately after its one run; `git status` was confirmed clean afterward. No unrelated concurrent-session file was touched.
+
+## 15. §6b execution result — EXECUTED, VERIFICATION PASSED
+
+Status: **EXECUTED. VERIFICATION PASSED.** Date: 08-20-2026.
+
+### 15.1 Immediate pre-execution drift check (matched exactly — proceeded)
+
+| Check | Expected (§14) | Actual (re-checked immediately before writing) | Match |
+|---|---|---|---|
+| Total distinct existing users | 8 | 8 | ✅ |
+| Already anchored | 0 | 0 | ✅ |
+| Eligible for backfill | 8 | 8 | ✅ |
+| Eligible user-ID set | §14.3's 8 IDs | identical set | ✅ |
+| Florida Statewide anchor district exists | yes | yes | ✅ |
+| `current_officials` rows referencing the anchor or any of the 4 office districts | 0 | 0 | ✅ |
+| Pre-write `user_districts` total | 41 | 41 | ✅ |
+
+No drift found. Execution proceeded exactly as approved.
+
+### 15.2 Execution method
+
+A temporary, one-time Node script (service-role client, key loaded internally from `.env.local`, never printed) first re-ran the exact read-only drift check above, then — only because every check matched — performed **one single `.insert()` call** on `user_districts` (8 rows, one per eligible user, `district_id` = the Florida Statewide anchor, `scope: 'state'`), then ran the read-only post-write verification below in the same run. No `.update()`, `.delete()`, or `.upsert()` call exists anywhere in the script. The script was deleted immediately after this one run; `git status` confirmed a clean working tree afterward.
+
+### 15.3 Result — all verified live in the same run
+
+- **Users inserted: 8/8** — exactly the §14.3 list, no more, no fewer.
+- **`user_districts` total: 41 → 49** (exactly +8).
+- **No duplicate anchors:** each of the 8 users holds exactly one Florida Statewide row.
+- **No unexpected/ninth user received it:** the post-write anchor-holder set is exactly the 8 expected IDs, nothing else.
+- **All prior rows remain intact:** the +8 delta accounts for the entire total-row increase; no existing row was deleted, updated, or replaced (the script never called anything but `.insert()`).
+- **`current_officials` unchanged:** 9 → 9; 0 rows reference the anchor or any of the 4 statewide office districts, both before and after.
+- **Statewide ballot eligibility now works for these 8 users** (code trace, unchanged logic since §12): each now holds the anchor, so `getBallotEligibilityMode` resolves `'statewide'` and `getExpansionJurisdictions` expands to the 5 live `type='statewide'` districts, making the 14 certification-independent candidates (§6a) ballot-eligible for all 8.
+- **FL House/Senate remain exact-district only:** `ballotEligibility.ts` was not touched by this execution (no rule exists for `type='state'`); unaffected.
+- **City Council / County Commission / School Board / House / Senate assignments untouched:** confirmed structurally (insert-only script) and by the exact +8 row-count delta.
+- **Write guards confirmed `false`:** `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` (`src/app/api/set-city-council-district/route.ts:10`) and `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` (`src/app/api/set-county-commission-district/route.ts:9`), neither touched this turn.
+- **No deployment occurred.**
+
+### 15.4 Not done (per explicit approval scope)
+
+- No certification-dependent candidate was inserted.
+- No schema/RLS/grant/function was changed.
+- No unrelated concurrent-session file was touched.
+- No rollback was run (verification passed; nothing to roll back).
+
+### 15.5 No-change confirmation
+
+Beyond the one explicitly approved `user_districts` insert (8 rows, §15.2-15.3), no other table, schema, RLS, grant, policy, or function was modified. Both write guards remain `false`. No deployment occurred. This document is the only file changed and committed for this task.
