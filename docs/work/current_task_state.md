@@ -1,21 +1,20 @@
 # Current Task State
 
 ## Completed
-- Home final UX review for controlled beta: COMPLETE, **READY**. `docs/internal_beta_home_final_ux_review.md`. Live-reviewed the running Home page (hard refresh, desktop width + 200% zoom mobile approximation, live nav click test). No must-fix issues found — hierarchy, spacing, density, section distinctness, locked/scored candidate clarity, and mobile rendering all passed. No code changes made (only cosmetic-preference-level nice-to-haves identified, per instruction not implemented). Mayor gap reconfirmed as a data issue, not a UI confusion problem — left deferred, no placeholder added.
+- Deploy target and domain plan: COMPLETE. `docs/internal_beta_deploy_target_domain_plan.md`. Confirmed repo is directly Vercel-deployable with zero code changes (standard Next.js App Router, no middleware, no filesystem/cron assumptions, no hardcoded localhost, no hardcoded auth redirects — Supabase dashboard config drives redirects entirely). Full env-var inventory by name only (no values read): `NEXT_PUBLIC_SUPABASE_URL`/`NEXT_PUBLIC_SUPABASE_ANON_KEY` (public), `SUPABASE_SERVICE_ROLE_KEY`/`INVITE_CODE` (server secrets, required for real signup + full onboarding experience), `ANTHROPIC_API_KEY`/`GEMINI_API_KEY` + 2 config vars (server secrets, optional/future — candidate-evidence extraction is hardcoded disabled). Recommended: Vercel, production branch `master`, deploy first to generated `*.vercel.app`, attach custom domain later. Supabase Auth URL plan designed (Site URL + Redirect URLs pattern, keep localhost). Zero BLOCKER-classified risks found; two FOLLOW-UP items (env vars must be set before real signup works; unrelated uncommitted concurrent work not part of this deploy). 11-step interactive deployment sequence documented with explicit stop boundary at env-var-value entry (step 4) and Supabase dashboard credential entry (step 7).
+- Home final UX review for controlled beta: COMPLETE, READY (commit `cbb7419`).
 - Home Top Matches sorting fix: COMPLETE (commit `11555fa`).
 - Home match-score dimension coverage disclosure: COMPLETE (commit `c51e296`).
 - Home layout UX improvement: COMPLETE (commit `56ea311`).
-- Home "My Current Officials" completeness audit: COMPLETE (commit `46b9e93`).
 
 ## Current findings
-- Home is considered UX-ready for controlled beta as currently implemented; no further Home-specific polish is required before deployment.
-- Two nice-to-have items documented for optional future polish (not implemented): further visual de-emphasis of CivicMarket Status cards; a "View all" affordance for Your Ballot Races if the chip count grows much larger.
-- Unrelated concurrent uncommitted change present in the working tree throughout this session: `package.json`/`package-lock.json` adding `@google/genai` (Gemini migration prep) — left untouched, not part of any commit made in Home-review sessions.
+- This was planning-only — no Vercel project created, no Supabase Auth URLs changed, no secrets accessed. The next action is entirely the user's: sign into Vercel, import the repo, and provide the 4 required env-var values directly into Vercel's own UI.
+- Unrelated concurrent uncommitted work remains in the working tree (`package.json`/`package-lock.json` adding `@google/genai`; untracked `src/lib/candidateEvidence/` + modified `extract-shannon-martin-evidence` route) — not part of this deploy plan, correctly left untouched. Today's `master` (through `cbb7419` plus this task's commit) is fully deployable without that work.
+- No `.env.local` values were read or printed at any point in this task — only variable names were identified via source-code search.
 
 ## Blockers
-- P0: no deploy target/domain; Supabase Auth URL config; real invite-code/email-confirmation verification (all deploy-time, downstream of having a domain).
-- P1: Gemini migration (in progress concurrently, not by this task); mobile smoke test on 4 auth-gated screens; candidate-evidence coverage scaling.
-- Mayor `current_officials` row remains source-blocked (no official source URL yet) — unaffected by this session, reconfirmed not a live UI confusion problem.
+- None classified as a hard BLOCKER for deployment itself. FOLLOW-UP: the 4 required env vars (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `INVITE_CODE`) must be entered by the user directly into Vercel before a real signup test can succeed.
+- Gemini migration and candidate-evidence coverage scaling remain separate, unrelated in-progress/future work.
 
 ## Next action
-- Home UX workstream is closed for now (READY). Return to the broader Internal Beta launch plan: Milestone 1 — choose/provision a real deploy target and domain. Full sequence in `docs/internal_beta_launch_priority_review.md`.
+- User decision: sign into Vercel and begin the import flow (Phase 7, step 1 of the plan doc). Claude stops and waits at step 4 (entering actual env-var values) and step 7 (Supabase dashboard credentials) — those are explicitly the user's own steps.

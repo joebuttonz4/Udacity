@@ -1,6 +1,6 @@
 # CivicMarket Current State
 
-Last updated: August 20, 2026 (Gemini candidate-evidence migration — implementation complete, offline-tested, default provider still Anthropic; no live Gemini call made, no Supabase write, no deployment)
+Last updated: August 20, 2026 (Deploy target and domain plan complete — repo confirmed directly Vercel-deployable with zero code changes, env-var inventory and Supabase Auth URL plan documented, no BLOCKER risks found; planning only, no deployment, no secrets accessed)
 
 ## Authoritative order
 
@@ -3546,4 +3546,23 @@ Required pre-beta item: replace the Anthropic/Claude candidate-evidence extracti
 **Migration sequence (per the linked doc):** (1) Gemini implementation ✓ this task; (2) same-input Anthropic-vs-Gemini comparison — blocked on live credentials; (3) parity review; (4) switch default provider to Gemini; (5) retain Anthropic as fallback temporarily; (6) remove Anthropic only after beta confidence. Default provider is **still Anthropic** — nothing changes for any real caller as a result of this task.
 
 No `candidate_position_evidence`, `candidate_positions`, or `match_scores` row was created, modified, or read. No Anthropic or Gemini API call was made. No Supabase write was performed. No schema/RLS/function change. No deployment occurred.
+
+## Deploy Target and Domain Plan
+
+Date: 08-20-2026
+Timestamp: 08:41 pm EST
+
+Status: **Planning complete. No deployment. No Vercel project created. No Supabase Auth URLs changed. No secrets accessed.** Full record: `docs/internal_beta_deploy_target_domain_plan.md`.
+
+Confirmed by source inspection that the repository is **directly deployable to Vercel with zero code changes**: standard Next.js App Router (`next.config.ts` is empty/default, no `vercel.json`, no `middleware.ts`), no filesystem access anywhere in `src/` (only the manual, non-deployed `scripts/*.cjs` tools touch the filesystem), no cron/background-job assumptions (the only `setInterval` is the client-side election countdown), zero hardcoded `localhost` references, and zero hardcoded auth-redirect URLs — `supabase.auth.signUp()` is called with no `emailRedirectTo`, so redirect behavior is entirely delegated to the Supabase dashboard's Site URL / Redirect URL configuration, meaning no app code needs to change across environments.
+
+**Env-var inventory (names only, no values read):** `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` (public, required for basic load); `SUPABASE_SERVICE_ROLE_KEY` (server secret, powers `compute-match-scores` — onboarding degrades gracefully without it, all rings just stay locked) and `INVITE_CODE` (server secret, signup fails closed without it); `ANTHROPIC_API_KEY` / `GEMINI_API_KEY` / `CANDIDATE_EVIDENCE_PROVIDER` / `GEMINI_EVIDENCE_MODEL` (server secrets/config, optional/future — the candidate-evidence extraction route remains hardcoded `ENABLE_CAMPAIGN_EVIDENCE_EXTRACTION = false`, unreachable regardless of these).
+
+**Recommendation:** Vercel, production branch `master`, deploy first to the generated `*.vercel.app` domain to validate the pipeline, then attach a custom beta subdomain afterward (no domain ownership assumed or confirmed), then finalize Supabase Auth URLs once.
+
+**Risk check:** zero items classified BLOCKER. All three write guards (`ENABLE_CITY_COUNCIL_DISTRICT_WRITE`, `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE`, `ENABLE_CAMPAIGN_EVIDENCE_EXTRACTION`) are hardcoded source constants, not env-var-driven, so no Vercel misconfiguration can flip them. Service-role key usage confirmed server-only. Two items marked FOLLOW-UP (not blockers): the 4 required env vars must be entered by the user directly into Vercel before real signup works; today's `master` does not yet include the unrelated, still-uncommitted concurrent Gemini-migration work, which is not needed for this deployment milestone.
+
+An 11-step interactive deployment sequence was documented (sign into Vercel → import repo → configure project → add env vars → deploy → capture URL → configure Supabase Auth → test signup → attach custom domain → re-test → mobile smoke test), with an explicit stop boundary: this task does not read `.env.local` or request secret values in chat — the user enters environment-variable values directly into Vercel (step 4) and Supabase dashboard credentials directly into Supabase (step 7).
+
+No deployment occurred. No Supabase write. No schema/RLS/function change. No secret file was inspected or its values printed.
 
