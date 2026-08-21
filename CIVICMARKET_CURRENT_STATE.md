@@ -1,6 +1,6 @@
 # CivicMarket Current State
 
-Last updated: August 20, 2026 (Home Top Matches now sorts scored candidates first — Shannon Martin ranks #1 showing 66% match / Based on 4 Civic DNA dimensions, locked candidates follow alphabetically; Home-only change, /ballot ordering unchanged; no match-score math change, no writes, no deployment)
+Last updated: August 20, 2026 (Home final UX review complete — READY for controlled beta; live-reviewed at desktop and mobile-approximation widths, no must-fix issues found, no code changes made; Mayor gap reconfirmed as a data issue not a UI confusion problem; no writes, no deployment)
 
 ## Authoritative order
 
@@ -3507,4 +3507,19 @@ Fix: added a `topMatchesComparator` (scored candidates first, sorted by `match_s
 Live-verified (hard refresh, already-authenticated `civicmarket.test.01@example.com` session): Shannon Martin now ranks #1 on Home showing "66% match" and "Based on 4 Civic DNA dimensions"; locked candidates (Amr Metwally, Anthony Bonna) follow in alphabetical order below her; "View Full Ballot" still navigates correctly; no layout clipping. `npm run build` passed (28 routes); `npm run lint` had only the 5 known pre-existing errors.
 
 No `match_scores`, `candidate_positions`, or `candidate_position_evidence` row was created, modified, or deleted. No match-score formula change. No ballot-eligibility change. No schema/RLS/function change. No deployment.
+
+## Home Final UX Review — Controlled Beta Readiness
+
+Date: 08-20-2026
+Timestamp: 08:34 pm EST
+
+Status: **READY for controlled beta. Live review only — no code changes made.** Full record: `docs/internal_beta_home_final_ux_review.md`.
+
+Live-reviewed the running Home page (hard refresh, already-authenticated `civicmarket.test.01@example.com` session, desktop width and a 200% CSS-zoom mobile approximation) against the expected hierarchy from commits `56ea311`/`c51e296`/`11555fa`. All Phase 4 acceptance criteria passed: Shannon Martin ranks first in Top Matches with "66% match" / "Based on 4 Civic DNA dimensions" visible with no clipping; locked candidates are clearly distinguished; My Current Officials renders above Your Ballot Races with unchanged content (Debbie Hawley, Stephanie Morgan, Toby Overdorf); Your Ballot Races (chip cloud) is visually and textually distinct from Current Officials (card list); CivicMarket Status reads as secondary/meta content, not live civic news; the pilot disclaimer is appropriately unobtrusive; bottom navigation was live-clicked and confirmed working; no mobile clipping was found; page length is proportionate to its content.
+
+No must-fix issues were found. Two cosmetic-preference-level nice-to-haves were documented but not implemented, per instruction (further visual de-emphasis of CivicMarket Status; a future "View all" affordance for Your Ballot Races if the chip count grows much larger).
+
+**Mayor gap reconfirmed as a data issue, not a UI confusion problem:** "Mayor" appears as a Your Ballot Races chip but not in My Current Officials (no `current_officials` row exists for Mayor yet, source-blocked, unchanged). The Your Ballot Races helper text already explicitly disambiguates the two lists, so this was judged not confusing on the live page. No placeholder was created; the gap remains deferred exactly as previously documented.
+
+No Supabase write. No representation, ballot-eligibility, or match-score logic touched. No schema/RLS/function change. No deployment.
 
