@@ -1,6 +1,6 @@
 # CivicMarket Current State
 
-Last updated: August 20, 2026 (Current Officials empty-state copy clarified on Home and Profile — now explains representation-district verification instead of implying missing data; copy-only, no data/query behavior changed, no writes, no deployment)
+Last updated: August 20, 2026 (Mayor current_official source verification and seed approval package prepared — STAGE A complete, exact proposed row/INSERT/verification/rollback drafted; STAGE B write NOT executed, pending explicit user row-level approval)
 
 ## Authoritative order
 
@@ -3623,4 +3623,21 @@ The old copy implied the only cause of an empty section was a data backlog; the 
 `npm run build` passed (28 routes, no errors). `npm run lint` had only the 5 known pre-existing errors. Live-verified: populated Current Officials unchanged on both Home and Profile for `civicmarket.test.01@example.com`; the new empty-state text was visually verified via a reversible, client-side-only DOM substitution (no real account's data was touched, no network/Supabase call was made by the check itself, and the page was fully reloaded immediately after, restoring the normal populated render) — confirmed correct spacing, hierarchy, and no clipping.
 
 Both substantive remediation paths identified by the prior audit (sourcing/seeding the Mayor `current_officials` row; enabling `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` for real users) remain open, undecided, and unaffected by this task — this task addressed only the messaging layer.
+
+## Mayor Current Official — Source Verification and Seed Approval Package
+
+Date: 08-20-2026
+Timestamp: 09:56 pm EST
+
+Status: **STAGE A (read-only verification + exact write package) complete. STAGE B (the INSERT) NOT executed — pending explicit user row-level approval.** Full record: `docs/internal_beta_mayor_current_official_source_and_seed_approval.md`.
+
+Resolves the long-open "Current Officials — Mayor district gap" using only official City of Port St. Lucie sources (Mayor & City Council page as primary; Elections page and a January-2026 City document as corroboration), per explicit source policy — no campaign, Wikipedia, or news sources used. Both `cityofpsl.com` URLs returned HTTP 403 to this session's own `WebFetch` attempts (consistent with the same domain's already-documented behavior in Milestone 2B) — source content used exactly as supplied.
+
+**Read-only verification, all confirmed live:** Mayor district id `11111111-0000-0000-0000-000000000006` (unchanged, same anchor `ZIP_MANAGED_DISTRICTS` assigns today); zero existing `current_officials` rows for Mayor; zero existing "Shannon Martin" rows anywhere in the table; exactly 3 users system-wide currently hold the Mayor district (the fresh production account plus two known prior test accounts) — confirmed exact blast radius, no surprises.
+
+**Exact proposed row prepared** (UUID `9b10d3fb-88b5-42f0-82cb-aad1720efa34`, 15 columns): name "Shannon Martin", office "Mayor", `district_id` as above, `jurisdiction_level: city`, `source_url` the primary City page, `source_label` "City of Port St. Lucie Mayor & City Council page". `photo_url`/`website`/`bio`/`term_start`/`term_end`/`next_election_date` all `NULL` (matching established convention; only a *year*, not an exact term-end date, was verified). Two deliberate, source-backed deviations from raw convention-copying: `is_on_next_ballot = true` (she is a verified declared 2026 Mayor candidate, per both the Elections source and the app's own already-approved `candidates` row) and `candidate_id = NULL` (matches convention, flagged as a separate future linking decision, not part of this row). Exact INSERT, verification SELECT, and single-row-scoped rollback DELETE were all drafted and are documented — **none were executed**.
+
+**Expected effect if approved:** for the fresh account and the two other Mayor-holding accounts, "My Current Officials" would show exactly Shannon Martin as Mayor via the unmodified `officials_for_user` view; County Commission At-Large and Florida Statewide remain unresolved (no change); Stephanie Morgan/Debbie Hawley/Toby Overdorf would not be added for any of these accounts (different districts). Home and Profile share the identical result via the same `CurrentOfficialsSection` component.
+
+No database write, schema, RLS, function, `user_districts`, ballot-eligibility, or write-guard change occurred. No deployment. No unrelated Gemini-migration work was touched.
 
