@@ -1,6 +1,6 @@
 # CivicMarket Current State
 
-Last updated: August 20, 2026 (Home final UX review complete — READY for controlled beta; live-reviewed at desktop and mobile-approximation widths, no must-fix issues found, no code changes made; Mayor gap reconfirmed as a data issue not a UI confusion problem; no writes, no deployment)
+Last updated: August 20, 2026 (Gemini candidate-evidence migration — implementation complete, offline-tested, default provider still Anthropic; no live Gemini call made, no Supabase write, no deployment)
 
 ## Authoritative order
 
@@ -3522,4 +3522,28 @@ No must-fix issues were found. Two cosmetic-preference-level nice-to-haves were 
 **Mayor gap reconfirmed as a data issue, not a UI confusion problem:** "Mayor" appears as a Your Ballot Races chip but not in My Current Officials (no `current_officials` row exists for Mayor yet, source-blocked, unchanged). The Your Ballot Races helper text already explicitly disambiguates the two lists, so this was judged not confusing on the live page. No placeholder was created; the gap remains deferred exactly as previously documented.
 
 No Supabase write. No representation, ballot-eligibility, or match-score logic touched. No schema/RLS/function change. No deployment.
+
+## Gemini Candidate-Evidence Migration (Pre-Beta)
+
+Date: August 20, 2026
+
+Status: **Implementation complete, offline-tested. Default provider remains Anthropic. No live Gemini call made. No Supabase write. No deployment.** Full record: `docs/gemini_candidate_evidence_migration.md`.
+
+Required pre-beta item: replace the Anthropic/Claude candidate-evidence extraction path (`src/app/api/admin/extract-shannon-martin-evidence/route.ts`, the only route that has ever called a text-generation model in this project) with Gemini, without redoing candidate research/scoring architecture or touching any stored `candidate_position_evidence` data.
+
+**Provider abstraction added:** new `src/lib/candidateEvidence/` — `types.ts` (`EvidenceProvider` interface + `EvidenceProviderConfigError`/`EvidenceProviderRequestError`), `providers/anthropic.ts` (the prior inline Anthropic `fetch` call, relocated with no behavior change), `providers/gemini.ts` (new, `@google/genai`-based), `provider.ts` (`CANDIDATE_EVIDENCE_PROVIDER` env var, defaults to `anthropic`; `GEMINI_EVIDENCE_MODEL` env var, defaults to `DEFAULT_GEMINI_EVIDENCE_MODEL = 'gemini-2.5-flash'`). The extraction route now calls `getEvidenceProvider()` instead of an inline Anthropic call; all prompt construction, JSON parsing, and `validateEvidenceRow`/`crossCheckConflicts` schema validation are unchanged and run identically regardless of provider. The dry-run/live JSON response now includes a `provider` field alongside `model`.
+
+**Gemini implementation:** `ai.models.generateContent({ model, contents, config: { systemInstruction, temperature: 0, maxOutputTokens, responseMimeType: 'application/json', thinkingConfig: { thinkingBudget: 0 } } })` — verified directly against the installed `@google/genai@2.18.0` package's own TypeScript definitions, not solely web documentation, which inconsistently described a different (`ai.interactions.create`) surface that does exist on this SDK version but is marked next-gen/experimental in its own type name. `GEMINI_API_KEY` is read server-side only via `process.env`; confirmed absent from the built client bundle, from every client component, and from any `NEXT_PUBLIC_` reference anywhere under the new module.
+
+**Dependencies:** `@google/genai` (`^2.18.0`) added to `dependencies`. `vitest` (`^4.1.11`) added to `devDependencies` with a new `npm run test` script and `vitest.config.mts` — no test framework existed in this repository before this task. `@anthropic-ai/sdk` was never installed and remains not installed (the Anthropic path has always used a raw `fetch` call).
+
+**Offline tests:** 46 tests across two new files (`src/lib/candidateEvidence/__tests__/evidenceValidation.test.ts`, `providers.test.ts`) — all passing, zero real API keys read, zero network calls made (Anthropic mocked via `global.fetch`, Gemini mocked via the `@google/genai` module). Covers valid/malformed/truncated output, missing required fields, unsupported dimensions, unapproved source URLs, unverifiable dates, conflict-flag consistency and cross-check logic, the growth_development parcel-specific guardrail, both providers' config-error/request-error/timeout paths, and `provider.ts` resolution logic.
+
+**Live Gemini test:** prepared (exact input, expected output shape, comparison criteria, acceptance thresholds — full plan in the linked doc) but **not executed** — requires `GEMINI_API_KEY`, which this task did not access, per its explicit stop condition. Mirrors the already-approved Shannon Martin pilot sources/flow (Gates I38–I44).
+
+**Verification:** `npm run build` passed (28 routes, no errors). `npm run lint` — only the 5 pre-existing `scripts/*.cjs` errors, nothing new. `npm run test` — 46/46 passed.
+
+**Migration sequence (per the linked doc):** (1) Gemini implementation ✓ this task; (2) same-input Anthropic-vs-Gemini comparison — blocked on live credentials; (3) parity review; (4) switch default provider to Gemini; (5) retain Anthropic as fallback temporarily; (6) remove Anthropic only after beta confidence. Default provider is **still Anthropic** — nothing changes for any real caller as a result of this task.
+
+No `candidate_position_evidence`, `candidate_positions`, or `match_scores` row was created, modified, or read. No Anthropic or Gemini API call was made. No Supabase write was performed. No schema/RLS/function change. No deployment occurred.
 
