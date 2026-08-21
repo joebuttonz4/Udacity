@@ -1,6 +1,6 @@
 # CivicMarket Current State
 
-Last updated: August 20, 2026 (Gemini candidate-evidence live parity test executed — GEMINI PARITY = PASS with one flagged coverage gap; default provider still Anthropic, no cutover, no Supabase write, no deployment)
+Last updated: August 20, 2026 (Current Officials empty-state copy clarified on Home and Profile — now explains representation-district verification instead of implying missing data; copy-only, no data/query behavior changed, no writes, no deployment)
 
 ## Authoritative order
 
@@ -3605,4 +3605,22 @@ One explicitly-approved, real (non-dry-run) live Gemini call was made through th
 **Not done, not authorized:** `CANDIDATE_EVIDENCE_PROVIDER` default cutover to Gemini (remains `anthropic`), any `candidate_position_evidence`/`candidate_positions`/`match_scores` write, deployment. **Recommended next step:** a human reviewer confirms this automated PASS (re-check the flagged phrasing item, decide whether the missing `growth_development` row needs a prompt refinement) before any cutover decision.
 
 No database write. No schema/RLS/function change. `ENABLE_CAMPAIGN_EVIDENCE_EXTRACTION` restored to `false`. No deployment occurred. Unrelated concurrent-session files (`src/components/CurrentOfficialsSection.tsx`, and this file's own "Fresh production account..." section above) were left untouched by this task.
+
+## Current Officials Empty-State Copy Clarification
+
+Date: 08-20-2026
+Timestamp: 09:47 pm EST
+
+Status: **Implemented and verified. Copy-only. No data/query behavior changed. No Supabase write. No deployment.** Full record: `docs/internal_beta_current_officials_empty_state_copy.md`.
+
+Directly implements the fresh-account audit's recommendation option 1 (`docs/internal_beta_fresh_account_district_initialization_audit.md`, commit `4b45238`). `src/components/CurrentOfficialsSection.tsx` — the single component shared by Home and Profile — had its empty-state message changed from the misleading "Current officials will appear here after verified official source data is added." to:
+
+> "Your current officials will appear as your representation districts are verified."
+> "Some districts require an additional verification step because ZIP codes can cross district boundaries."
+
+The old copy implied the only cause of an empty section was a data backlog; the real cause (confirmed by the audit) is that most auto-assigned districts are ballot-eligibility anchors that structurally never have a directly-tied officeholder, plus one source-blocked seat (Mayor) — representation districts, not ballot-eligible districts, are what need verification. No new buttons/links were added (copy-only scope). The unconditional section helper "Officials who currently represent you." was left unchanged.
+
+`npm run build` passed (28 routes, no errors). `npm run lint` had only the 5 known pre-existing errors. Live-verified: populated Current Officials unchanged on both Home and Profile for `civicmarket.test.01@example.com`; the new empty-state text was visually verified via a reversible, client-side-only DOM substitution (no real account's data was touched, no network/Supabase call was made by the check itself, and the page was fully reloaded immediately after, restoring the normal populated render) — confirmed correct spacing, hierarchy, and no clipping.
+
+Both substantive remediation paths identified by the prior audit (sourcing/seeding the Mayor `current_officials` row; enabling `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` for real users) remain open, undecided, and unaffected by this task — this task addressed only the messaging layer.
 

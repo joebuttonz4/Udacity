@@ -172,7 +172,10 @@ export default function CurrentOfficialsSection({ userId }: { userId: string }) 
       {!loading && !error && officials.length === 0 && (
         <div className="bg-[#F8FAFC] rounded-xl p-4">
           <p className="text-[#9CA3AF] text-sm [font-family:var(--font-instrument-sans)]">
-            Current officials will appear here after verified official source data is added.
+            Your current officials will appear as your representation districts are verified.
+          </p>
+          <p className="text-[#B8C4D0] text-xs mt-2 [font-family:var(--font-instrument-sans)]">
+            Some districts require an additional verification step because ZIP codes can cross district boundaries.
           </p>
         </div>
       )}
