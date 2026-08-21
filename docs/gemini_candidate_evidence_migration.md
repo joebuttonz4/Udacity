@@ -2,7 +2,45 @@
 
 Date: 08-20-2026
 
-Status: **Live parity test executed and PASSED (with one flagged coverage gap). Default provider remains Anthropic. No Supabase write. No deployment. No provider cutover.**
+Status: **CUTOVER COMPLETE. Gemini (`gemini-3.6-flash`) is now the default candidate-evidence extraction provider.** Anthropic retained, fully implemented, selectable via an explicit `CANDIDATE_EVIDENCE_PROVIDER=anthropic` override. No Supabase write. No deployment. No district write guard touched.
+
+## Cutover to Gemini as default provider (08-20-2026, ~22:00 local)
+
+Following the human parity review of the live test below — **GEMINI PARITY = PASS**, coverage-gap decision **ACCEPT GAP FOR BETA**, phrasing-variance review **PASS** (see the separately-delivered human-review package for full source-by-source detail) — Gemini was explicitly approved and made the default provider.
+
+**Change:** `src/lib/candidateEvidence/provider.ts`'s `resolveEvidenceProviderName()` now defaults to `"gemini"` when `CANDIDATE_EVIDENCE_PROVIDER` is unset or empty; `"anthropic"` is only selected by an explicit `CANDIDATE_EVIDENCE_PROVIDER=anthropic` value (case-insensitive). An unrecognized value still fails closed (`EvidenceProviderConfigError`), unchanged from before. No provider name is scattered elsewhere — the route (`extract-shannon-martin-evidence/route.ts`) was not touched, since it already called `getEvidenceProvider()`/`resolveEvidenceProviderName()` generically.
+
+**Model/config:** unchanged from the live-tested configuration — `DEFAULT_GEMINI_EVIDENCE_MODEL = 'gemini-3.6-flash'`, `GEMINI_EVIDENCE_MODEL` override still supported, `thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL }` retained (not reverted to `thinkingBudget: 0`, which is confirmed rejected by this model — see the prior live-test section below).
+
+**`ENABLE_CAMPAIGN_EVIDENCE_EXTRACTION` remains `false`** — the cutover only changes which provider *would* be called if that guard were ever separately approved and flipped; it makes no database-writing behavior reachable and performs no extraction on its own.
+
+### Fallback policy (Task 5)
+
+Anthropic is **not** automatically retried after a Gemini failure. If `provider.extract()` throws (`EvidenceProviderConfigError` or `EvidenceProviderRequestError`), the route returns that failure directly to the caller (500/502, as before) — it does not catch the error and silently re-attempt the same request against Anthropic. This is a deliberate design choice, not an oversight:
+
+- **No hidden double-provider spend.** A caller (or a future retry loop) should not be charged for two different paid providers on what looks like a single logical extraction attempt.
+- **Failures should be visible, not masked.** If Gemini is degraded or misconfigured, that should surface as a clear error, not be silently absorbed by falling back to a second model whose behavior hasn't been re-validated for that specific failure.
+- **Anthropic override remains available for troubleshooting**, but it is an explicit operator action (`CANDIDATE_EVIDENCE_PROVIDER=anthropic`, then re-run), not automatic behavior baked into the request path.
+
+This matches the "preferred beta behavior" specified for this cutover and was not changed by this task, since the route already worked this way — there was never automatic cross-provider fallback logic to remove.
+
+### Tests updated for the cutover (Task 6)
+
+`src/lib/candidateEvidence/__tests__/providers.test.ts`'s provider-resolution suite was rewritten for the new default and expanded: default-unset resolves to `gemini`; explicit `gemini` resolves to `gemini`; explicit `anthropic` resolves to `anthropic` (the only way to get Anthropic now); case-insensitivity for both explicit values; an unknown value still fails closed (`EvidenceProviderConfigError`, no silent fallback); `DEFAULT_GEMINI_EVIDENCE_MODEL` is asserted to equal `'gemini-3.6-flash'`; `GEMINI_EVIDENCE_MODEL` override still works; the default (no env vars set) path resolves to `gemini-3.6-flash`. Two new tests assert, structurally, that no provider file or the test suite itself references Supabase/a service-role client — a static safety net against a future edit accidentally wiring a provider straight to the database. All 52 tests pass (up from 46); no test makes a network call or reads a real API key.
+
+### Verification performed for this cutover
+
+- `npm run test`: 52/52 passed.
+- `npm run build`: passed, 28 routes, no errors.
+- `npm run lint`: only the known pre-existing `scripts/*.cjs` require-import errors remain (plus one unrelated, untracked, concurrent-session temp script with the same pre-existing error class — not part of this change).
+- Secret scan: no `GEMINI_API_KEY`/`ANTHROPIC_API_KEY` value or `NEXT_PUBLIC_*` Gemini/Anthropic variable anywhere in `.next/static` (client bundle), `src/**/*.tsx`, or the git diff for this change.
+
+### Remaining deployment/runtime verification steps (not performed by this task)
+
+1. No deployment has occurred — this cutover only affects the local repository's default. The deployed production environment's own `CANDIDATE_EVIDENCE_PROVIDER`/`GEMINI_EVIDENCE_MODEL`/`GEMINI_API_KEY` configuration is unrelated to and unaffected by this commit until a deploy actually happens.
+2. `ENABLE_CAMPAIGN_EVIDENCE_EXTRACTION` must still be separately, explicitly approved before any real (non-dry-run) extraction — Gemini or Anthropic — can run in any environment.
+3. The one accepted coverage gap (missing borderline `growth_development` evidence) is a known, documented behavior, not a defect to silently fix — no prompt change was made in response to it, per the human review's own "ACCEPT GAP FOR BETA" decision.
+4. `candidate_position_evidence` inserts remain a fully separate, not-yet-designed step for any future candidate beyond Shannon Martin's already-inserted Gate I44 rows — this cutover changes which provider *would* produce a draft, not whether drafts get persisted.
 
 ## Live parity test result (08-20-2026, ~21:46 local)
 
@@ -167,16 +205,14 @@ Model/provider selection is centralized in `src/lib/candidateEvidence/provider.t
 
 ## 7. Parity plan (Anthropic retained)
 
-`@anthropic-ai/sdk` was never a dependency and remains not a dependency — no package was added or removed for Anthropic. The Anthropic adapter is fully retained and is still the default provider. Sequence:
+`@anthropic-ai/sdk` was never a dependency and remains not a dependency — no package was added or removed for Anthropic. The Anthropic adapter is fully retained, fully implemented, and selectable via an explicit override. Sequence:
 
 1. ✅ Gemini implementation.
-2. ✅ Same-input comparison — one live Gemini call vs. the accepted Gate I41 Anthropic baseline (08-20-2026, see "Live parity test result" above). **GEMINI PARITY = PASS**, with one flagged coverage gap (a borderline `growth_development` row Anthropic captured and Gemini did not).
-3. ⬜ Parity review — **a human reviewer should still confirm** the automated PASS above, specifically re-checking the flagged public_safety "traffic management" phrasing (item 4) against the live page, and deciding whether the missing `growth_development` row (item 10) is acceptable to lose or worth a prompt refinement first. Not yet performed by a human.
-4. ⬜ Switch default provider to Gemini — **not done, not authorized this task.** `CANDIDATE_EVIDENCE_PROVIDER` default remains `"anthropic"` in `provider.ts`.
-5. ⬜ Retain Anthropic as a fallback/comparison path temporarily — unaffected, still fully in place.
-6. ⬜ Remove Anthropic only after beta confidence is established — not started.
-
-**Cutover recommendation:** Gemini (`gemini-3.6-flash`) is technically capable of producing beta-acceptable candidate evidence and is meaningfully cheaper per call, but a full human parity review (step 3) has not yet happened and the one flagged coverage gap has not been resolved or explicitly accepted. Recommend running step 3 (human review of this one test's output, using the same `HUMAN_REVIEW_CHECKLIST` the route already returns) before proceeding to step 4. This single test is a promising signal, not yet sufficient grounds by itself for a production default switch.
+2. ✅ Same-input comparison — one live Gemini call vs. the accepted Gate I41 Anthropic baseline (08-20-2026, see "Live parity test result" below). **GEMINI PARITY = PASS**, with one flagged coverage gap.
+3. ✅ Parity review — human reviewer confirmed **GEMINI PARITY = PASS**, coverage-gap decision **ACCEPT GAP FOR BETA**, phrasing-variance review **PASS** (08-20-2026).
+4. ✅ Switch default provider to Gemini — **done** (this section, 08-20-2026). `CANDIDATE_EVIDENCE_PROVIDER` now defaults to `"gemini"`; `"anthropic"` requires an explicit override.
+5. ✅ Retain Anthropic as a fallback/comparison path temporarily — in place; see "Fallback policy" above for exactly how (explicit override only, no automatic cross-provider retry).
+6. ⬜ Remove Anthropic only after beta confidence is established — not started; no timeline set by this task.
 
 No automated test in this repository calls either paid API — see §8. One real, explicitly-approved live call was made outside the automated suite for this parity test (documented above); the offline suite itself made none.
 

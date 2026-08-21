@@ -1,8 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { EvidenceProviderConfigError, EvidenceProviderRequestError } from '../types'
 import { createAnthropicEvidenceProvider } from '../providers/anthropic'
 import { createGeminiEvidenceProvider, DEFAULT_GEMINI_EVIDENCE_MODEL } from '../providers/gemini'
 import { getEvidenceProvider, resolveEvidenceProviderName } from '../provider'
+
+const currentFilePath = fileURLToPath(import.meta.url)
+const currentDirPath = dirname(currentFilePath)
 
 // ============================================================================
 // Provider-independent tests (Task 8). Every test in this file mocks the
@@ -180,27 +186,42 @@ describe('Gemini provider', () => {
   })
 })
 
-describe('provider resolution (src/lib/candidateEvidence/provider.ts)', () => {
-  it('defaults to anthropic when CANDIDATE_EVIDENCE_PROVIDER is unset', () => {
+describe('provider resolution (src/lib/candidateEvidence/provider.ts) — post-cutover (08-20-2026)', () => {
+  it('defaults to gemini when CANDIDATE_EVIDENCE_PROVIDER is unset', () => {
     delete process.env.CANDIDATE_EVIDENCE_PROVIDER
-    expect(resolveEvidenceProviderName()).toBe('anthropic')
-    expect(getEvidenceProvider().name).toBe('anthropic')
+    expect(resolveEvidenceProviderName()).toBe('gemini')
+    expect(getEvidenceProvider().name).toBe('gemini')
   })
 
-  it('selects gemini when CANDIDATE_EVIDENCE_PROVIDER=gemini', () => {
+  it('resolves to gemini when CANDIDATE_EVIDENCE_PROVIDER=gemini is set explicitly', () => {
     process.env.CANDIDATE_EVIDENCE_PROVIDER = 'gemini'
     expect(resolveEvidenceProviderName()).toBe('gemini')
     expect(getEvidenceProvider().name).toBe('gemini')
   })
 
-  it('is case-insensitive', () => {
+  it('resolves to anthropic only via an explicit CANDIDATE_EVIDENCE_PROVIDER=anthropic override', () => {
+    process.env.CANDIDATE_EVIDENCE_PROVIDER = 'anthropic'
+    expect(resolveEvidenceProviderName()).toBe('anthropic')
+    expect(getEvidenceProvider().name).toBe('anthropic')
+  })
+
+  it('is case-insensitive for the anthropic override', () => {
+    process.env.CANDIDATE_EVIDENCE_PROVIDER = 'ANTHROPIC'
+    expect(resolveEvidenceProviderName()).toBe('anthropic')
+  })
+
+  it('is case-insensitive for an explicit gemini value', () => {
     process.env.CANDIDATE_EVIDENCE_PROVIDER = 'GEMINI'
     expect(resolveEvidenceProviderName()).toBe('gemini')
   })
 
-  it('throws EvidenceProviderConfigError on an unknown provider name', () => {
+  it('fails safely (throws EvidenceProviderConfigError, does not silently fall back) on an unknown provider name', () => {
     process.env.CANDIDATE_EVIDENCE_PROVIDER = 'openai'
     expect(() => resolveEvidenceProviderName()).toThrow(EvidenceProviderConfigError)
+  })
+
+  it('the default Gemini model is gemini-3.6-flash', () => {
+    expect(DEFAULT_GEMINI_EVIDENCE_MODEL).toBe('gemini-3.6-flash')
   })
 
   it('respects GEMINI_EVIDENCE_MODEL to override the default model', () => {
@@ -209,9 +230,49 @@ describe('provider resolution (src/lib/candidateEvidence/provider.ts)', () => {
     expect(getEvidenceProvider().model).toBe('gemini-3.5-flash-lite')
   })
 
-  it('uses the documented default Gemini model when GEMINI_EVIDENCE_MODEL is unset', () => {
+  it('uses the documented default Gemini model (gemini-3.6-flash) when GEMINI_EVIDENCE_MODEL is unset', () => {
     process.env.CANDIDATE_EVIDENCE_PROVIDER = 'gemini'
     delete process.env.GEMINI_EVIDENCE_MODEL
     expect(getEvidenceProvider().model).toBe(DEFAULT_GEMINI_EVIDENCE_MODEL)
+    expect(getEvidenceProvider().model).toBe('gemini-3.6-flash')
+  })
+
+  it('the default (unset-provider) path also uses gemini-3.6-flash', () => {
+    delete process.env.CANDIDATE_EVIDENCE_PROVIDER
+    delete process.env.GEMINI_EVIDENCE_MODEL
+    expect(getEvidenceProvider().model).toBe('gemini-3.6-flash')
+  })
+})
+
+describe('no database write occurs during extraction (structural guarantee)', () => {
+  it('neither provider adapter file references Supabase or a database client', () => {
+    // Architectural invariant, not just runtime behavior: provider adapters
+    // only ever send/receive text (see src/lib/candidateEvidence/types.ts —
+    // "no database knowledge inside provider adapter"). This guards against
+    // a future edit accidentally wiring a provider straight to Supabase.
+    const files = [
+      resolve(currentDirPath, '../providers/anthropic.ts'),
+      resolve(currentDirPath, '../providers/gemini.ts'),
+      resolve(currentDirPath, '../provider.ts'),
+    ]
+    const forbiddenServiceClientCall = 'createService' + 'Client'
+    for (const file of files) {
+      const source = readFileSync(file, 'utf-8')
+      expect(source).not.toMatch(/supabase/i)
+      expect(source.includes(forbiddenServiceClientCall)).toBe(false)
+    }
+  })
+
+  it('the offline test suite itself never imports or calls a Supabase client', () => {
+    // This suite exercises extraction end-to-end (validation + both
+    // providers) using only mocks/fixtures — no service-role client, no
+    // supabase-js import anywhere in this file. The forbidden substrings
+    // are built at runtime (not written literally) so this assertion
+    // doesn't trivially match its own source text.
+    const source = readFileSync(currentFilePath, 'utf-8')
+    const forbiddenPackageImport = '@supa' + 'base/supabase-js'
+    const forbiddenServiceClientCall = 'createService' + 'Client'
+    expect(source.includes(forbiddenPackageImport)).toBe(false)
+    expect(source.includes(forbiddenServiceClientCall)).toBe(false)
   })
 })

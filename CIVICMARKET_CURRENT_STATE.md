@@ -1,6 +1,6 @@
 # CivicMarket Current State
 
-Last updated: August 20, 2026 (Mayor current_official source verification and seed approval package prepared — STAGE A complete, exact proposed row/INSERT/verification/rollback drafted; STAGE B write NOT executed, pending explicit user row-level approval)
+Last updated: August 20, 2026 (Gemini candidate-evidence extraction cutover — gemini-3.6-flash is now the default provider after human parity review PASS; Anthropic retained as an explicit override; no district write guard touched, no Supabase write, no deployment)
 
 ## Authoritative order
 
@@ -3640,4 +3640,20 @@ Resolves the long-open "Current Officials — Mayor district gap" using only off
 **Expected effect if approved:** for the fresh account and the two other Mayor-holding accounts, "My Current Officials" would show exactly Shannon Martin as Mayor via the unmodified `officials_for_user` view; County Commission At-Large and Florida Statewide remain unresolved (no change); Stephanie Morgan/Debbie Hawley/Toby Overdorf would not be added for any of these accounts (different districts). Home and Profile share the identical result via the same `CurrentOfficialsSection` component.
 
 No database write, schema, RLS, function, `user_districts`, ballot-eligibility, or write-guard change occurred. No deployment. No unrelated Gemini-migration work was touched.
+
+## Gemini Candidate-Evidence Extraction Cutover
+
+Date: August 20, 2026
+
+Status: **Cutover complete. `gemini-3.6-flash` is now the default candidate-evidence extraction provider.** Anthropic retained, fully implemented, selectable via explicit `CANDIDATE_EVIDENCE_PROVIDER=anthropic` override. No Supabase write. No deployment. No district write guard touched. Full record: `docs/gemini_candidate_evidence_migration.md`.
+
+Following the human parity review of the previously-recorded live test (Gate: **GEMINI PARITY = PASS**; coverage-gap decision **ACCEPT GAP FOR BETA** — the omitted `growth_development` row was borderline/medium-confidence and Gemini's abstention is consistent with the project's standing "prefer missing evidence over unsupported evidence" rule; phrasing-variance review **PASS**, no confirmed fabrication), `src/lib/candidateEvidence/provider.ts`'s `resolveEvidenceProviderName()` was updated so `CANDIDATE_EVIDENCE_PROVIDER` unset/empty now resolves to `"gemini"` (previously `"anthropic"`); `"anthropic"` is only selected by an explicit override. No provider name is scattered elsewhere — the extraction route was not touched, since it already called the abstraction generically.
+
+Model configuration unchanged from the already-live-tested setup: `DEFAULT_GEMINI_EVIDENCE_MODEL = 'gemini-3.6-flash'`, `GEMINI_EVIDENCE_MODEL` override still supported, `thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL }` retained (not reverted to the rejected `thinkingBudget: 0`). `ENABLE_CAMPAIGN_EVIDENCE_EXTRACTION` remains `false` — the cutover changes which provider *would* run, not whether extraction is currently reachable at all.
+
+**Fallback policy:** Anthropic is not automatically retried after a Gemini failure — a failed `provider.extract()` call surfaces its error directly to the caller. This avoids hidden double-provider spend and keeps failures visible; Anthropic remains available only via an explicit operator override for troubleshooting. This was already the route's behavior (no cross-provider retry logic existed to remove) and is now documented as the intended design.
+
+`src/lib/candidateEvidence/__tests__/providers.test.ts`'s provider-resolution suite was rewritten for the new default and expanded (explicit anthropic/gemini overrides, case-insensitivity, fail-closed on an unknown value, model-default assertions, two new structural tests proving no provider file or the test suite itself references Supabase). All 52 offline tests pass (up from 46). `npm run build` passed (28 routes). `npm run lint` — only known pre-existing `scripts/*.cjs` errors (plus one unrelated, untracked, concurrent-session temp script with the same error class). Secret scan: no key value or `NEXT_PUBLIC_*` Gemini/Anthropic variable in the client bundle, any `.tsx` file, or the git diff.
+
+**Not done, not authorized by this task:** deployment (the production environment's own provider/model env vars are unaffected until an actual deploy happens); enabling `ENABLE_CAMPAIGN_EVIDENCE_EXTRACTION`; any `candidate_position_evidence` write for any candidate; touching either district write guard (`ENABLE_CITY_COUNCIL_DISTRICT_WRITE`, `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE`, both still `false`, untouched); removing the Anthropic path (deferred per the migration sequence's own step 6, no timeline set).
 

@@ -8,23 +8,29 @@ import { createGeminiEvidenceProvider, DEFAULT_GEMINI_EVIDENCE_MODEL } from './p
 // through route files. Never imported by client components — this file only
 // reads process.env server-side inside an API route handler.
 //
-// CANDIDATE_EVIDENCE_PROVIDER=gemini|anthropic — defaults to "anthropic".
-// The default intentionally does NOT change to Gemini yet: per the migration
-// sequence in docs/gemini_candidate_evidence_migration.md, the default only
-// flips after a parity review comparing same-input output from both
-// providers. Until then, set the env var explicitly to opt into testing the
-// Gemini path.
+// CANDIDATE_EVIDENCE_PROVIDER=gemini|anthropic — defaults to "gemini".
+//
+// Cutover (08-20-2026): after a human parity review of one live Gemini vs.
+// Anthropic extraction (docs/gemini_candidate_evidence_migration.md —
+// GEMINI PARITY = PASS, one flagged coverage gap explicitly accepted as
+// "ACCEPT GAP FOR BETA"), Gemini became the default provider. Anthropic
+// remains fully implemented and selectable via an explicit
+// CANDIDATE_EVIDENCE_PROVIDER=anthropic override for admin/troubleshooting
+// use — it is not removed and not silently auto-invoked as a fallback after
+// a Gemini failure (see docs/gemini_candidate_evidence_migration.md
+// "Fallback policy" for why: no hidden double-provider spend, and a Gemini
+// failure should surface clearly rather than be masked by a second paid
+// call to a different provider).
 //
 // GEMINI_EVIDENCE_MODEL — overrides DEFAULT_GEMINI_EVIDENCE_MODEL.
 // ANTHROPIC_EVIDENCE_MODEL is not currently made configurable via env var
-// (it never was before this migration); only the Gemini model is
-// env-configurable, since that is the one actively being evaluated.
+// (it never was before this migration).
 // ============================================================================
 
 export function resolveEvidenceProviderName(): EvidenceProviderName {
   const raw = process.env.CANDIDATE_EVIDENCE_PROVIDER?.trim().toLowerCase()
-  if (raw === 'gemini') return 'gemini'
-  if (raw === 'anthropic' || raw === undefined || raw === '') return 'anthropic'
+  if (raw === 'anthropic') return 'anthropic'
+  if (raw === 'gemini' || raw === undefined || raw === '') return 'gemini'
   throw new EvidenceProviderConfigError(
     `Unknown CANDIDATE_EVIDENCE_PROVIDER "${raw}". Expected "anthropic" or "gemini".`
   )
