@@ -1,6 +1,6 @@
 # CivicMarket Current State
 
-Last updated: August 20, 2026 (Home match-score dimension coverage disclosure added — Top Matches now shows "Based on N Civic DNA dimensions" for scored candidates, generically computed from non-null candidate_positions fields, verified 4 for Shannon Martin; no scoring formula change, no writes, no deployment)
+Last updated: August 20, 2026 (Package C1 statewide ballot model complete — 5 statewide district rows, 4 election rows, and 14 certification-independent candidates live; fresh-user onboarding activation and the 8-user existing-user backfill both executed and verified; statewide ballot eligibility now works for both fresh and existing Florida users with no Current Officials representation impact; both write guards remain false; no deployment)
 
 ## Authoritative order
 
@@ -3459,4 +3459,37 @@ Live-verified for `civicmarket.test.01@example.com`: network capture confirmed t
 Two separate unrelated concurrent-work diffs were encountered in the working tree during this and the prior session and were left completely untouched both times: `src/lib/ballotEligibility.ts` (Package C1 statewide mode, since self-committed by its own session) and `src/app/onboarding/zip/page.tsx` (Package C1 "Florida Statewide" onboarding anchor, still uncommitted).
 
 No `match_scores`, `candidate_positions`, or `candidate_position_evidence` row was created, modified, or deleted. No schema/RLS/function change. No deployment.
+
+## Package C1 — Statewide Ballot Model, Complete
+
+Date: 08-20-2026
+Timestamp: 08:25 pm EST
+
+Status: **COMPLETE.** Full record: `docs/candidate_import_package_c1_statewide_certification_independent.md` (design, preflight, execution, and verification for every step below); execution result also separately recorded in `docs/candidate_import_package_c1_6a_execution_result.md`.
+
+### Architecture
+
+Option A statewide model approved: one Florida Statewide ballot anchor district plus four statewide office district rows (Governor/Lieutenant Governor, Attorney General, Chief Financial Officer, Commissioner of Agriculture), all `type='statewide'`, `city='Statewide'`, `state='FL'`. `src/lib/ballotEligibility.ts` gained a new `'statewide'` mode and one additive rule (`city: 'Statewide', state: 'FL', types: ['statewide']`) — no change to `findRule`/`getBallotEligibilityMode`/`getExpansionJurisdictions`, both already generic. No schema change (`districts.type`/`city` are free-text columns). Current Officials representation logic (`officials_for_user`, `src/lib/officials.ts`, `CurrentOfficialsSection`) is completely unchanged — the anchor and all 4 office districts are never referenced by any `current_officials` row, by design.
+
+### Package C1 §6a — district/election/candidate rows
+
+Executed and verified PASS: 5 district rows inserted (anchor + 4 offices), 4 election rows inserted (one per office, `election_date = 2026-11-03`), 14 certification-independent statewide candidates inserted (11 Governor/Lt. Governor, 2 Attorney General, 1 Commissioner of Agriculture — Chief Financial Officer has 0 candidates in C1, all 4 CFO qualifiers being certification-dependent). Post-write verification: no duplicate or conflicting rows (`candidates` total 21 → 35, exactly +14); `current_officials` unchanged (9 → 9); `user_districts` untouched by §6a (41 before and after).
+
+### Fresh-user onboarding activation
+
+`src/app/onboarding/zip/page.tsx`'s `ZIP_MANAGED_DISTRICTS` now includes the Florida Statewide anchor alongside the pre-existing Mayor and County Commission At-Large entries. School Board District 1, FL House District 85, FL Senate District 27, and City Council District 1/3 all remain excluded from automatic ZIP-based assignment, unchanged. `npm run build` passed; `npm run lint` reported only the known pre-existing `scripts/*.cjs` baseline errors, nothing new.
+
+### Existing-user §6b backfill
+
+Read-only blast-radius capture found 8 eligible existing users and 0 already anchored (eligibility predicate: holds County Commission At-Large or Mayor). A drift check re-run immediately before execution matched exactly, then the single approved `INSERT` ran: 8/8 users received exactly one Florida Statewide anchor row, `user_districts` went 41 → 49 (+8 exactly), no duplicate anchors, no unexpected users, `current_officials` unchanged (9 → 9).
+
+### Final Package C1 status
+
+**COMPLETE.** Statewide ballot eligibility now works for both fresh and existing Florida users — 14 certification-independent statewide candidates are ballot-eligible for anyone holding the Florida Statewide anchor. FL House and FL Senate remain exact-district only (no rule exists for `type='state'`, unaffected by this package). Both `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` and `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` remain `false`. No deployment occurred at any point in this workstream.
+
+### Remaining deferred work
+
+- Package B's local post-Primary reconciliation (`docs/candidate_import_package_b_post_certification.md`) remains deferred pending county certification.
+- The 25 Package C statewide certification-dependent candidates (Governor/Lt. Governor REP+DEM, Chief Financial Officer REP+DEM, Commissioner of Agriculture REP+DEM — see `docs/candidate_import_package_c_statewide.md` §4-§6) remain deferred pending an official results source and certification.
+- No result-dependent write (won/lost distinction, `is_incumbent` refinement, or any certification-dependent candidate insert) will be made until official certification evidence is separately verified and approved.
 
