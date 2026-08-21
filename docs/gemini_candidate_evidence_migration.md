@@ -2,7 +2,30 @@
 
 Date: 08-20-2026
 
-Status: **Gemini implementation complete, offline-tested, not live-tested. Default provider remains Anthropic. No live Gemini API call has been made. No Supabase write. No deployment.**
+Status: **Gemini implementation complete, offline-tested. Live parity test AUTHORIZED but BLOCKED — GEMINI_API_KEY is not present in this environment. Default provider remains Anthropic. No live Gemini API call has been made. No Supabase write. No deployment.**
+
+## Live parity test attempt — blocked on missing credential (08-20-2026)
+
+A one-time, explicitly-approved controlled live Gemini parity test (Shannon Martin evidence pilot, same 3 approved sources, `gemini-2.5-flash`) was authorized. Before making any call, `GEMINI_API_KEY` availability was checked — per the approval's own instruction — without ever printing, logging, or recording its value, length, prefix, or suffix. Checked in every place this project's server-side process could plausibly read it from:
+
+- `.env.local` (the only `.env*` file present in the repo root) — key name absent.
+- The current shell process environment (`printenv`) — absent.
+- Windows User-level environment variable — absent.
+- Windows Machine-level environment variable — absent.
+
+**Result: `GEMINI_API_KEY` is not configured anywhere in this environment.** The approval's premise ("accessing the already-provisioned GEMINI_API_KEY from the normal server-side environment only") does not hold here — there is nothing already provisioned to access. Per the approval's own boundaries (no copying the key into code/docs/chat, no reading unrelated secrets), the correct response is to stop and report this rather than fabricate a call or ask for the key to be pasted into the conversation.
+
+**No Gemini API call was made.** Tasks 4–7 (live call, parity review, acceptance decision, cost comparison) could not be performed and are not claimed as complete or attempted-with-results. Task 1 (baseline) and Task 2 (verify test input) below were completed, since neither requires the key.
+
+**Next step, not performed by this task:** the key needs to be provisioned into this environment (e.g. added to `.env.local` directly by the user, out-of-band from this conversation — not pasted into chat) before the live test can proceed. Once provisioned, this same test can be re-run without further code changes — the provider path, model default, and test-input baseline documented below are already ready.
+
+### Test input baseline (ready for re-run once GEMINI_API_KEY is provisioned)
+
+- **Candidate:** Shannon Martin, `candidate_id d44ff05a-14af-45c2-9f2f-6d530a8a051e` (`CANDIDATE_ID` in the route).
+- **Source URLs (closed set, `APPROVED_SOURCES`):** `https://martinforpslmayor.com/`, `https://martinforpslmayor.com/about-shannon-martin/`, `https://martinforpslmayor.com/biography/` — fetched live at call time by the route itself; no cached/static fixture file exists, so the "exact input" is whatever `fetchSourceText()` returns from those 3 live URLs at test time.
+- **In-scope dimensions requested:** `growth_development`, `taxation_spending`, `environment`, `public_safety`, `transparency` (education/housing intentionally excluded from the request — Gate I39).
+- **Accepted comparison baseline:** the final human-reviewed 5-row Shannon Martin evidence set in `docs/internal_beta_gate_i41_shannon_martin_final_evidence_set.md`, itself extracted by Anthropic (`claude-sonnet-5`) and already inserted into `candidate_position_evidence` (Gate I44) — `growth_development +1`, `taxation_spending +2` ×2, `environment +2`, `public_safety +2`, all sourced to `about-shannon-martin/` or `biography/`. One additional row (`growth_development -1`, parcel-specific Rosser Lakes conservation evidence) was extracted but deterministically rejected by `validateEvidenceRow`'s guardrail and is not part of the accepted set — recorded in the same document as an audit-trail-only rejected row. `transparency` has no accepted row in the baseline (no first-party evidence was found for it).
+- **Existing evidence rows are the live, inserted `candidate_position_evidence` data and were not read, modified, or queried by this task** — the baseline above comes from the already-published Gate I41 document, not a fresh database read, since Task 2 does not require a database call and this task made none.
 
 This is a required pre-beta item: replace the current Anthropic/Claude candidate-evidence extraction path with Gemini before Controlled Beta, without redoing candidate research, scoring architecture, or any stored `candidate_position_evidence` data.
 
