@@ -325,3 +325,145 @@ No live end-to-end browser onboarding test was performed this session (no test a
 ## 13. No-change confirmation (updated through §12)
 
 `src/lib/ballotEligibility.ts` (§4, commit `b7282b1`) and `src/app/onboarding/zip/page.tsx` (§12) are the only application source-code changes made across this document's sessions — both confirmed live/inert as documented in §4/§7 and §12 respectively. No other file under `src/` was modified. §6a's database write (5 districts, 4 elections, 14 candidates) was explicitly approved and executed separately — see `docs/candidate_import_package_c1_6a_execution_result.md`; no other database write was performed by this document's own work. No `user_districts` or `current_officials` row was created, modified, or deleted (§12 confirms this live). No schema, RLS, grant, policy, function, migration, or seed was changed. §6b (the existing-user backfill) remains **not executed**. `ENABLE_CITY_COUNCIL_DISTRICT_WRITE` and `ENABLE_COUNTY_COMMISSION_DISTRICT_WRITE` are unrelated to this workstream and were not inspected or changed. No deployment occurred. Package B (`docs/candidate_import_package_b_post_certification.md`) and Package C (`docs/candidate_import_package_c_statewide.md`) were not modified. No unrelated concurrent-session file (e.g. `src/lib/candidates.ts`, other in-progress `src/app/page.tsx` edits) was touched. All ID-collision, count, and code-trace checks used only read-only `GET` requests against the public PostgREST API with a `sb_publishable_...` key extracted from a freshly-built `.next/static` client bundle — `.env.local` and every other file matching the project's secret-file exclusion list were never opened or read directly.
+
+## 14. §6b blast-radius capture — read-only, 08-20-2026
+
+Status: **Read-only capture complete. §6b remains NOT AUTHORIZED FOR EXECUTION.**
+
+### 14.1 Eligibility rule (exact predicate already proposed by §6b, unchanged)
+
+A user is eligible for the Florida Statewide anchor backfill if and only if they currently hold **at least one** of these two existing rows in `user_districts`:
+
+- `11111111-0000-0000-0000-000000000003` — St. Lucie County Commission At-Large
+- `11111111-0000-0000-0000-000000000006` — Mayor
+
+This is the exact predicate documented in §6b's draft SQL (`WHERE ud.district_id IN ('...0003', '...0006')`), not a new or broadened rule. It was deliberately kept conservative — both rows are themselves `ZIP_MANAGED_DISTRICTS` anchors that already required a genuine PSL onboarding to obtain, and neither is a legacy/known-unreliable row (unlike School Board District 1, FL House 85, or FL Senate 27, which are ZIP-derived legacy rows no longer written by fresh onboarding — see `src/app/onboarding/zip/page.tsx`'s own comments). Holding either is not itself Florida-specific proof by name, but both are Port St. Lucie/FL-specific by construction (no non-Florida jurisdiction can hold these IDs), which is what makes this an explicit, already-approved-shape inference rather than an arbitrary single-district guess.
+
+### 14.2 Blast radius (captured via read-only `.select()` queries only, service-role client — zero mutation calls in the capture script, script deleted immediately after this one run)
+
+| Metric | Count |
+|---|---|
+| Total distinct existing users in `user_districts` | **8** |
+| Already holding the Florida Statewide anchor | **0** |
+| Eligible for backfill | **8** |
+| Not eligible | **0** |
+| Total `user_districts` rows (cross-check) | **41** — matches the documented pre-/post-§6a baseline exactly (unchanged, confirming no drift since §6a) |
+
+**All 8 existing users are eligible** — every one already holds County Commission At-Large; 2 of the 8 additionally hold Mayor. There is no user who holds only a legacy row (School Board D1 / FL House 85 / FL Senate 27) without also holding one of the two qualifying anchors — `legacyOnlyNotEligibleUsers` returned empty.
+
+### 14.3 Exact eligible user IDs and qualifying rows
+
+| # | `user_id` | Known account (from already-documented, non-secret repo history only — `auth.users`/email was never queried) | Existing `user_districts` rows | Qualifying row(s) |
+|---|---|---|---|---|
+| 1 | `90f290e6-3e3b-484c-8ddc-d451826281e6` | not previously documented in this repo | City Council D1, School Board D1, County Commission At-Large, FL House 85, FL Senate 27 (5) | County Commission At-Large |
+| 2 | `14055592-df01-4aec-933d-4c44476f7bab` | not previously documented in this repo | City Council D1, School Board D1, County Commission At-Large, FL House 85, FL Senate 27 (5) | County Commission At-Large |
+| 3 | `4955f9dd-f20a-4b99-878a-fc7e89e38acb` | not previously documented in this repo | City Council D1, School Board D1, County Commission At-Large, FL House 85, FL Senate 27 (5) | County Commission At-Large |
+| 4 | `479780fe-e447-4c6e-9462-338841bbaa4b` | `civicmarket.test.04@example.com` (documented, `CIVICMARKET_CURRENT_STATE.md`) | City Council D1, School Board D1, County Commission At-Large, FL House 85, FL Senate 27 (5) | County Commission At-Large |
+| 5 | `f1fde6f9-07c3-4c76-ae81-ebb2f461a5c3` | project admin/reviewer profile (documented, `CIVICMARKET_CURRENT_STATE.md` Gate I42 — `is_admin: true`) | City Council D1, School Board D1, County Commission At-Large, FL House 85, FL Senate 27 (5) | County Commission At-Large |
+| 6 | `73264ade-24fd-467f-b4c8-4481cef3e535` | not previously documented in this repo | City Council D1, School Board D1, County Commission At-Large, FL House 85, FL Senate 27 (5) | County Commission At-Large |
+| 7 | `ec59ea92-470f-447f-8873-ab2dbde52aca` | `civicmarket.test.01@example.com` (documented) | City Council D1, School Board D1, County Commission At-Large, FL House 85, FL Senate 27, Mayor (6) | County Commission At-Large + Mayor |
+| 8 | `3b223f8c-059e-4f3a-a507-29714ad8b3a9` | `civicmarket.test.05@example.com` (documented) | School Board D1, County Commission At-Large, FL House 85, FL Senate 27, Mayor (5) | County Commission At-Large + Mayor |
+
+No email address was queried or included anywhere in this capture — the three labeled accounts above are labeled solely from already-public, already-committed project documentation (`CIVICMARKET_CURRENT_STATE.md`), matched by `user_id` only.
+
+Every row above is internally consistent with this project's own prior documented history for these exact accounts (Milestone 1's 5-row test.05 result, Milestone 2A's 6-row test.01 result including Mayor, and the Gate I25-era 5-row test.04 result) — a strong independent cross-check that this capture reflects real, undrifted state.
+
+### 14.4 Ambiguous / legacy / duplicate cases
+
+- **Ambiguous cases:** none. Every eligible user's qualification is unambiguous (via County Commission At-Large alone, or via both County Commission At-Large and Mayor together — never a borderline or inferred case).
+- **Duplicate anchor rows:** none — `alreadyAnchoredCount = 0`, so there is nothing to deduplicate, and the `UNIQUE(user_id, district_id)` constraint structurally prevents any future duplicate regardless.
+- **Legacy-only users (would be excluded if they existed):** none found. If a future population included a user holding only School Board D1 / FL House 85 / FL Senate 27 without County Commission At-Large or Mayor, this predicate would correctly exclude them — none of the current 8 users are in that shape.
+- **Test / known accounts:** 3 of 8 are already-documented test accounts (`civicmarket.test.01`, `.04`, `.05`); 1 of 8 is the project's documented admin/reviewer profile; the remaining 4 are not previously documented anywhere in this repo's history and were not further identified (no `auth.users`/email lookup was performed).
+
+### 14.5 Safety checks
+
+| Check | Result |
+|---|---|
+| No eligible user already has the anchor | **PASS** — `alreadyAnchoredCount = 0`; eligible and already-anchored sets are disjoint by construction |
+| Backfill would insert at most one anchor row per user | **PASS** — a plain `SELECT DISTINCT user_id`, plus the table's own `UNIQUE(user_id, district_id)` constraint and `ON CONFLICT DO NOTHING`, structurally guarantee this |
+| No existing row would be deleted or replaced | **PASS** — §6b's draft SQL (§6.2, unchanged) contains only one `INSERT`, no `DELETE`/`UPDATE`/`UPSERT` |
+| City Council representation rows untouched | **PASS** — City Council D1 rows (user #1-6) are not referenced anywhere in the backfill predicate or insert target |
+| County Commission rows untouched | **PASS** — County Commission At-Large rows are read-only (used as a `WHERE` filter), never written or modified |
+| School Board / FL House / FL Senate legacy rows untouched | **PASS** — none referenced in the insert target; all 8 users' legacy rows are structurally unaffected |
+| Current Officials behavior unchanged | **PASS** — re-confirmed live this session-family (§7/§12): zero `current_officials` rows reference the anchor or any of the 4 statewide office district IDs |
+| Ballot eligibility expands only to statewide races | **PASS** — the anchor's only effect, via the already-committed `ballotEligibility.ts` rule (§4), is expanding to the 5 `type='statewide'` districts; no other rule references this anchor |
+
+### 14.6 Draft SQL — **NOT AUTHORIZED FOR EXECUTION**
+
+Unchanged in substance from §6.2 — reproduced here with the captured user ID list substituted in as the literal, exact-ID rollback scope (replacing the placeholder comment), since the blast radius is now known precisely.
+
+```sql
+-- ============================================================
+-- PACKAGE C1 §6b -- EXISTING-USER FLORIDA STATEWIDE ANCHOR BACKFILL
+-- NOT AUTHORIZED FOR EXECUTION
+-- Blast radius captured read-only, 08-20-2026: 8 eligible users,
+-- 0 already anchored, 0 not eligible. See §14.3 for the full list.
+-- INSERT only. No UPDATE. No DELETE. Idempotent via
+-- UNIQUE(user_id, district_id) + ON CONFLICT DO NOTHING.
+-- ============================================================
+BEGIN;
+INSERT INTO user_districts (user_id, district_id, scope)
+SELECT DISTINCT ud.user_id, '11111111-0000-0000-0000-00000000000b', 'state'
+FROM user_districts ud
+WHERE ud.district_id IN (
+  '11111111-0000-0000-0000-000000000003', -- St. Lucie County Commission At-Large
+  '11111111-0000-0000-0000-000000000006'  -- Mayor
+)
+ON CONFLICT (user_id, district_id) DO NOTHING;
+COMMIT;
+```
+
+**Read-only post-write verification SQL:**
+```sql
+-- Expect exactly 8 (the captured eligible count)
+SELECT count(*) FROM user_districts WHERE district_id = '11111111-0000-0000-0000-00000000000b';
+
+-- Expect all 8 captured IDs present, none missing
+SELECT user_id FROM user_districts
+WHERE district_id = '11111111-0000-0000-0000-00000000000b'
+ORDER BY user_id;
+-- Compare against the exact 8 IDs in §14.3.
+
+-- Expect 0 rows -- no user received a duplicate anchor
+SELECT user_id, count(*) FROM user_districts
+WHERE district_id = '11111111-0000-0000-0000-00000000000b'
+GROUP BY user_id HAVING count(*) > 1;
+
+-- Expect unchanged from the immediate pre-write baseline (9, per §12/§7)
+SELECT count(*) FROM current_officials;
+
+-- Expect 41 + 8 = 49 (pre-write baseline 41, plus exactly 8 new anchor rows)
+SELECT count(*) FROM user_districts;
+```
+
+**Rollback SQL — exact-ID scoped to the 8 captured user IDs, never a bare predicate delete:**
+```sql
+BEGIN;
+DELETE FROM user_districts
+WHERE district_id = '11111111-0000-0000-0000-00000000000b'
+  AND user_id IN (
+    '90f290e6-3e3b-484c-8ddc-d451826281e6',
+    '14055592-df01-4aec-933d-4c44476f7bab',
+    '4955f9dd-f20a-4b99-878a-fc7e89e38acb',
+    '479780fe-e447-4c6e-9462-338841bbaa4b',
+    'f1fde6f9-07c3-4c76-ae81-ebb2f461a5c3',
+    '73264ade-24fd-467f-b4c8-4481cef3e535',
+    'ec59ea92-470f-447f-8873-ab2dbde52aca',
+    '3b223f8c-059e-4f3a-a507-29714ad8b3a9'
+  );
+COMMIT;
+```
+
+### 14.7 Risks
+
+- **Blast radius is 100% of the current existing-user population** (8/8) — larger, proportionally, than any single-office write executed so far in this project. The predicate itself is unchanged and conservative (§14.1); this is simply a reflection of how small and uniformly-onboarded the current Internal Beta population is, not a sign the predicate is too broad. Worth the project owner's explicit awareness before approving, not a defect.
+- **This snapshot can drift.** If new users onboard, or the concurrent Home/representation session's work changes `user_districts` before §6b executes, this exact 8-user list should be recaptured immediately before execution rather than reused from memory — mirroring the same discipline already used for every prior backfill/write in this project (e.g. Gate I25's "capture immediately before execution" pattern).
+- **One eligible account is the project's own admin/reviewer profile** (`f1fde6f9-...`) — receiving a ballot-eligibility-only anchor row has no special implication for that account beyond what any other eligible user gets, but it is called out here for transparency since that identity is otherwise significant elsewhere in this project (Gate I42-I47).
+
+### 14.8 Approval boundary
+
+**This document (§14) does not authorize execution.** Two things must still happen, matching this project's standing design → approval → execution discipline:
+1. Immediately before execution, recapture the blast radius (a fresh run of the same read-only method) to confirm the 8-user list has not drifted, per §14.7.
+2. A separate, explicit approval to execute §6b's `INSERT` (§14.6) — this document only prepares that approval, it does not grant it.
+
+No `user_districts`, `districts`, `elections`, `candidates`, `current_officials`, schema, RLS, grant, policy, or function was modified by this capture. Both write guards remain `false`. No deployment occurred. The temporary read-only capture script was deleted immediately after its one run; `git status` was confirmed clean afterward. No unrelated concurrent-session file was touched.
