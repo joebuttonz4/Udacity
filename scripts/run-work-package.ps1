@@ -26,6 +26,26 @@
          contents of docs/CURRENT_WORK_PACKAGE.md plus a fixed instruction block that tells
          Claude to follow docs/AGENT_WORKFLOW.md as the governing safety/process contract.
          Skipped when -DryRun is passed (used for safely testing preflight validation).
+     10. Captures the implementation output and the starting/ending git commit and status,
+         and writes the implementation output to .tmp/implementation-review-input.txt.
+     11. If Required Reviews is not NONE, invokes one separate non-interactive Claude session
+         per selected reviewer (docs/agents/*.md), each explicitly instructed to only review
+         and report -- never to modify, stage, commit, push, write to the database, deploy,
+         or change secrets. Release Gate (if selected) always runs last and also receives the
+         other selected reviewers' outputs. Each reviewer's raw output is saved under
+         .tmp/reviews/<name>.txt.
+     12. Prints one compact "CIVICMARKET WORK PACKAGE RESULT" report combining the
+         implementation verdict, each reviewer's verdict, git start/end commit, and a
+         final status (PASS / PASS WITH CONDITIONS / FAIL) derived only from parsed verdicts
+         -- never guessed.
+
+    Testing the reviewer pipeline:
+      -TestReviewPipeline skips the real implementation call entirely (synthetic
+      implementation output/diff are used instead) and, unless -UseRealReviewers is also
+      passed, uses synthetic/mocked reviewer output instead of real Claude reviewer calls,
+      via -TestImplementationStatus and -TestReviewerVerdicts. This lets the parsing,
+      normalization, ordering, and final-status logic be exercised with zero real Claude
+      implementation or reviewer invocations.
 
     Safety:
       - This script never sets --dangerously-skip-permissions,
@@ -54,7 +74,32 @@ param(
     # Runs every preflight check (including Required Reviews validation) and prints the
     # preflight summary, then exits before invoking Claude. Used for safely testing this
     # script's validation logic without launching a real implementation session.
-    [switch]$DryRun
+    [switch]$DryRun,
+
+    # Review-pipeline test mode: skips the real implementation Claude call and (unless
+    # -UseRealReviewers is also passed) skips real reviewer Claude calls too, using
+    # synthetic/mocked text instead. Lets the parsing/normalization/ordering/final-status
+    # logic be exercised with zero real Claude implementation or reviewer invocations, and
+    # without touching the repository. Never used for a real CivicMarket implementation
+    # package.
+    [switch]$TestReviewPipeline,
+
+    # Synthetic Implementation verdict used only when -TestReviewPipeline is set.
+    [ValidateSet('PASS', 'PARTIAL', 'FAIL')]
+    [string]$TestImplementationStatus = 'PASS',
+
+    # Synthetic per-reviewer verdicts used only when -TestReviewPipeline is set and
+    # -UseRealReviewers is not passed. Keys are canonical reviewer names (Mission, UX,
+    # Data Integrity, Security, Release Gate); values are PASS, "PASS WITH CONDITIONS",
+    # FAIL, or UNPARSEABLE (simulates a reviewer response with no recognizable verdict
+    # line, to test missing/unusable-result handling). A selected reviewer not present in
+    # this hashtable defaults to PASS.
+    [hashtable]$TestReviewerVerdicts = @{},
+
+    # Only meaningful with -TestReviewPipeline. When set, reviewers are invoked for real
+    # (the implementation call is still skipped). Off by default so pipeline testing never
+    # spends real reviewer tokens unless explicitly requested.
+    [switch]$UseRealReviewers
 )
 
 $ErrorActionPreference = 'Stop'
@@ -282,8 +327,112 @@ if ($DryRun) {
     exit 0
 }
 
-# 9. Build the prompt: contents of docs/CURRENT_WORK_PACKAGE.md plus the fixed instruction block.
-$instruction = @'
+# 9. Prepare .tmp/ output directories (gitignored -- see .gitignore).
+$tmpDir = Join-Path -Path $repoRoot -ChildPath '.tmp'
+$reviewsDir = Join-Path -Path $tmpDir -ChildPath 'reviews'
+if (-not (Test-Path -LiteralPath $tmpDir)) { New-Item -ItemType Directory -Path $tmpDir | Out-Null }
+if (-not (Test-Path -LiteralPath $reviewsDir)) { New-Item -ItemType Directory -Path $reviewsDir | Out-Null }
+
+# --- Helper functions used by the implementation-capture and reviewer pipeline -------------
+
+function Get-WorkPackageSection {
+    param([string]$Content, [string]$HeadingText)
+    $lines = $Content -split "`r`n|`n"
+    $idx = -1
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+        if ($lines[$i].Trim() -eq $HeadingText) { $idx = $i; break }
+    }
+    if ($idx -lt 0) { return '' }
+    $collected = @()
+    for ($i = $idx + 1; $i -lt $lines.Count; $i++) {
+        if ($lines[$i].Trim().StartsWith('## ')) { break }
+        $collected += $lines[$i]
+    }
+    return ($collected -join "`n").Trim()
+}
+
+function Invoke-ClaudeCapture {
+    param([Parameter(Mandatory)][string]$Prompt)
+    $captured = & claude -p $Prompt 2>&1 | Out-String
+    return [PSCustomObject]@{ Output = $captured; ExitCode = $LASTEXITCODE }
+}
+
+function Get-FirstRegexGroup {
+    param([string]$Text, [string]$Pattern)
+    if ([string]::IsNullOrWhiteSpace($Text)) { return $null }
+    $m = [regex]::Match($Text, $Pattern)
+    if ($m.Success) { return $m.Groups[1].Value.Trim() }
+    return $null
+}
+
+function Get-TruncatedText {
+    param([string]$Text, [int]$MaxLength = 6000)
+    if ([string]::IsNullOrEmpty($Text)) { return $Text }
+    if ($Text.Length -le $MaxLength) { return $Text }
+    return $Text.Substring(0, $MaxLength) + "`n...[truncated for token efficiency]..."
+}
+
+function Remove-UnrelatedStatusLines {
+    param([string]$StatusText, [string]$UnrelatedPath)
+    if ([string]::IsNullOrWhiteSpace($StatusText)) { return $StatusText }
+    ($StatusText -split "`r`n|`n" | Where-Object { $_ -notmatch [regex]::Escape($UnrelatedPath) }) -join "`n"
+}
+
+# Reviewer verdict line patterns, matching each reviewer doc's own "Output format" heading.
+$reviewerVerdictPatterns = @{
+    'Mission'        = '(?im)^MISSION REVIEW:\s*(PASS WITH CONDITIONS|PASS|FAIL)'
+    'UX'             = '(?im)^UX REVIEW:\s*(PASS WITH CONDITIONS|PASS|FAIL)'
+    'Data Integrity' = '(?im)^DATA INTEGRITY REVIEW:\s*(PASS WITH CONDITIONS|PASS|FAIL)'
+    'Security'       = '(?im)^SECURITY REVIEW:\s*(PASS WITH CONDITIONS|PASS|FAIL)'
+    'Release Gate'   = '(?im)^RELEASE DECISION:\s*(PASS WITH CONDITIONS|PASS|FAIL)'
+}
+
+# Output filenames under .tmp/reviews/ for each canonical reviewer name.
+$reviewerOutputFileNameMap = @{
+    'Mission'        = 'mission.txt'
+    'UX'             = 'ux.txt'
+    'Data Integrity' = 'data-integrity.txt'
+    'Security'       = 'security.txt'
+    'Release Gate'   = 'release-gate.txt'
+}
+
+$unrelatedFileRelPath = 'src/app/api/admin/extract-shannon-martin-evidence/route.ts'
+
+$objectiveText = Get-WorkPackageSection -Content $workPackageContent -HeadingText '## Objective'
+$scopeText = Get-WorkPackageSection -Content $workPackageContent -HeadingText '## Scope'
+
+# --- Git snapshot before implementation -----------------------------------------------------
+
+$startCommit = ((& git rev-parse HEAD) 2>$null | Out-String).Trim()
+$startStatusRaw = ((& git status --short) 2>$null | Out-String)
+
+# --- Implementation phase: real Claude call, or synthetic output in -TestReviewPipeline ----
+
+if ($TestReviewPipeline) {
+    Write-Host "TEST MODE (-TestReviewPipeline): using synthetic implementation output and diff."
+    Write-Host "No real implementation package will be executed."
+    Write-Host ""
+
+    $claudeExitCode = 0
+    $implementationStatus = $TestImplementationStatus
+    $implementationOutput = @"
+## Report
+
+- $TestImplementationStatus
+- branch: $branch
+- files changed: docs/example-test-file.md (synthetic)
+- database writes: NO
+- deployment: NO
+
+(Synthetic implementation output generated by -TestReviewPipeline for safe pipeline testing.
+No real CivicMarket implementation package was executed.)
+"@
+    $targetedDiff = "diff --git a/docs/example-test-file.md b/docs/example-test-file.md`n(synthetic diff generated by -TestReviewPipeline)"
+    $endCommit = $startCommit
+    $endStatusRaw = $startStatusRaw
+} else {
+    # 10. Build the implementation prompt and invoke Claude for real.
+    $instruction = @'
 Read CLAUDE.md, CIVICMARKET_CURRENT_STATE.md, docs/AGENT_WORKFLOW.md,
 docs/agent_handoff.json, and docs/CURRENT_WORK_PACKAGE.md.
 
@@ -298,17 +447,298 @@ scope unless an explicit-approval boundary is reached.
 At completion, return only the concise standardized completion report.
 '@
 
-$fullPrompt = $workPackageContent.TrimEnd() + "`n`n" + $instruction
+    $fullPrompt = $workPackageContent.TrimEnd() + "`n`n" + $instruction
 
-Write-Host "Starting Claude Code non-interactively (claude -p) with the current work package."
-Write-Host "No elevated or bypassed permissions are set by this script; normal Claude Code"
-Write-Host "permission checks apply exactly as in an interactive session."
+    Write-Host "Starting Claude Code non-interactively (claude -p) with the current work package."
+    Write-Host "No elevated or bypassed permissions are set by this script; normal Claude Code"
+    Write-Host "permission checks apply exactly as in an interactive session."
+    Write-Host ""
+
+    # Invoke Claude Code in non-interactive print mode. Deliberately does NOT pass:
+    #   --dangerously-skip-permissions
+    #   --allow-dangerously-skip-permissions
+    #   --permission-mode bypassPermissions
+    $implResult = Invoke-ClaudeCapture -Prompt $fullPrompt
+    $implementationOutput = $implResult.Output
+    $claudeExitCode = $implResult.ExitCode
+
+    Write-Host $implementationOutput
+
+    $endCommit = ((& git rev-parse HEAD) 2>$null | Out-String).Trim()
+    $endStatusRaw = ((& git status --short) 2>$null | Out-String)
+
+    if ($startCommit -ne $endCommit) {
+        $rawDiff = ((& git diff "$startCommit..$endCommit" -- . ":(exclude)$unrelatedFileRelPath") 2>$null | Out-String)
+    } else {
+        $rawDiff = ((& git diff HEAD -- . ":(exclude)$unrelatedFileRelPath") 2>$null | Out-String)
+    }
+    $targetedDiff = $rawDiff.Trim()
+    if ([string]::IsNullOrWhiteSpace($targetedDiff)) {
+        $targetedDiff = '(no tracked changes relevant to this work package were found)'
+    }
+
+    if ($claudeExitCode -ne 0) {
+        $implementationStatus = 'FAIL'
+    } else {
+        $parsedImpl = Get-FirstRegexGroup -Text $implementationOutput -Pattern '(?im)^\s*[-*]?\s*\**\s*(PASS|PARTIAL|FAIL)\s*\**\s*$'
+        if ($null -eq $parsedImpl) {
+            $implementationStatus = 'PARTIAL'
+        } else {
+            $implementationStatus = $parsedImpl.ToUpperInvariant()
+        }
+    }
+}
+
+# 11. Persist the implementation output plus the git snapshot for reviewer input / audit
+# trail. Never stores secrets: this is exactly the text Claude itself printed to the
+# console, plus git metadata. The unrelated known file is excluded from the status lines.
+$startStatusFiltered = Remove-UnrelatedStatusLines -StatusText $startStatusRaw -UnrelatedPath $unrelatedFileRelPath
+$endStatusFiltered = Remove-UnrelatedStatusLines -StatusText $endStatusRaw -UnrelatedPath $unrelatedFileRelPath
+
+$implementationInputPath = Join-Path -Path $tmpDir -ChildPath 'implementation-review-input.txt'
+$implementationInputContent = @"
+$implementationOutput
+
+--- Git snapshot (unrelated known file excluded from status) ---
+Start commit: $startCommit
+End commit: $endCommit
+Start status:
+$startStatusFiltered
+End status:
+$endStatusFiltered
+"@
+Set-Content -LiteralPath $implementationInputPath -Value $implementationInputContent
+
+$dbWritesParsed = Get-FirstRegexGroup -Text $implementationOutput -Pattern '(?im)database writes:\s*(YES|NO)'
+$deploymentParsed = Get-FirstRegexGroup -Text $implementationOutput -Pattern '(?im)deployment:\s*(YES|NO)'
+$dbWritesDisplay = if ($dbWritesParsed) { $dbWritesParsed.ToUpperInvariant() } else { 'UNKNOWN' }
+$deploymentDisplay = if ($deploymentParsed) { $deploymentParsed.ToUpperInvariant() } else { 'UNKNOWN' }
+
+# 12. Run selected reviewers. Skipped entirely if Required Reviews = NONE, or if the
+# implementation itself failed (a failed implementation has no reliable diff/report to
+# review, and Release Gate must never run after a failed implementation).
+$reviewerResults = [ordered]@{
+    'Mission'        = 'NOT REQUIRED'
+    'UX'             = 'NOT REQUIRED'
+    'Data Integrity' = 'NOT REQUIRED'
+    'Security'       = 'NOT REQUIRED'
+    'Release Gate'   = 'NOT REQUIRED'
+}
+
+$specialistReviewers = $normalizedReviewers | Where-Object { $_ -ne 'Release Gate' }
+$releaseGateSelected = $normalizedReviewers -contains 'Release Gate'
+$reviewerRawOutputs = @{}
+
+if ($implementationStatus -eq 'FAIL') {
+    if ($normalizedReviewers.Count -gt 0) {
+        Write-Host "Implementation failed; selected reviewers were not executed."
+        foreach ($name in $normalizedReviewers) {
+            $reviewerResults[$name] = 'FAIL'
+        }
+    }
+} elseif ($normalizedReviewers.Count -gt 0) {
+    foreach ($name in $specialistReviewers) {
+        Write-Host "Running $name reviewer..."
+
+        $roleDocFullPath = Join-Path -Path $repoRoot -ChildPath $reviewerFileMap[$name]
+        $roleDocContent = Get-Content -LiteralPath $roleDocFullPath -Raw
+
+        $reviewerPrompt = @"
+$roleDocContent
+
+---
+WORK PACKAGE CONTEXT (review-only; do not modify any file)
+
+Objective:
+$objectiveText
+
+Scope:
+$scopeText
+
+Implementation completion report:
+$(Get-TruncatedText -Text $implementationOutput)
+
+Relevant diff (unrelated pre-existing modifications excluded):
+$(Get-TruncatedText -Text $targetedDiff)
+
+---
+INSTRUCTIONS
+You are running as the $name reviewer defined above. Follow its Output format exactly.
+Do not modify, stage, commit, or push any file. Do not perform database writes, deployment,
+schema, RLS, or secret changes. Do not remediate any finding you identify -- only review
+and report using the exact output format defined above.
+"@
+
+        if ($TestReviewPipeline -and -not $UseRealReviewers) {
+            $requestedVerdict = if ($TestReviewerVerdicts.ContainsKey($name)) { $TestReviewerVerdicts[$name] } else { 'PASS' }
+            $headingWord = switch ($name) {
+                'Mission'        { 'MISSION REVIEW' }
+                'UX'             { 'UX REVIEW' }
+                'Data Integrity' { 'DATA INTEGRITY REVIEW' }
+                'Security'       { 'SECURITY REVIEW' }
+            }
+            if ($requestedVerdict -eq 'UNPARSEABLE') {
+                $reviewerOutput = "This synthetic reviewer response has no recognizable verdict line (generated by -TestReviewPipeline)."
+                $reviewerExit = 0
+            } else {
+                $reviewerOutput = "$headingWord`: $requestedVerdict`n`nFindings:`n- synthetic test finding`n`nBlocking issues:`n- none`n`nEvidence reviewed:`n- synthetic test data (generated by -TestReviewPipeline)"
+                $reviewerExit = 0
+            }
+        } else {
+            $reviewerCallResult = Invoke-ClaudeCapture -Prompt $reviewerPrompt
+            $reviewerOutput = $reviewerCallResult.Output
+            $reviewerExit = $reviewerCallResult.ExitCode
+        }
+
+        $reviewerOutputPath = Join-Path -Path $reviewsDir -ChildPath $reviewerOutputFileNameMap[$name]
+        Set-Content -LiteralPath $reviewerOutputPath -Value $reviewerOutput
+        $reviewerRawOutputs[$name] = $reviewerOutput
+
+        if ($reviewerExit -ne 0) {
+            $reviewerResults[$name] = 'FAIL'
+            Write-Host "$name reviewer invocation failed (exit $reviewerExit); treated as FAIL/unavailable."
+            continue
+        }
+
+        $verdict = Get-FirstRegexGroup -Text $reviewerOutput -Pattern $reviewerVerdictPatterns[$name]
+        if ($null -eq $verdict) {
+            $reviewerResults[$name] = 'FAIL'
+            Write-Host "$name reviewer returned no usable/parseable verdict; treated as FAIL/unavailable."
+        } elseif ($verdict -match '(?i)^pass with conditions$') {
+            $reviewerResults[$name] = 'PASS WITH CONDITIONS'
+        } elseif ($verdict -match '(?i)^pass$') {
+            $reviewerResults[$name] = 'PASS'
+        } else {
+            $reviewerResults[$name] = 'FAIL'
+        }
+    }
+
+    if ($releaseGateSelected) {
+        Write-Host "Running Release Gate reviewer (last)..."
+
+        $roleDocFullPath = Join-Path -Path $repoRoot -ChildPath $reviewerFileMap['Release Gate']
+        $roleDocContent = Get-Content -LiteralPath $roleDocFullPath -Raw
+
+        $otherReviewsSection = ($specialistReviewers | ForEach-Object {
+            "## $_`n$($reviewerRawOutputs[$_])"
+        }) -join "`n`n"
+        if ([string]::IsNullOrWhiteSpace($otherReviewsSection)) {
+            $otherReviewsSection = '(no specialized reviewers were selected for this work package)'
+        }
+
+        $releaseGatePrompt = @"
+$roleDocContent
+
+---
+WORK PACKAGE CONTEXT (review-only; do not modify any file)
+
+Objective:
+$objectiveText
+
+Scope:
+$scopeText
+
+Implementation completion report:
+$(Get-TruncatedText -Text $implementationOutput)
+
+Relevant diff (unrelated pre-existing modifications excluded):
+$(Get-TruncatedText -Text $targetedDiff)
+
+Specialized reviewer outputs:
+$otherReviewsSection
+
+---
+INSTRUCTIONS
+You are running as the Release Gate defined above. Follow its Output format exactly.
+Do not modify, stage, commit, or push any file. Do not perform database writes, deployment,
+schema, RLS, or secret changes. Do not remediate any finding -- only review and report.
+"@
+
+        if ($TestReviewPipeline -and -not $UseRealReviewers) {
+            $requestedVerdict = if ($TestReviewerVerdicts.ContainsKey('Release Gate')) { $TestReviewerVerdicts['Release Gate'] } else { 'PASS' }
+            if ($requestedVerdict -eq 'UNPARSEABLE') {
+                $releaseGateOutput = "Synthetic Release Gate response with no recognizable decision line (generated by -TestReviewPipeline)."
+                $releaseGateExit = 0
+            } else {
+                $releaseGateOutput = "RELEASE DECISION: $requestedVerdict`n`nImplementation: $implementationStatus`nTests: NOT RUN`nBuild: NOT RUN`n`nBlocking issues:`n- none`n`n(Synthetic Release Gate output generated by -TestReviewPipeline.)"
+                $releaseGateExit = 0
+            }
+        } else {
+            $releaseGateCallResult = Invoke-ClaudeCapture -Prompt $releaseGatePrompt
+            $releaseGateOutput = $releaseGateCallResult.Output
+            $releaseGateExit = $releaseGateCallResult.ExitCode
+        }
+
+        $releaseGateOutputPath = Join-Path -Path $reviewsDir -ChildPath $reviewerOutputFileNameMap['Release Gate']
+        Set-Content -LiteralPath $releaseGateOutputPath -Value $releaseGateOutput
+
+        if ($releaseGateExit -ne 0) {
+            $reviewerResults['Release Gate'] = 'FAIL'
+            Write-Host "Release Gate invocation failed (exit $releaseGateExit); treated as FAIL/unavailable."
+        } else {
+            $rgVerdict = Get-FirstRegexGroup -Text $releaseGateOutput -Pattern $reviewerVerdictPatterns['Release Gate']
+            if ($null -eq $rgVerdict) {
+                $reviewerResults['Release Gate'] = 'FAIL'
+                Write-Host "Release Gate returned no usable/parseable decision; treated as FAIL/unavailable."
+            } elseif ($rgVerdict -match '(?i)^pass with conditions$') {
+                $reviewerResults['Release Gate'] = 'PASS WITH CONDITIONS'
+            } elseif ($rgVerdict -match '(?i)^pass$') {
+                $reviewerResults['Release Gate'] = 'PASS'
+            } else {
+                $reviewerResults['Release Gate'] = 'FAIL'
+            }
+        }
+    }
+}
+
+# 13. Determine the final status. PASS requires implementation PASS and every selected
+# review PASS with no conditions; any FAIL anywhere is a hard FAIL; anything else
+# (implementation PARTIAL, or any selected review PASS WITH CONDITIONS) is
+# PASS WITH CONDITIONS.
+$anyFail = ($implementationStatus -eq 'FAIL')
+foreach ($name in $normalizedReviewers) {
+    if ($reviewerResults[$name] -eq 'FAIL') { $anyFail = $true }
+}
+
+$anyCondition = ($implementationStatus -ne 'PASS')
+foreach ($name in $normalizedReviewers) {
+    if ($reviewerResults[$name] -eq 'PASS WITH CONDITIONS') { $anyCondition = $true }
+}
+
+if ($anyFail) {
+    $finalStatus = 'FAIL'
+} elseif ($anyCondition) {
+    $finalStatus = 'PASS WITH CONDITIONS'
+} else {
+    $finalStatus = 'PASS'
+}
+
+# 14. Final compact console report.
 Write-Host ""
+Write-Host "CIVICMARKET WORK PACKAGE RESULT"
+Write-Host ""
+Write-Host "Implementation: $implementationStatus"
+Write-Host ""
+Write-Host "Reviews:"
+Write-Host "Mission: $($reviewerResults['Mission'])"
+Write-Host "UX: $($reviewerResults['UX'])"
+Write-Host "Data Integrity: $($reviewerResults['Data Integrity'])"
+Write-Host "Security: $($reviewerResults['Security'])"
+Write-Host "Release Gate: $($reviewerResults['Release Gate'])"
+Write-Host ""
+Write-Host "Git:"
+Write-Host "Start commit: $startCommit"
+Write-Host "End commit: $endCommit"
+Write-Host "Branch: $branch"
+Write-Host ""
+Write-Host "Database writes: $dbWritesDisplay"
+Write-Host "Deployment: $deploymentDisplay"
+Write-Host ""
+Write-Host "Final status:"
+Write-Host $finalStatus
 
-# Invoke Claude Code in non-interactive print mode. Deliberately does NOT pass:
-#   --dangerously-skip-permissions
-#   --allow-dangerously-skip-permissions
-#   --permission-mode bypassPermissions
-& claude -p $fullPrompt
-
-exit $LASTEXITCODE
+if ($finalStatus -eq 'FAIL') {
+    exit 1
+} else {
+    exit 0
+}

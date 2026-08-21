@@ -49,3 +49,6 @@ next-env.d.ts
 # Local backup folders
 OLD/
 docs/OLD-docs/
+
+# Work package runner temporary output (implementation/reviewer capture, not source)
+.tmp/
