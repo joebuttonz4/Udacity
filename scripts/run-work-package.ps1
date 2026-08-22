@@ -223,7 +223,13 @@ function Invoke-ClaudeCapture {
     # argument. Piping via stdin bypasses native command-line argument quoting entirely.
     # Verified empirically: `claude -p` reads the full prompt from stdin, unmodified, when
     # no positional prompt argument is supplied.
-    $captured = $Prompt | & claude @claudeArgs 2>&1 | Out-String
+    #
+    # Every Claude invocation in this script (implementation, reviewers, Release Gate, and
+    # all test modes, including -TestEditPermission) goes through this one function, which
+    # always calls the single resolved executable path in $script:ClaudeExePath -- set once,
+    # early, by the robust discovery block below. This script never calls the bare `claude`
+    # command name directly anywhere else.
+    $captured = $Prompt | & $script:ClaudeExePath @claudeArgs 2>&1 | Out-String
     return [PSCustomObject]@{ Output = $captured; ExitCode = $LASTEXITCODE }
 }
 
@@ -307,11 +313,50 @@ if ($missing.Count -gt 0) {
     Fail "Missing required file(s): $($missing -join ', '). Cannot start the work package runner."
 }
 
-# 5. Verify the claude command is available.
+# 5. Resolve the Claude Code executable. Normal PATH discovery (Get-Command) is tried
+# first, unchanged from before. If that fails, this falls back to the known Windows
+# npm-global install locations under $env:APPDATA (never a hardcoded username), preferring
+# claude.cmd over claude.ps1 if both exist. The resolved path is stored once, in
+# $script:ClaudeExePath, and every Claude invocation in this script (implementation,
+# reviewer sessions, Release Gate, and all test modes) goes through Invoke-ClaudeCapture,
+# which always uses this one variable -- see Invoke-ClaudeCapture above. If no executable
+# can be resolved by either method, this fails before any implementation starts and prints
+# every location that was checked; it does not guess any further location.
+$script:ClaudeExePath = $null
+$claudePathsChecked = @()
+
 $claudeCmd = Get-Command claude -ErrorAction SilentlyContinue
-if (-not $claudeCmd) {
-    Fail "The 'claude' command was not found on PATH. Install/configure the Claude Code CLI before running this script."
+if ($claudeCmd) {
+    $script:ClaudeExePath = if (-not [string]::IsNullOrWhiteSpace($claudeCmd.Source)) { $claudeCmd.Source } else { 'claude' }
+    $claudePathsChecked += "Get-Command claude -> $($script:ClaudeExePath) (found)"
+} else {
+    $claudePathsChecked += 'Get-Command claude (not found on PATH)'
+
+    $appDataCmdPath = Join-Path -Path $env:APPDATA -ChildPath 'npm\claude.cmd'
+    $appDataPs1Path = Join-Path -Path $env:APPDATA -ChildPath 'npm\claude.ps1'
+
+    if (Test-Path -LiteralPath $appDataCmdPath -PathType Leaf) {
+        $script:ClaudeExePath = $appDataCmdPath
+        $claudePathsChecked += "$appDataCmdPath (found, preferred over claude.ps1)"
+    } else {
+        $claudePathsChecked += "$appDataCmdPath (not found)"
+
+        if (Test-Path -LiteralPath $appDataPs1Path -PathType Leaf) {
+            $script:ClaudeExePath = $appDataPs1Path
+            $claudePathsChecked += "$appDataPs1Path (found)"
+        } else {
+            $claudePathsChecked += "$appDataPs1Path (not found)"
+        }
+    }
 }
+
+if (-not $script:ClaudeExePath) {
+    Write-Host "Could not resolve the Claude Code executable. Paths checked:"
+    foreach ($checkedPath in $claudePathsChecked) { Write-Host "  - $checkedPath" }
+    Fail "Install/configure the Claude Code CLI (or ensure it is discoverable via PATH or `$env:APPDATA\npm\) before running this script."
+}
+
+Write-Host "Resolved Claude Code executable: $($script:ClaudeExePath)"
 
 # 5a. Standalone smoke test for Defect 1 (implementation edit permission). Independent of
 # every other mode; runs two small, real Claude Code calls against a disposable scratch file
