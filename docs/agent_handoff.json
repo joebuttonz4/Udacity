@@ -1,21 +1,20 @@
 {
   "project": "CivicMarket",
   "status": "PASS",
-  "updated_at": "2026-08-21T21:52:00Z",
-  "commit": null,
+  "updated_at": "2026-08-22T01:28:55Z",
+  "commit": "3333f3ec8ffe807bd2e5b4d23df401671d1f7fa4",
   "branch": "master",
-  "work_package": "Gemini migration review documentation",
-  "summary": "Recorded the specialized-reviewer outcome (Mission PASS WITH CONDITIONS, Data Integrity PASS WITH CONDITIONS, Security PASS, Release Gate PASS WITH CONDITIONS, no blocking issues) for the pre-existing, already-pushed Gemini candidate-evidence migration (commit b510ef2) in CIVICMARKET_CURRENT_STATE.md, including four tracked follow-up conditions required before scaling extraction beyond Shannon Martin. Documentation only; not committed by this update.",
+  "work_package": "Claude executable discovery fix",
+  "summary": "Runner now resolves Claude Code reliably through normal PATH discovery with an APPDATA fallback on Windows, and all Claude invocations use the resolved executable path.",
   "files_changed": [
-    "CIVICMARKET_CURRENT_STATE.md",
-    "docs/agent_handoff.json"
+    "scripts/run-work-package.ps1"
   ],
   "tests": {
-    "build": "NOT_RUN",
-    "lint": "NOT_RUN",
-    "other": [
-      "Documentation-only change; npm run build/lint not run for this task. Fresh npm run build (PASS) and npm run test (52/52 PASS) were run during the prior review task and are cited in the recorded outcome, not re-run here."
-    ]
+    "PowerShell syntax": "PASS",
+    "normal Claude discovery": "PASS",
+    "APPDATA fallback discovery": "PASS",
+    "Claude version verification": "PASS",
+    "all runner Claude calls use resolved path": "PASS"
   },
   "database": {
     "writes_performed": false,
@@ -29,5 +28,5 @@
     "rls_changed": false
   },
   "blockers": [],
-  "recommended_next_step": "Track the four Gemini migration follow-up conditions recorded in CIVICMARKET_CURRENT_STATE.md before scaling candidate-evidence extraction beyond Shannon Martin. No corrective work package is required to keep the current change in place."
+  "recommended_next_step": "Complete the reviewer read-only enforcement and baseline-aware diff isolation fixes identified by the Codex independent review."
 }
