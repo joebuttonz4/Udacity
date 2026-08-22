@@ -6,35 +6,48 @@
     This runner reduces manual copy/paste between ChatGPT and Claude Code. It:
 
       1. Determines the CivicMarket repository root from this script's own location.
-      2. Changes directory to the repository root.
+      2. Changes directory to the repository root, and creates the gitignored .tmp/ and
+         .tmp/reviews/ output directories (see .gitignore).
       3. Verifies CLAUDE.md, docs/AGENT_WORKFLOW.md, and docs/CURRENT_WORK_PACKAGE.md exist.
       4. Verifies the `claude` CLI is available on PATH.
-      5. Prints the repository path, current git branch, and a concise `git status --short`.
-      6. Runs a safety preflight on docs/CURRENT_WORK_PACKAGE.md: refuses to launch Claude if
+      5. If -TestEditPermission is passed, runs a standalone smoke test of the narrow Edit-tool
+         allowlist mechanism (see Defect 1 below) against a disposable scratch file, then exits.
+         Skipped otherwise.
+      6. Prints the repository path, current git branch, and a concise `git status --short`.
+      7. Runs a safety preflight on docs/CURRENT_WORK_PACKAGE.md: refuses to launch Claude if
          the file still contains blank-template placeholder text, or is missing any of its
          required sections (## Status, ## Objective, ## Scope, ## Required Reviews,
          ## Commit / Push Authorization, ## Work Instructions).
-      7. Parses, validates, and normalizes the ## Required Reviews value (NONE, or a
+      8. Parses, validates, and normalizes the ## Required Reviews value (NONE, or a
          comma-separated list drawn only from: Mission, UX, Data Integrity, Security,
          Release Gate). Rejects a blank value, unknown names, duplicates, and NONE combined
          with another name. Verifies every requested reviewer's file under docs/agents/
-         exists. This step only validates and maps reviewers — it does not yet invoke any
-         reviewer agent (that is added in a future work package).
-      8. Displays a concise preflight summary (repository, branch, normalized Required
+         exists.
+      9. Displays a concise preflight summary (repository, branch, normalized Required
          Reviews) before Claude launches.
-      9. Invokes `claude -p` (non-interactive print mode) with a prompt built from the
+     10. Invokes `claude -p` (non-interactive print mode) with a prompt built from the
          contents of docs/CURRENT_WORK_PACKAGE.md plus a fixed instruction block that tells
          Claude to follow docs/AGENT_WORKFLOW.md as the governing safety/process contract.
+         This single implementation call is granted a narrow, explicit `--allowedTools Edit`
+         allowlist (see Defect 1 below); no other call this script makes ever receives it.
          Skipped when -DryRun is passed (used for safely testing preflight validation).
-     10. Captures the implementation output and the starting/ending git commit and status,
+     11. Captures the implementation output and the starting/ending git commit and status,
          and writes the implementation output to .tmp/implementation-review-input.txt.
-     11. If Required Reviews is not NONE, invokes one separate non-interactive Claude session
-         per selected reviewer (docs/agents/*.md), each explicitly instructed to only review
-         and report -- never to modify, stage, commit, push, write to the database, deploy,
-         or change secrets. Release Gate (if selected) always runs last and also receives the
-         other selected reviewers' outputs. Each reviewer's raw output is saved under
-         .tmp/reviews/<name>.txt.
-     12. Prints one compact "CIVICMARKET WORK PACKAGE RESULT" report combining the
+     12. If Required Reviews is not NONE, and a reviewable implementation diff exists,
+         invokes one separate non-interactive Claude session per selected reviewer
+         (docs/agents/*.md), each explicitly instructed to only review and report -- never to
+         modify, stage, commit, push, write to the database, deploy, or change secrets. Each
+         reviewer receives the full role document plus the work package's Objective, Scope,
+         and Work Instructions, the implementation completion report, a best-effort
+         test/build extract, and the relevant diff (see Defect 2 below). Release Gate (if
+         selected) always runs last and also receives the other selected reviewers' outputs.
+         Each reviewer's raw output is saved under .tmp/reviews/<name>.txt, and the exact
+         prompt sent to it is saved under .tmp/reviews/<name>-prompt.txt for audit/debugging.
+         If the implementation failed, or produced no reviewable diff, every selected
+         reviewer is deterministically marked FAIL with a documented blocking issue instead of
+         being invoked (see Defect 2 / validation item G below) -- this does not depend on a
+         model choosing to comply with an instruction.
+     13. Prints one compact "CIVICMARKET WORK PACKAGE RESULT" report combining the
          implementation verdict, each reviewer's verdict, git start/end commit, and a
          final status (PASS / PASS WITH CONDITIONS / FAIL) derived only from parsed verdicts
          -- never guessed.
@@ -47,11 +60,44 @@
       normalization, ordering, and final-status logic be exercised with zero real Claude
       implementation or reviewer invocations.
 
+      -TestNoDiff (only honored with -TestReviewPipeline) additionally forces the synthetic
+      implementation down a "no reviewable diff" path, to validate that every selected
+      reviewer is deterministically marked FAIL (missing implementation) without being
+      invoked at all -- zero real or synthetic reviewer tokens spent.
+
+      -TestReviewersOverride (only honored with -TestReviewPipeline) overrides which
+      reviewers are exercised, independent of docs/CURRENT_WORK_PACKAGE.md's own
+      '## Required Reviews' value, so every reviewer role document (including Data Integrity
+      and Security, which the current real work package does not select) can have its prompt
+      assembly validated without ever modifying docs/CURRENT_WORK_PACKAGE.md. Each selected
+      reviewer's fully-assembled prompt is always written to .tmp/reviews/<name>-prompt.txt
+      regardless of -UseRealReviewers, so prompt content can be statically verified (full
+      role-doc inclusion, no truncation, presence of Objective/Scope/Work Instructions/diff)
+      with zero real Claude calls.
+
+    -TestEditPermission is a separate, standalone smoke test (see step 5 above) that never
+    touches -TestReviewPipeline, the real implementation, or any reviewer.
+
     Safety:
       - This script never sets --dangerously-skip-permissions,
-        --allow-dangerously-skip-permissions, or --permission-mode bypassPermissions.
-      - Claude's normal permission system (interactive prompts / project permission
-        settings) applies exactly as it would in an interactive session.
+        --allow-dangerously-skip-permissions, or --permission-mode bypassPermissions, for any
+        invocation, under any parameter combination.
+      - The only additional permission this script ever grants beyond a normal interactive
+        session is a narrow, explicit --allowedTools Edit allowlist, applied solely to the
+        single non-interactive implementation call (see Defect 1 in the project history).
+        This lets routine file edits explicitly authorized by the work package's own
+        "Allowed Autonomous Actions" section proceed without an unanswerable interactive
+        approval prompt. It does not enable Bash, Write, NotebookEdit, database, or
+        deployment actions -- those remain governed by whatever permission settings already
+        apply (project/user settings, or normal per-call approval), exactly as in an
+        interactive session. No reviewer call (Mission, UX, Data Integrity, Security, or
+        Release Gate) ever receives this or any other allowlist -- reviewer sessions remain
+        review-only.
+      - Every prompt is piped to `claude -p` via stdin rather than passed as a command-line
+        argument, to avoid Windows/cmd.exe native command-line argument quoting corrupting or
+        truncating prompt content that contains embedded double quotes (this previously
+        truncated the UX reviewer's prompt around its literal quoted "Central question" text;
+        see Defect 3 in the project history).
       - This script does not read, print, or write .env.local or any secret/credential file.
       - This script does not modify application source files, perform database writes, or
         deploy anything. All of that is left to Claude Code's own approval-gated behavior,
@@ -77,7 +123,7 @@ param(
     [switch]$DryRun,
 
     # Review-pipeline test mode: skips the real implementation Claude call and (unless
-    # -UseRealReviewers is also passed) skips real reviewer Claude calls too, using
+    # -UseRealReviewers is also set) skips real reviewer Claude calls too, using
     # synthetic/mocked text instead. Lets the parsing/normalization/ordering/final-status
     # logic be exercised with zero real Claude implementation or reviewer invocations, and
     # without touching the repository. Never used for a real CivicMarket implementation
@@ -99,7 +145,30 @@ param(
     # Only meaningful with -TestReviewPipeline. When set, reviewers are invoked for real
     # (the implementation call is still skipped). Off by default so pipeline testing never
     # spends real reviewer tokens unless explicitly requested.
-    [switch]$UseRealReviewers
+    [switch]$UseRealReviewers,
+
+    # Only honored with -TestReviewPipeline. Forces the synthetic implementation down a "no
+    # reviewable diff" path, so every selected reviewer is deterministically marked FAIL
+    # (missing implementation) without being invoked at all -- validates that this behavior
+    # does not depend on a model choosing to comply with an instruction. Zero real or
+    # synthetic reviewer tokens are spent either way.
+    [switch]$TestNoDiff,
+
+    # Only honored with -TestReviewPipeline. Overrides which reviewers are exercised,
+    # independent of docs/CURRENT_WORK_PACKAGE.md's own '## Required Reviews' value, so
+    # every reviewer role document (including ones the current real work package does not
+    # select) can have its prompt assembly validated without ever modifying
+    # docs/CURRENT_WORK_PACKAGE.md. Comma-separated canonical names: Mission, UX,
+    # Data Integrity, Security, Release Gate.
+    [string[]]$TestReviewersOverride = @(),
+
+    # Standalone smoke test for the Defect 1 fix. Runs two small, real Claude Code calls
+    # against a disposable scratch file under .tmp/ only (never application code, never
+    # docs/CURRENT_WORK_PACKAGE.md) to prove that a narrow --allowedTools Edit grant allows
+    # an unattended edit while the default (no allowlist) does not, then exits. Never
+    # invokes the real implementation or any reviewer, and is independent of
+    # -TestReviewPipeline and all of its parameters.
+    [switch]$TestEditPermission
 )
 
 $ErrorActionPreference = 'Stop'
@@ -107,6 +176,89 @@ $ErrorActionPreference = 'Stop'
 function Fail([string]$Message) {
     Write-Error $Message
     exit 1
+}
+
+# --- Helper functions (defined early so they are available to every mode, including the ------
+# --- standalone -TestEditPermission smoke test, which exits before the main pipeline runs) ---
+
+function Get-WorkPackageSection {
+    param([string]$Content, [string]$HeadingText)
+    $lines = $Content -split "`r`n|`n"
+    $idx = -1
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+        if ($lines[$i].Trim() -eq $HeadingText) { $idx = $i; break }
+    }
+    if ($idx -lt 0) { return '' }
+    $collected = @()
+    for ($i = $idx + 1; $i -lt $lines.Count; $i++) {
+        if ($lines[$i].Trim().StartsWith('## ')) { break }
+        $collected += $lines[$i]
+    }
+    return ($collected -join "`n").Trim()
+}
+
+function Invoke-ClaudeCapture {
+    param(
+        [Parameter(Mandatory)][string]$Prompt,
+
+        # Optional narrow tool allowlist for this single invocation only (e.g. 'Edit'),
+        # equivalent to Claude Code's --allowedTools flag. Never used to pass
+        # --dangerously-skip-permissions, --allow-dangerously-skip-permissions, or
+        # --permission-mode bypassPermissions -- this script never sets any of those, for
+        # any invocation, under any parameter combination. Leave unset (the default) for
+        # every review-only invocation, so reviewer sessions never receive edit permission.
+        [string]$AllowedTools = $null
+    )
+
+    $claudeArgs = @('-p')
+    if (-not [string]::IsNullOrWhiteSpace($AllowedTools)) {
+        $claudeArgs += @('--allowedTools', $AllowedTools)
+    }
+
+    # The prompt is piped to Claude via stdin rather than passed as a positional CLI
+    # argument. `claude` is invoked through a Node .cmd shim on Windows, which is itself
+    # re-parsed by cmd.exe; a prompt containing embedded double quotes (for example, the
+    # literal quoted sentence in docs/agents/UX_REVIEWER.md's "Central question" section)
+    # can be truncated or corrupted by that re-parsing when passed as a command-line
+    # argument. Piping via stdin bypasses native command-line argument quoting entirely.
+    # Verified empirically: `claude -p` reads the full prompt from stdin, unmodified, when
+    # no positional prompt argument is supplied.
+    $captured = $Prompt | & claude @claudeArgs 2>&1 | Out-String
+    return [PSCustomObject]@{ Output = $captured; ExitCode = $LASTEXITCODE }
+}
+
+function Get-FirstRegexGroup {
+    param([string]$Text, [string]$Pattern)
+    if ([string]::IsNullOrWhiteSpace($Text)) { return $null }
+    $m = [regex]::Match($Text, $Pattern)
+    if ($m.Success) { return $m.Groups[1].Value.Trim() }
+    return $null
+}
+
+function Get-TruncatedText {
+    param([string]$Text, [int]$MaxLength = 6000)
+    if ([string]::IsNullOrEmpty($Text)) { return $Text }
+    if ($Text.Length -le $MaxLength) { return $Text }
+    return $Text.Substring(0, $MaxLength) + "`n...[truncated for token efficiency]..."
+}
+
+function Remove-UnrelatedStatusLines {
+    param([string]$StatusText, [string]$UnrelatedPath)
+    if ([string]::IsNullOrWhiteSpace($StatusText)) { return $StatusText }
+    ($StatusText -split "`r`n|`n" | Where-Object { $_ -notmatch [regex]::Escape($UnrelatedPath) }) -join "`n"
+}
+
+function Get-TestBuildResultsText {
+    param([string]$ImplementationOutput)
+    if ([string]::IsNullOrWhiteSpace($ImplementationOutput)) {
+        return '(not separately available; implementation produced no output)'
+    }
+    $lines = $ImplementationOutput -split "`r`n|`n"
+    $testBuildLines = $lines | Where-Object { $_ -match '(?i)\b(test|tests|lint|build)\b' }
+    if (-not $testBuildLines -or @($testBuildLines).Count -eq 0) {
+        return '(not separately reported by the implementation; see the completion report above for full context)'
+    }
+    return (@($testBuildLines) -join "`n")
 }
 
 # 1. Determine repository root from this script's own location.
@@ -126,6 +278,14 @@ if (-not (Test-Path -LiteralPath $repoRoot -PathType Container)) {
 Set-Location -LiteralPath $repoRoot
 
 Write-Host "Repository path: $repoRoot"
+
+# 2a. Prepare .tmp/ output directories (gitignored -- see .gitignore). Created early and
+# unconditionally so both the standalone -TestEditPermission smoke test and the main
+# pipeline can rely on them.
+$tmpDir = Join-Path -Path $repoRoot -ChildPath '.tmp'
+$reviewsDir = Join-Path -Path $tmpDir -ChildPath 'reviews'
+if (-not (Test-Path -LiteralPath $tmpDir)) { New-Item -ItemType Directory -Path $tmpDir | Out-Null }
+if (-not (Test-Path -LiteralPath $reviewsDir)) { New-Item -ItemType Directory -Path $reviewsDir | Out-Null }
 
 # 3. Verify required files exist.
 $requiredFiles = @(
@@ -151,6 +311,62 @@ if ($missing.Count -gt 0) {
 $claudeCmd = Get-Command claude -ErrorAction SilentlyContinue
 if (-not $claudeCmd) {
     Fail "The 'claude' command was not found on PATH. Install/configure the Claude Code CLI before running this script."
+}
+
+# 5a. Standalone smoke test for Defect 1 (implementation edit permission). Independent of
+# every other mode; runs two small, real Claude Code calls against a disposable scratch file
+# under .tmp/ only, then exits. Never touches application code, docs/CURRENT_WORK_PACKAGE.md,
+# git, or the reviewer pipeline.
+if ($TestEditPermission) {
+    Write-Host "TEST MODE (-TestEditPermission): validating the narrow Edit-tool allowlist mechanism."
+    Write-Host "This performs two small, real Claude Code calls against a disposable scratch file"
+    Write-Host "under .tmp/ only -- no application source file, docs/CURRENT_WORK_PACKAGE.md, or"
+    Write-Host "repository content outside .tmp/ is touched. No --dangerously-skip-permissions,"
+    Write-Host "--allow-dangerously-skip-permissions, or --permission-mode bypassPermissions is"
+    Write-Host "ever used, in this mode or any other."
+    Write-Host ""
+
+    $scratchPath = Join-Path -Path $tmpDir -ChildPath 'edit-permission-smoketest.txt'
+    $editPrompt = "The file at $scratchPath currently contains the single line 'before-edit'. " +
+        "Using the Edit tool only, replace its contents with the single line 'edited-ok' " +
+        "exactly, with no other file touched. Reply with exactly one word: PASS if you " +
+        "successfully edited it, or BLOCKED if you were not able to because of a permission " +
+        "check."
+
+    Set-Content -LiteralPath $scratchPath -Value 'before-edit'
+    Write-Host "Call 1 (baseline, no --allowedTools): expected to be blocked / not edit the file."
+    $baselineResult = Invoke-ClaudeCapture -Prompt $editPrompt
+    $baselineContent = (Get-Content -LiteralPath $scratchPath -Raw).Trim()
+    $baselineEdited = ($baselineContent -eq 'edited-ok')
+
+    Set-Content -LiteralPath $scratchPath -Value 'before-edit'
+    Write-Host "Call 2 (-AllowedTools 'Edit'): expected to succeed unattended."
+    $allowedResult = Invoke-ClaudeCapture -Prompt $editPrompt -AllowedTools 'Edit'
+    $allowedContent = (Get-Content -LiteralPath $scratchPath -Raw).Trim()
+    $allowedEdited = ($allowedContent -eq 'edited-ok')
+
+    Remove-Item -LiteralPath $scratchPath -Force -ErrorAction SilentlyContinue
+
+    Write-Host ""
+    Write-Host "Baseline (no allowlist) edited the scratch file: $baselineEdited"
+    Write-Host "Baseline output:"
+    Write-Host $baselineResult.Output
+    Write-Host ""
+    Write-Host "With -AllowedTools 'Edit' edited the scratch file: $allowedEdited"
+    Write-Host "Allowed output:"
+    Write-Host $allowedResult.Output
+    Write-Host ""
+
+    if ($allowedEdited -and -not $baselineEdited) {
+        Write-Host "TEST RESULT: PASS -- the narrow --allowedTools Edit grant enables unattended editing; the default (no allowlist) call does not."
+        exit 0
+    } elseif ($allowedEdited -and $baselineEdited) {
+        Write-Host "TEST RESULT: INCONCLUSIVE -- the baseline call also edited the file (this indicates a permissive project/user setting outside this script's control, not a defect in this mechanism); the -AllowedTools call succeeded as expected."
+        exit 0
+    } else {
+        Write-Host "TEST RESULT: FAIL -- the -AllowedTools 'Edit' call did not result in the expected edit."
+        exit 1
+    }
 }
 
 # 6. Display repository path, current git branch, and concise git status.
@@ -327,58 +543,7 @@ if ($DryRun) {
     exit 0
 }
 
-# 9. Prepare .tmp/ output directories (gitignored -- see .gitignore).
-$tmpDir = Join-Path -Path $repoRoot -ChildPath '.tmp'
-$reviewsDir = Join-Path -Path $tmpDir -ChildPath 'reviews'
-if (-not (Test-Path -LiteralPath $tmpDir)) { New-Item -ItemType Directory -Path $tmpDir | Out-Null }
-if (-not (Test-Path -LiteralPath $reviewsDir)) { New-Item -ItemType Directory -Path $reviewsDir | Out-Null }
-
-# --- Helper functions used by the implementation-capture and reviewer pipeline -------------
-
-function Get-WorkPackageSection {
-    param([string]$Content, [string]$HeadingText)
-    $lines = $Content -split "`r`n|`n"
-    $idx = -1
-    for ($i = 0; $i -lt $lines.Count; $i++) {
-        if ($lines[$i].Trim() -eq $HeadingText) { $idx = $i; break }
-    }
-    if ($idx -lt 0) { return '' }
-    $collected = @()
-    for ($i = $idx + 1; $i -lt $lines.Count; $i++) {
-        if ($lines[$i].Trim().StartsWith('## ')) { break }
-        $collected += $lines[$i]
-    }
-    return ($collected -join "`n").Trim()
-}
-
-function Invoke-ClaudeCapture {
-    param([Parameter(Mandatory)][string]$Prompt)
-    $captured = & claude -p $Prompt 2>&1 | Out-String
-    return [PSCustomObject]@{ Output = $captured; ExitCode = $LASTEXITCODE }
-}
-
-function Get-FirstRegexGroup {
-    param([string]$Text, [string]$Pattern)
-    if ([string]::IsNullOrWhiteSpace($Text)) { return $null }
-    $m = [regex]::Match($Text, $Pattern)
-    if ($m.Success) { return $m.Groups[1].Value.Trim() }
-    return $null
-}
-
-function Get-TruncatedText {
-    param([string]$Text, [int]$MaxLength = 6000)
-    if ([string]::IsNullOrEmpty($Text)) { return $Text }
-    if ($Text.Length -le $MaxLength) { return $Text }
-    return $Text.Substring(0, $MaxLength) + "`n...[truncated for token efficiency]..."
-}
-
-function Remove-UnrelatedStatusLines {
-    param([string]$StatusText, [string]$UnrelatedPath)
-    if ([string]::IsNullOrWhiteSpace($StatusText)) { return $StatusText }
-    ($StatusText -split "`r`n|`n" | Where-Object { $_ -notmatch [regex]::Escape($UnrelatedPath) }) -join "`n"
-}
-
-# Reviewer verdict line patterns, matching each reviewer doc's own "Output format" heading.
+# --- Reviewer verdict patterns, matching each reviewer doc's own "Output format" heading. -----
 $reviewerVerdictPatterns = @{
     'Mission'        = '(?im)^MISSION REVIEW:\s*(PASS WITH CONDITIONS|PASS|FAIL)'
     'UX'             = '(?im)^UX REVIEW:\s*(PASS WITH CONDITIONS|PASS|FAIL)'
@@ -398,8 +563,15 @@ $reviewerOutputFileNameMap = @{
 
 $unrelatedFileRelPath = 'src/app/api/admin/extract-shannon-martin-evidence/route.ts'
 
+# Sentinel string meaning "the implementation produced no reviewable file changes". Shared
+# between the real path and -TestNoDiff so both use exactly the same value (see Defect 2 /
+# validation item G: any reviewer facing this diff is deterministically marked FAIL rather
+# than invoked, instead of relying on a model choosing to comply with an instruction).
+$noDiffPlaceholder = '(no tracked changes relevant to this work package were found)'
+
 $objectiveText = Get-WorkPackageSection -Content $workPackageContent -HeadingText '## Objective'
 $scopeText = Get-WorkPackageSection -Content $workPackageContent -HeadingText '## Scope'
+$workInstructionsText = Get-WorkPackageSection -Content $workPackageContent -HeadingText '## Work Instructions'
 
 # --- Git snapshot before implementation -----------------------------------------------------
 
@@ -415,7 +587,27 @@ if ($TestReviewPipeline) {
 
     $claudeExitCode = 0
     $implementationStatus = $TestImplementationStatus
-    $implementationOutput = @"
+
+    if ($TestNoDiff) {
+        Write-Host "TEST MODE (-TestNoDiff): simulating a completed implementation call that made no"
+        Write-Host "reviewable file changes, to validate the missing-diff review behavior without"
+        Write-Host "spending any real implementation or reviewer tokens."
+        Write-Host ""
+        $implementationOutput = @"
+## Report
+
+- $TestImplementationStatus
+- branch: $branch
+- files changed: (none -- synthetic -TestNoDiff scenario)
+- database writes: NO
+- deployment: NO
+
+(Synthetic implementation output generated by -TestReviewPipeline -TestNoDiff for safe pipeline
+testing. No real CivicMarket implementation package was executed.)
+"@
+        $targetedDiff = $noDiffPlaceholder
+    } else {
+        $implementationOutput = @"
 ## Report
 
 - $TestImplementationStatus
@@ -427,7 +619,9 @@ if ($TestReviewPipeline) {
 (Synthetic implementation output generated by -TestReviewPipeline for safe pipeline testing.
 No real CivicMarket implementation package was executed.)
 "@
-    $targetedDiff = "diff --git a/docs/example-test-file.md b/docs/example-test-file.md`n(synthetic diff generated by -TestReviewPipeline)"
+        $targetedDiff = "diff --git a/docs/example-test-file.md b/docs/example-test-file.md`n(synthetic diff generated by -TestReviewPipeline)"
+    }
+
     $endCommit = $startCommit
     $endStatusRaw = $startStatusRaw
 } else {
@@ -441,6 +635,12 @@ Execute docs/CURRENT_WORK_PACKAGE.md as the authoritative approved work package.
 Follow all safety, git, approval, testing, documentation, and completion rules
 defined in docs/AGENT_WORKFLOW.md.
 
+This session has been granted a narrow, explicit permission to use the Edit tool,
+scoped only to files within this approved work package. You may make approved edits
+without needing to ask for permission. This does not extend to any other tool or to
+any explicit-approval boundary defined in docs/AGENT_WORKFLOW.md or this work
+package -- still stop and request explicit approval before any of those.
+
 Do not stop after routine safe steps. Continue autonomously through the approved
 scope unless an explicit-approval boundary is reached.
 
@@ -450,15 +650,19 @@ At completion, return only the concise standardized completion report.
     $fullPrompt = $workPackageContent.TrimEnd() + "`n`n" + $instruction
 
     Write-Host "Starting Claude Code non-interactively (claude -p) with the current work package."
-    Write-Host "No elevated or bypassed permissions are set by this script; normal Claude Code"
-    Write-Host "permission checks apply exactly as in an interactive session."
+    Write-Host "This call is granted a narrow --allowedTools Edit allowlist only (see Defect 1)."
+    Write-Host "No --dangerously-skip-permissions, --allow-dangerously-skip-permissions, or"
+    Write-Host "--permission-mode bypassPermissions is set; every other tool remains subject to"
+    Write-Host "normal Claude Code permission checks exactly as in an interactive session."
     Write-Host ""
 
-    # Invoke Claude Code in non-interactive print mode. Deliberately does NOT pass:
+    # Invoke Claude Code in non-interactive print mode, with a narrow Edit-only allowlist so
+    # routine, approved file edits do not stall waiting for an unanswerable interactive
+    # approval prompt. Deliberately does NOT pass:
     #   --dangerously-skip-permissions
     #   --allow-dangerously-skip-permissions
     #   --permission-mode bypassPermissions
-    $implResult = Invoke-ClaudeCapture -Prompt $fullPrompt
+    $implResult = Invoke-ClaudeCapture -Prompt $fullPrompt -AllowedTools 'Edit'
     $implementationOutput = $implResult.Output
     $claudeExitCode = $implResult.ExitCode
 
@@ -474,7 +678,7 @@ At completion, return only the concise standardized completion report.
     }
     $targetedDiff = $rawDiff.Trim()
     if ([string]::IsNullOrWhiteSpace($targetedDiff)) {
-        $targetedDiff = '(no tracked changes relevant to this work package were found)'
+        $targetedDiff = $noDiffPlaceholder
     }
 
     if ($claudeExitCode -ne 0) {
@@ -509,14 +713,25 @@ $endStatusFiltered
 "@
 Set-Content -LiteralPath $implementationInputPath -Value $implementationInputContent
 
+# Note on Database writes / Deployment status: these are parsed only from an explicit
+# "database writes: YES/NO" / "deployment: YES/NO" self-report in the implementation's own
+# completion report (per docs/AGENT_WORKFLOW.md's required report format). If that text is
+# absent -- for example because the implementation stopped early, before reaching its own
+# completion checklist -- this deliberately reports UNKNOWN rather than guessing NO from the
+# mere absence of a keyword, or from the absence of a file diff (a database write would not
+# show up in `git diff` at all, so file-diff emptiness is not evidence of "no database
+# write"). This script has no mechanism to independently observe network/Supabase calls made
+# during the implementation call, so UNKNOWN is the honest result whenever the
+# implementation did not explicitly self-report either way.
 $dbWritesParsed = Get-FirstRegexGroup -Text $implementationOutput -Pattern '(?im)database writes:\s*(YES|NO)'
 $deploymentParsed = Get-FirstRegexGroup -Text $implementationOutput -Pattern '(?im)deployment:\s*(YES|NO)'
 $dbWritesDisplay = if ($dbWritesParsed) { $dbWritesParsed.ToUpperInvariant() } else { 'UNKNOWN' }
 $deploymentDisplay = if ($deploymentParsed) { $deploymentParsed.ToUpperInvariant() } else { 'UNKNOWN' }
 
-# 12. Run selected reviewers. Skipped entirely if Required Reviews = NONE, or if the
-# implementation itself failed (a failed implementation has no reliable diff/report to
-# review, and Release Gate must never run after a failed implementation).
+# 12. Run selected reviewers. Skipped entirely if Required Reviews = NONE, if the
+# implementation itself failed, or if the implementation produced no reviewable diff (a
+# failed or empty implementation has no reliable diff/report to review, and Release Gate
+# must never run after either).
 $reviewerResults = [ordered]@{
     'Mission'        = 'NOT REQUIRED'
     'UX'             = 'NOT REQUIRED'
@@ -525,15 +740,61 @@ $reviewerResults = [ordered]@{
     'Release Gate'   = 'NOT REQUIRED'
 }
 
+# Test-only override of which reviewers are exercised (see -TestReviewersOverride above).
+# Only honored with -TestReviewPipeline; never affects a real run, and never touches
+# docs/CURRENT_WORK_PACKAGE.md.
+if ($TestReviewPipeline -and $TestReviewersOverride.Count -gt 0) {
+    $overrideUnknown = @()
+    $overrideNormalized = @()
+    foreach ($tok in $TestReviewersOverride) {
+        $key = $tok.Trim().ToLowerInvariant()
+        if ($canonicalLookup.ContainsKey($key)) {
+            $overrideNormalized += $canonicalLookup[$key]
+        } else {
+            $overrideUnknown += $tok
+        }
+    }
+    if ($overrideUnknown.Count -gt 0) {
+        Fail "TestReviewersOverride contains unknown reviewer name(s): $($overrideUnknown -join ', '). Valid names are: Mission, UX, Data Integrity, Security, Release Gate."
+    }
+    Write-Host "TEST MODE: overriding Required Reviews with -TestReviewersOverride: $($overrideNormalized -join ', ')"
+    Write-Host ""
+    $normalizedReviewers = $overrideNormalized
+}
+
 $specialistReviewers = $normalizedReviewers | Where-Object { $_ -ne 'Release Gate' }
 $releaseGateSelected = $normalizedReviewers -contains 'Release Gate'
 $reviewerRawOutputs = @{}
 
-if ($implementationStatus -eq 'FAIL') {
+$implementationHasNoDiff = ($targetedDiff -eq $noDiffPlaceholder)
+
+if ($implementationStatus -eq 'FAIL' -or $implementationHasNoDiff) {
     if ($normalizedReviewers.Count -gt 0) {
-        Write-Host "Implementation failed; selected reviewers were not executed."
+        $skipReason = if ($implementationStatus -eq 'FAIL') {
+            'Implementation failed; selected reviewers were not executed.'
+        } else {
+            'No reviewable implementation diff was found; the implementation is missing. Selected reviewers were not executed and are deterministically marked FAIL rather than being invoked with nothing to review.'
+        }
+        Write-Host $skipReason
+
         foreach ($name in $normalizedReviewers) {
             $reviewerResults[$name] = 'FAIL'
+
+            $skipOutputText = if ($name -eq 'Release Gate') {
+                "RELEASE DECISION: FAIL`n`nImplementation: $implementationStatus`n`nBlocking issues:`n- $skipReason`n`nRecommended next step:`n- Re-run the implementation phase so it produces a reviewable diff, then re-run the review pipeline."
+            } else {
+                $headingWord = switch ($name) {
+                    'Mission'        { 'MISSION REVIEW' }
+                    'UX'             { 'UX REVIEW' }
+                    'Data Integrity' { 'DATA INTEGRITY REVIEW' }
+                    'Security'       { 'SECURITY REVIEW' }
+                }
+                "$headingWord`: FAIL`n`nBlocking issues:`n- $skipReason`n`nEvidence reviewed:`n- Implementation completion report and git diff (none found)"
+            }
+
+            $reviewerOutputPath = Join-Path -Path $reviewsDir -ChildPath $reviewerOutputFileNameMap[$name]
+            Set-Content -LiteralPath $reviewerOutputPath -Value $skipOutputText
+            $reviewerRawOutputs[$name] = $skipOutputText
         }
     }
 } elseif ($normalizedReviewers.Count -gt 0) {
@@ -555,8 +816,14 @@ $objectiveText
 Scope:
 $scopeText
 
+Work Instructions:
+$workInstructionsText
+
 Implementation completion report:
 $(Get-TruncatedText -Text $implementationOutput)
+
+Test/build results (best-effort extract from the completion report above; may be incomplete):
+$(Get-TruncatedText -Text (Get-TestBuildResultsText -ImplementationOutput $implementationOutput) -MaxLength 2000)
 
 Relevant diff (unrelated pre-existing modifications excluded):
 $(Get-TruncatedText -Text $targetedDiff)
@@ -564,10 +831,20 @@ $(Get-TruncatedText -Text $targetedDiff)
 ---
 INSTRUCTIONS
 You are running as the $name reviewer defined above. Follow its Output format exactly.
+Review the implementation described above. Do not ask for clarification. If there is no
+reviewable implementation diff, return FAIL with a blocking issue stating that the
+implementation is missing.
 Do not modify, stage, commit, or push any file. Do not perform database writes, deployment,
 schema, RLS, or secret changes. Do not remediate any finding you identify -- only review
 and report using the exact output format defined above.
 "@
+
+        # Persist the exact prompt sent to this reviewer, regardless of whether the call
+        # below is real or synthetic, so prompt assembly (full role-doc inclusion, no
+        # truncation, presence of Objective/Scope/Work Instructions/diff) can always be
+        # statically verified without spending any Claude tokens.
+        $reviewerPromptOutputPath = Join-Path -Path $reviewsDir -ChildPath ($reviewerOutputFileNameMap[$name] -replace '\.txt$', '-prompt.txt')
+        Set-Content -LiteralPath $reviewerPromptOutputPath -Value $reviewerPrompt
 
         if ($TestReviewPipeline -and -not $UseRealReviewers) {
             $requestedVerdict = if ($TestReviewerVerdicts.ContainsKey($name)) { $TestReviewerVerdicts[$name] } else { 'PASS' }
@@ -638,8 +915,14 @@ $objectiveText
 Scope:
 $scopeText
 
+Work Instructions:
+$workInstructionsText
+
 Implementation completion report:
 $(Get-TruncatedText -Text $implementationOutput)
+
+Test/build results (best-effort extract from the completion report above; may be incomplete):
+$(Get-TruncatedText -Text (Get-TestBuildResultsText -ImplementationOutput $implementationOutput) -MaxLength 2000)
 
 Relevant diff (unrelated pre-existing modifications excluded):
 $(Get-TruncatedText -Text $targetedDiff)
@@ -650,9 +933,16 @@ $otherReviewsSection
 ---
 INSTRUCTIONS
 You are running as the Release Gate defined above. Follow its Output format exactly.
+Review the implementation and reviewer results described above. Do not ask for clarification.
+If there is no reviewable implementation diff, or the implementation is otherwise missing,
+report Implementation: FAIL and RELEASE DECISION: FAIL with a blocking issue stating that the
+implementation is missing -- do not ask what to review.
 Do not modify, stage, commit, or push any file. Do not perform database writes, deployment,
 schema, RLS, or secret changes. Do not remediate any finding -- only review and report.
 "@
+
+        $releaseGatePromptOutputPath = Join-Path -Path $reviewsDir -ChildPath 'release-gate-prompt.txt'
+        Set-Content -LiteralPath $releaseGatePromptOutputPath -Value $releaseGatePrompt
 
         if ($TestReviewPipeline -and -not $UseRealReviewers) {
             $requestedVerdict = if ($TestReviewerVerdicts.ContainsKey('Release Gate')) { $TestReviewerVerdicts['Release Gate'] } else { 'PASS' }
@@ -718,6 +1008,7 @@ Write-Host ""
 Write-Host "CIVICMARKET WORK PACKAGE RESULT"
 Write-Host ""
 Write-Host "Implementation: $implementationStatus"
+Write-Host "Implementation permission mode: --allowedTools Edit only (no bypass flags ever set)"
 Write-Host ""
 Write-Host "Reviews:"
 Write-Host "Mission: $($reviewerResults['Mission'])"
