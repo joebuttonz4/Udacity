@@ -1,4 +1,4 @@
-{
+﻿{
   "model": "sonnet",
   "permissions": {
     "defaultMode": "acceptEdits",
@@ -63,8 +63,6 @@
       "Read(./scripts/**)",
       "Edit(./src/**)",
       "Edit(./docs/**)",
-      "Write(./src/**)",
-      "Write(./docs/**)",
       "Task(Explore)",
       "Task(Plan)"
     ]

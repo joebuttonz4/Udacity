@@ -1,13 +1,23 @@
 # CivicMarket Current Work Package
 
 ## Status
-READY
+DONE
 
 ## Objective
-Replace this section with the approved work objective.
+Fix the City Council district profile copy so it does not falsely state that saving is always disabled once ENABLE_CITY_COUNCIL_DISTRICT_WRITE is eventually enabled.
 
 ## Scope
-- Replace with approved work items.
+- Update only the misleading static disclaimer copy in:
+  - src/app/profile/city-council-district/page.tsx
+- Address the current text around:
+  - line 127: "Preview only â€” saving is currently disabled"
+  - lines 235â€“237: the beta-preview text stating saving is intentionally disabled and nothing is saved
+- Make the wording accurate in both states:
+  - ENABLE_CITY_COUNCIL_DISTRICT_WRITE = false
+  - ENABLE_CITY_COUNCIL_DISTRICT_WRITE = true
+- Preserve the existing write guard and all current behavior.
+- Prefer deriving displayed copy from the same guard/state if the page can safely access it without duplicating business logic.
+- If that would require broader architecture changes, use the smallest safe implementation and document the limitation.
 
 ## Allowed Autonomous Actions
 - Inspect repository files
@@ -22,6 +32,7 @@ Replace this section with the approved work objective.
 ## Explicit Approval Required
 Stop before:
 - Supabase/database writes
+- enabling ENABLE_CITY_COUNCIL_DISTRICT_WRITE
 - schema or migration execution
 - RLS/policy changes
 - production deployment
@@ -31,26 +42,48 @@ Stop before:
 - force push
 - branch deletion
 - unrelated file changes
-- public candidate/election fact changes not explicitly authorized
-- scoring methodology changes not explicitly authorized
+- candidate/election fact changes
+- scoring methodology changes
 
 ## Completion Requirements
 When work is complete:
 
-1. Run applicable tests.
-2. Run `npm run build` when appropriate.
-3. Review `git status` and final diff.
-4. Do not stage unrelated concurrent work.
-5. Update `CIVICMARKET_CURRENT_STATE.md` if project state materially changed.
-6. Update `docs/agent_handoff.json`.
-7. Commit and push only if this work package explicitly authorizes commit/push.
-8. Return a concise completion report.
+1. Verify the write guard remains false.
+2. Verify no API/write behavior changed.
+3. Verify the UI copy is accurate for the current disabled state and will not become misleading when the guard is later enabled.
+4. Run applicable tests.
+5. Run `npm run build`.
+6. Review `git status` and final diff.
+7. Do not stage unrelated concurrent work.
+8. Update `CIVICMARKET_CURRENT_STATE.md` if project state materially changed.
+9. Update `docs/agent_handoff.json`.
+10. Commit and push only the files belonging to this work package.
+11. Return a concise completion report.
 
 ## Required Reviews
-NONE
+UX, Mission, Release Gate
 
 ## Commit / Push Authorization
-NO
+YES
 
 ## Work Instructions
-Replace this section with the actual approved instructions.
+Implement the smallest safe fix for the two static City Council district disclaimer blocks.
+
+Do not enable the write feature.
+
+Do not change:
+- src/app/api/set-city-council-district/route.ts write behavior
+- database behavior
+- Supabase
+- RLS
+- schema
+- secrets
+- deployment configuration
+
+The goal is copy correctness only.
+
+The final implementation must make it clear to the user whether saving is currently available without hardcoding wording that becomes false when the existing feature guard changes.
+
+Keep the wording concise and user-friendly.
+
+Do not touch unrelated files.
