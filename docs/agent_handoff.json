@@ -1,20 +1,17 @@
 {
   "project": "CivicMarket",
   "status": "PASS",
-  "updated_at": "2026-08-22T01:28:55Z",
-  "commit": "3333f3ec8ffe807bd2e5b4d23df401671d1f7fa4",
+  "updated_at": "2026-08-25T00:00:00Z",
+  "commit": "PENDING",
   "branch": "master",
-  "work_package": "Claude executable discovery fix",
-  "summary": "Runner now resolves Claude Code reliably through normal PATH discovery with an APPDATA fallback on Windows, and all Claude invocations use the resolved executable path.",
+  "work_package": "Fix misleading City Council district disclaimer copy",
+  "summary": "The two static disclaimer blocks on /profile/city-council-district claimed saving was permanently/intentionally disabled, which would become false once ENABLE_CITY_COUNCIL_DISTRICT_WRITE is later enabled. Header copy now makes no claim about the current save state; the bottom disclaimer is now derived from the live dryRun value returned by POST /api/set-city-council-district on each submission, so it reads correctly whether the guard is false or true. No API write behavior, guard value, or business logic changed.",
   "files_changed": [
-    "scripts/run-work-package.ps1"
+    "src/app/profile/city-council-district/page.tsx"
   ],
   "tests": {
-    "PowerShell syntax": "PASS",
-    "normal Claude discovery": "PASS",
-    "APPDATA fallback discovery": "PASS",
-    "Claude version verification": "PASS",
-    "all runner Claude calls use resolved path": "PASS"
+    "npm run build": "PASS",
+    "npm run lint": "PASS (only pre-existing unrelated scripts/*.cjs require-import errors)"
   },
   "database": {
     "writes_performed": false,
@@ -28,5 +25,5 @@
     "rls_changed": false
   },
   "blockers": [],
-  "recommended_next_step": "Complete the reviewer read-only enforcement and baseline-aware diff isolation fixes identified by the Codex independent review."
+  "recommended_next_step": "None for this package. Unrelated concurrent changes remain uncommitted in .claude/settings.json, docs/CURRENT_WORK_PACKAGE.md, scripts/run-work-package.ps1, and src/app/api/admin/extract-shannon-martin-evidence/route.ts — left untouched, belong to another session."
 }

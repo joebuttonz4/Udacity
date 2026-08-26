@@ -22,6 +22,7 @@ export default function CityCouncilDistrictPage() {
   const [state, setState] = useState<SubmitState>('idle')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [resultMessage, setResultMessage] = useState<string | null>(null)
+  const [lastDryRun, setLastDryRun] = useState<boolean | null>(null)
 
   useEffect(() => {
     async function checkAuth() {
@@ -79,6 +80,7 @@ export default function CityCouncilDistrictPage() {
         return
       }
 
+      setLastDryRun(Boolean(result?.dryRun))
       setResultMessage(
         result?.dryRun
           ? (result?.message as string) ?? 'Beta preview — this district was not saved yet.'
@@ -124,7 +126,7 @@ export default function CityCouncilDistrictPage() {
           with the official City lookup tool before selecting one below.
         </p>
         <p className="text-amber-400 text-xs font-semibold mt-3 [font-family:var(--font-syne)]">
-          Preview only — saving is currently disabled
+          Beta feature — submit below to see whether your selection is saved
         </p>
       </div>
 
@@ -230,13 +232,15 @@ export default function CityCouncilDistrictPage() {
         </form>
 
         {/* Beta disclaimer */}
-        <div className="bg-[#FFFBEB] border border-[#FDE68A] rounded-[24px] p-4">
-          <p className="text-[#92400E] text-xs leading-5 [font-family:var(--font-instrument-sans)]">
-            Beta preview. Saving is intentionally disabled and will stay disabled unless the
-            CivicMarket team explicitly approves and turns it on. Submitting the form above
-            only shows you a preview of what would happen — nothing is saved.
-          </p>
-        </div>
+        {lastDryRun !== false && (
+          <div className="bg-[#FFFBEB] border border-[#FDE68A] rounded-[24px] p-4">
+            <p className="text-[#92400E] text-xs leading-5 [font-family:var(--font-instrument-sans)]">
+              {lastDryRun === true
+                ? 'Beta preview. Saving was disabled for this submission, so nothing was saved. If that changes, this page will confirm it when you submit.'
+                : 'Beta feature. Whether your selection is saved depends on the current beta status — submit the form above and we’ll tell you exactly what happened.'}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   )
