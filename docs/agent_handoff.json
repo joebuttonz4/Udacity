@@ -2,7 +2,7 @@
   "project": "CivicMarket",
   "status": "PASS",
   "updated_at": "2026-08-25T00:00:00Z",
-  "commit": "PENDING",
+  "commit": "f7a06dbeceb23fed1eaea6c7f20e6beb11d63db3",
   "branch": "master",
   "work_package": "Fix misleading City Council district disclaimer copy",
   "summary": "The two static disclaimer blocks on /profile/city-council-district claimed saving was permanently/intentionally disabled, which would become false once ENABLE_CITY_COUNCIL_DISTRICT_WRITE is later enabled. Header copy now makes no claim about the current save state; the bottom disclaimer is now derived from the live dryRun value returned by POST /api/set-city-council-district on each submission, so it reads correctly whether the guard is false or true. No API write behavior, guard value, or business logic changed.",
