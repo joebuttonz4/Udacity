@@ -28,14 +28,10 @@ Read these first when relevant:
 
 1. CLAUDE.md
 2. CIVICMARKET_CURRENT_STATE.md
-3. docs/ACTIVE_SPRINT.md
-4. docs/DECISIONS.md
-5. docs/CHANGELOG.md
-6. Reference Files/CIVICMARKET_PATCH_MAY12.md
-7. Reference Files/CIVICMARKET_WEEK3_HANDOFF_v3.md
-8. Reference Files/CIVICMARKET_PROJECT_KNOWLEDGE.md
+3. CIVIC_DNA_V2_SPEC.md
+4. docs/design/DESIGN_DIRECTION_V3.md
 
-Older handoffs and archived files are historical unless a current file says otherwise.
+Everything in docs/archive/ is historical. Do not read it unless the user names a specific file.
 
 ## Required start
 
@@ -51,12 +47,11 @@ For normal app work:
 1. Make the smallest useful change.
 2. Run `npm run build`.
 3. If the build fails, fix only what is needed for the requested task.
-4. Update `docs/CHANGELOG.md` with:
-   - date
-   - files changed
-   - what was done
-   - tests run
-   - known limits or deferred work
+4. Update `docs/work/current_task_state.md` with:
+   - completed
+   - current findings
+   - blockers
+   - next action
 5. Run `git status`.
 6. Ask before committing unless the user explicitly asked you to commit.
 7. If committing, use a clear commit message.
