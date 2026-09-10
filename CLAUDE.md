@@ -2,22 +2,20 @@
 
 ## Read first
 
-Always read these files before planning or editing:
+Always read these files before planning or editing, in this order:
 
-1. @CIVICMARKET_CURRENT_STATE.md
-2. @CIVIC_DNA_V2_SPEC.md
-3. @docs/design/DESIGN_DIRECTION_V3.md
+1. @files/THIS_IS_THE_APP.md — the one-page definition of "complete" for the November beta. Wins every conflict.
+2. @mockup/civicmarket_mockup.jsx — the clickable mockup. It is the visual spec. Build screens to match it, not to match older HTML demos.
+3. @files/CIVIC_REPUTATION_SPEC.md — levels, badges, penalties, candidate accounts.
+4. @CIVICMARKET_CURRENT_STATE.md — where the code actually is.
 
-These three files plus this one are the entire active document set.
+Read `@CIVIC_DNA_V2_SPEC.md` only when working on Ballot or Candidate profile. Read `@files/VISION.md` only to confirm something is out of scope. Do not read `CIVICMARKET_BETA_SCOPE_PLAN`, `BETA_LAUNCH_PLAN`, or `CIVICMARKET_PROJECT_KNOWLEDGE` unless explicitly asked; they describe a previous product direction.
 
-Everything in docs/archive/ is historical. Do not read it unless I name a specific file.
-That includes all CIVICMARKET_CHATGPT_HANDOFF_*.md files, CIVICMARKET_GATE_LOG.md,
-civicmarket_build_guide.md, and CIVICMARKET_PROJECT_KNOWLEDGE.md. They describe superseded
-methodology, a superseded design system, and a superseded process.
+If any doc conflicts with `THIS_IS_THE_APP.md`, follow `THIS_IS_THE_APP.md`. If any doc conflicts with the mockup on layout, copy, or flow, follow the mockup.
 
-If an archived doc conflicts with an active one, the active one wins. Do not raise the conflict.
+## What CivicMarket is
 
-If any doc conflicts with CIVIC_DNA_V2_SPEC.md on categories, questions, scoring, evidence standards, or transparency, follow CIVIC_DNA_V2_SPEC.md. It supersedes all prior methodology.
+A community engagement app for Port St. Lucie. The feed of agenda items is the product. Elections are one feature. The beta learning goal is a single question: will residents open, weigh in on, and show up for agenda items?
 
 ## Current project
 
@@ -39,25 +37,33 @@ Never display a score without its supporting evidence visible.
 
 ## Current active priority
 
-Migrate Civic DNA from v1 to v2 per CIVIC_DNA_V2_SPEC.md.
+Build the app in `THIS_IS_THE_APP.md`, one screen per session, in this order:
 
-Sequence, one per session:
-1. Update this file and CIVICMARKET_CURRENT_STATE.md to remove v1 methodology rules
-2. Schema migration — eight category keys, evidence table, score_changes table
-3. Quiz rewrite — 16 questions, progressive, issue weighting
-4. Scoring engine — weighted Euclidean, coverage rules, tested against the worked example in the spec
-5. Candidate profile UI — three-level disclosure
+1. Onboarding (6 steps, matches mockup: welcome → invite + account → ZIP → backyard → verify (skippable) → issues)
+2. Home feed (live-meeting banner, This week, What happened, alerts bell)
+3. Item detail (when & where card with past/outcome state, stars, plain English, why you're seeing this, money, support/oppose/unsure, candidates strip, report link)
+4. Comments (AI summary, verified-only posting, helpful votes, level + act badges, affected-area priority)
+5. Alerts
+6. Profile (reputation card, civic record, issue picker, alert toggles, verification)
+7. Ballot
+8. Candidate profile (three-level disclosure, dispute per row)
+9. Vote
+10. Sheets: verify address, report inaccuracy, City Hall check-in
 
-Do not start a later step before the one before it is committed.
+Do not start a screen before the previous one is committed and matches the mockup at 390px.
 
-Current routes already exist:
-- /onboarding
-- /onboarding/signup
-- /onboarding/zip
-- /onboarding/districts
-- /onboarding/dna-teaser
-- /onboarding/quiz
-- /onboarding/calculating
+**The Civic DNA v1→v2 migration is no longer the active priority.** Steps already committed (schema, if done) stay. Do not continue the quiz rewrite or scoring engine until screens 1–6 are done. When Ballot and Candidate profile come up, use the 8-question core set only; the refine set and issue weighting UI are parked.
+
+**If a session surfaces a feature, screen, or rule not on `THIS_IS_THE_APP.md`, do not build it.** Append it to `@files/VISION.md` with a trigger, or to `POST_BETA.md`, and say so in the session summary. `THIS_IS_THE_APP.md` does not grow.
+
+**Content, not code, is the blocker.** Real agenda items entered by Mike are hard blocker #1. A session that ends with a working screen and no real items in the database has not moved the beta forward. Remind Mike of this at the end of every session in which the item count is still zero.
+
+## Scope guard
+
+Not in the beta, do not build, do not scaffold, do not "just stub":
+Agents 1–3 · Firecrawl · Gemini · Twilio · full 5-tab admin · PWA · push notifications · Delegate/Titan UI · followings · polls · townhalls · volunteer tools · campaign portal · Expo · voter-roll matching · federal races · city #2 · 16-question quiz · issue weighting UI.
+
+Retrofitting already-built screens to navy v3. New screens are built in navy per docs/design/DESIGN_DIRECTION_V3.md; migrating existing ones is a separate scheduled session.
 
 ## Do not build before beta
 
@@ -98,6 +104,11 @@ Do not build:
 - Do not restore anything from docs/archive/brand-v2/
 - Match values render as badges in lists and as one ring on the candidate profile only
 - A candidate with no position renders as "No position found" — never a padlock or locked state
+- Stars (item importance, candidate neighbor rating) are stored and displayed separately from Civic DNA. Never combine them into a match score.
+- Candidate comments on items are flagged `is_candidate = true` and excluded from AI summaries and support/oppose totals.
+- Level advancement checks the act gate, not just the point threshold (see `CIVIC_REPUTATION_SPEC.md` §1).
+- Penalties are written only by moderator/correction decisions, never by vote or flag counts.
+- Check-in data is stored as a per-meeting count. Never store or expose a list of who checked in.
 
 ## Current data limits
 
@@ -106,9 +117,10 @@ Do not build:
 - Do not add voting records without an official item-specific source verifying candidate, item, date, description, and vote cast. This rule applies to voting records only, not to candidate positions.
 - No real PSL ballot measures are currently confirmed in the database.
 - Do not add ballot measures without an official source confirming title, type, election/date, summary, and source URL.
-- Candidate positions are coded from credible public sources per the rubric in CIVIC_DNA_V2_SPEC.md section 5.
+- Candidate positions are coded from credible public sources per the rubric in @CIVIC_DNA_V2_SPEC.md section 5.
 - Minimum coverage to display a match score is 4 of 8 categories. Below that, show known positions and evidence with no percentage.
 - Categories with no evidence render as "no position found," never as a locked or failed state.
+- `civic_feed` currently has 0 real items. Per-item required fields: title, plain-English body, meeting body, date, time, location, address, tags[], area, urgency, source_url. For decided items add outcome, roll call, minutes_url.
 
 ## Required workflow
 
@@ -139,7 +151,7 @@ Do not combine onboarding, ballot, profile, admin, and scoring work in one sessi
 ## Session workflow
 
 Context discipline:
-- Read CIVICMARKET_CURRENT_STATE.md and CIVIC_DNA_V2_SPEC.md. Do not read docs/archive/CIVICMARKET_GATE_LOG.md unless I name it.
+- Read CIVICMARKET_CURRENT_STATE.md and @CIVIC_DNA_V2_SPEC.md. Do not read docs/archive/CIVICMARKET_GATE_LOG.md unless I name it.
 - Read only the files needed for the current task.
 - If information is already in a project file, reference the path instead of reproducing it in chat.
 - Use Explore/Plan subagents for search and research so large results stay out of the main context. Do not spawn subagents for writes.
