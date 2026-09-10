@@ -61,6 +61,7 @@ Working end to end:
 - **Match coverage** — only Shannon Martin has coded positions. Every other candidate shows no position data.
 - **civic_feed meeting/outcome columns** — `meeting_time`, `location`, `address`, `outcome`, `outcome_detail`, `minutes_url` don't exist on `civic_feed` yet. Migration drafted at `supabase/migrations/civicmarket_schema_addendum_civic_feed_fields_and_citywide_district.sql` (also adds a "Port St. Lucie (citywide)" `districts` row), not yet run — no DB connection string or exec-SQL RPC is available from the coding environment, so it must be run manually in the Supabase SQL Editor.
 - **onboarding top_issues columns** — `profiles.top_issues` and `profiles.onboarding_completed_at` don't exist yet. Migration drafted at `supabase/migrations/civicmarket_schema_addendum_onboarding_top_issues.sql`, not yet run — same manual-SQL-Editor constraint as above. The rebuilt `/onboarding/issues` screen will fail to persist picks until this runs.
+- **`src/app/api/admin/extract-shannon-martin-evidence/route.ts`** — has uncommitted local modifications, left as-is. This is v1-key candidate-evidence code tied to screen 8 (candidate profile), which is last in the `THIS_IS_THE_APP.md` build order. Deliberately parked, not forgotten — do not tidy up, refactor, or commit changes to this file until screen 8 comes up.
 
 ## Design direction
 
