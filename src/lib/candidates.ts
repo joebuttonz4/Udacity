@@ -178,6 +178,7 @@ export async function getCandidatesForDistricts(
     `)
     .in('district_id', eligibleDistrictIds)
     .is('archived_at', null)
+    .not('appeared_on_ballot', 'is', false)
     .order('name')
 
   if (error) throw error
