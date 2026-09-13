@@ -30,10 +30,17 @@ const AMBIGUOUS_ZIPS: string[] = [];
 // School Board District 1, FL House District 85, and FL Senate District 27 are also
 // excluded — none is a safe ZIP-based default (see prior onboarding/zip implementation
 // notes in git history for the full rationale).
+//
+// "Port St. Lucie (citywide)" is safe to assign from ZIP alone: every resident of a PSL
+// ZIP is in it by definition, so it needs no boundary source. It is what citywide
+// City Council agenda items are tagged to, and the Home feed filters strictly to the
+// user's own user_districts rows — without this assignment a resident sees no citywide
+// items at all.
 const ZIP_MANAGED_DISTRICTS = [
   { id: '11111111-0000-0000-0000-000000000003', name: 'St. Lucie County Commission At-Large', scope: 'county' },
   { id: '11111111-0000-0000-0000-000000000006', name: 'Mayor', scope: 'city' },
   { id: '11111111-0000-0000-0000-00000000000b', name: 'Florida Statewide', scope: 'state' },
+  { id: '33494621-5d0b-4b13-ae1b-0bbc2dd211b2', name: 'Port St. Lucie (citywide)', scope: 'city' },
 ];
 
 export default function ZipPage() {

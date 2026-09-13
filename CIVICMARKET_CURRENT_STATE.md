@@ -1,6 +1,6 @@
 # CivicMarket Current State
 
-Last updated: August 25, 2026
+Last updated: September 13, 2026
 
 This file describes what is true now. It is not a changelog.
 Historical gate records live in `docs/CIVICMARKET_GATE_LOG.md` and are not read by default.
@@ -40,6 +40,18 @@ session. `dna-teaser`, `quiz`, `calculating` still exist as routes but are no
 longer linked from onboarding (per `THIS_IS_THE_APP.md`: DNA quiz is a
 footnote reachable from Ballot, not part of onboarding) — untouched, not
 deleted.
+`/` — rebuilt 2026-09-13 to match `mockup/civicmarket_mockup.jsx` (`Home`) and
+`THIS_IS_THE_APP.md` screen 2: live-meeting banner (renders only when a real
+item's `meeting_date` is today; non-interactive, check-in is screen 10) → "This
+week"/"Coming up" upcoming items → "What happened" decided items. Three outcome
+states, not two: upcoming, past-with-outcome, and past-with-`outcome IS NULL`
+rendering "Outcome not posted yet". Feed is filtered strictly to the user's
+`user_districts` rows — `district_id IS NULL` items are invisible by design;
+citywide items reach residents via the "Port St. Lucie (citywide)" district,
+which `/onboarding/zip` now assigns. Built in Civic Navy via new
+`src/components/navy/`; `src/app/page.tsx` only, no other screen migrated. Feed
+cards do not navigate yet (item detail is screen 3). No stars, support/oppose,
+comments, money, or alerts bell.
 `/admin/entry`, `/admin/records`.
 
 Working end to end:
@@ -47,7 +59,7 @@ Working end to end:
 - ZIP → district assignment → auto-follow
 - Civic DNA quiz, raw answers stored, dimension scores computed
 - Automatic match score generation after quiz completion via POST /api/compute-match-scores
-- Current Officials on Home and Profile, personal-action-first
+- Current Officials on Profile, personal-action-first (removed from Home in the screen 2 rebuild — not on `THIS_IS_THE_APP.md` screen 2; Profile behavior untouched)
 - Admin voting-record entry and removal, RLS verified
 - Report Inaccuracy writes to inaccuracy_reports
 
@@ -59,8 +71,8 @@ Working end to end:
 - **City Council District write** — `ENABLE_CITY_COUNCIL_DISTRICT_WRITE = false`.
 - **Mayor district row** — no `districts` row exists for PSL Mayor.
 - **Match coverage** — only Shannon Martin has coded positions. Every other candidate shows no position data.
-- **civic_feed meeting/outcome columns** — `meeting_time`, `location`, `address`, `outcome`, `outcome_detail`, `minutes_url` don't exist on `civic_feed` yet. Migration drafted at `supabase/migrations/civicmarket_schema_addendum_civic_feed_fields_and_citywide_district.sql` (also adds a "Port St. Lucie (citywide)" `districts` row), not yet run — no DB connection string or exec-SQL RPC is available from the coding environment, so it must be run manually in the Supabase SQL Editor.
-- **onboarding top_issues columns** — `profiles.top_issues` and `profiles.onboarding_completed_at` don't exist yet. Migration drafted at `supabase/migrations/civicmarket_schema_addendum_onboarding_top_issues.sql`, not yet run — same manual-SQL-Editor constraint as above. The rebuilt `/onboarding/issues` screen will fail to persist picks until this runs.
+- **civic_feed dimensions** — all 3 real rows are `'{}'`. Until tagged with the locked 8 keys, the Home feed's "your issues" accent and the "you said X matters most to you" line never fire.
+- **civic_feed has no meeting-body column** — screen 3's "when & where" card wants "City Council · public comment allowed". Home works around it by showing the district name; screen 3 needs a decision on adding the column vs. deriving it.
 - **`src/app/api/admin/extract-shannon-martin-evidence/route.ts`** — has uncommitted local modifications, left as-is. This is v1-key candidate-evidence code tied to screen 8 (candidate profile), which is last in the `THIS_IS_THE_APP.md` build order. Deliberately parked, not forgotten — do not tidy up, refactor, or commit changes to this file until screen 8 comes up.
 
 ## Design direction

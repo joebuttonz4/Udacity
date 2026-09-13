@@ -38,3 +38,31 @@ The platform is two-sided. Officials come only if residents are there. Residents
 | USPS address validation | Post-beta |
 | ZIP-to-council-district boundary data | Real boundary source located |
 | Google OAuth | Post-beta |
+
+
+## Feed-specific tagging vocabulary
+
+**Trigger:** 10 real items in `civic_feed`, or the start of screen 5 (Alerts),
+whichever comes first.
+
+**The problem.** The eight Civic DNA categories were designed to score
+candidates — each one maps to a power the office controls, so the score
+predicts how a person would govern. Feed items are about what is being
+decided, which is a different axis. Some agenda items have no good home.
+
+**Evidence so far** (Sep 14, 2026 City Council agenda, 30 items):
+- Parks and recreation — fits weakly
+- Water and wastewater operations — only as "infrastructure"
+- Code enforcement / neighborhood property standards — no fit
+- Litigation and legal matters — no fit
+
+**Why this is deferred, not dismissed.** Feed tags are the alert mechanism,
+not labels. They are matched against `profiles.top_issues`, which is set in
+the onboarding `/issues` step and consumed by Alerts. Changing the vocabulary
+changes onboarding and Alerts too, so it is a three-screen change, not a data
+change.
+
+**What to decide at the trigger:** whether feed tags become their own
+vocabulary separate from the Civic DNA categories, and if so, what the
+onboarding issue picker shows. Until then, tag with the closest of the eight
+and keep a list of what did not fit.

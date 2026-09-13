@@ -1,328 +1,312 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { supabase } from '@/lib/supabase'
-import {
-  getCandidatesForDistricts,
-  getUserDistrictIds,
-  type CandidateWithContext,
-} from '@/lib/candidates'
-import MatchScoreRing from '@/components/ui/MatchScoreRing'
-import CoastalHero from '@/components/CoastalHero'
-import CurrentOfficialsSection from '@/components/CurrentOfficialsSection'
-
-const CIVIC_FEED = [
-  { id: 1, title: 'Candidate profiles loaded from verified source records', meta: 'Port St. Lucie District 1' },
-  { id: 2, title: 'Funding summaries available where official totals were reviewed', meta: 'Source-linked campaign finance data' },
-  { id: 3, title: 'Voting records locked until official candidate vote history is verified', meta: 'No unsupported vote rows shown' },
-]
-
-const ELECTION_DATE = new Date('2026-11-03T00:00:00')
-
-type Countdown = { days: number; hours: number; min: number; sec: number }
-
-function computeCountdown(): Countdown {
-  const diff = Math.max(0, ELECTION_DATE.getTime() - Date.now())
-  return {
-    days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-    hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-    min: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
-    sec: Math.floor((diff % (1000 * 60)) / 1000),
-  }
-}
-
-// Home-only "Top Matches" ranking. Does not mutate or reorder the shared
-// `candidates` array from getCandidatesForDistricts — /ballot groups that
-// same array by district and depends on its existing (name-ascending) order,
-// which must stay untouched. This comparator is applied to a copy, only for
-// building the Home preview list.
+// Home feed — THIS_IS_THE_APP.md screen 2, built to mockup/civicmarket_mockup.jsx
+// (`Home`) in Civic Navy v3 (docs/design/DESIGN_DIRECTION_V3.md).
 //
-// A candidate counts as scored only when match_score is a finite number —
-// 0 is a real score and must sort above locked (null/undefined) candidates,
-// never be treated as falsy/missing.
-function isScored(score: number | null | undefined): score is number {
-  return score !== null && score !== undefined
+// Deliberately absent, and owned by later screens in the build order:
+// item detail navigation (screen 3), comments (4), alerts + bell (5),
+// City Hall check-in (10), stars, support/oppose bars, follow-the-money,
+// candidates-on-this-item.
+
+import { useCallback, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
+import { getUserDistrictIds } from '@/lib/candidates';
+import { categoryLabel } from '@/lib/categories';
+import {
+  getHomeFeed,
+  formatMeetingDate,
+  upcomingHeading,
+  isForYou,
+  matchedIssues,
+  isSafeUrl,
+  type FeedItem,
+  type HomeFeed,
+} from '@/lib/feed';
+import {
+  PageHeader,
+  Card,
+  SectionLabel,
+  Pill,
+  ScopePill,
+  UrgencyBadge,
+} from '@/components/navy';
+
+function MetaLine({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="text-[13px] text-[#5A6B82] [font-family:var(--font-instrument-sans)]">
+      {children}
+    </p>
+  );
 }
 
-function topMatchesComparator(a: CandidateWithContext, b: CandidateWithContext): number {
-  const aScored = isScored(a.match_score)
-  const bScored = isScored(b.match_score)
-
-  if (aScored && !bScored) return -1
-  if (!aScored && bScored) return 1
-  if (aScored && bScored && a.match_score !== b.match_score) {
-    return (b.match_score as number) - (a.match_score as number)
-  }
-  return a.name.localeCompare(b.name)
+function ItemTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <h3 className="text-[16px] font-semibold text-[#1B2B41] leading-snug [font-family:var(--font-instrument-sans)]">
+      {children}
+    </h3>
+  );
 }
 
+function UpcomingCard({ item, topIssues }: { item: FeedItem; topIssues: string[] }) {
+  const matched = matchedIssues(item, topIssues);
+  const others = (item.dimensions ?? []).filter((d) => !matched.includes(d));
+
+  return (
+    <Card accent={isForYou(item, topIssues)}>
+      <div className="flex items-start justify-between gap-3">
+        <MetaLine>
+          {formatMeetingDate(item.meeting_date)}
+          {item.meeting_time ? ` · ${item.meeting_time}` : ''}
+        </MetaLine>
+        <UrgencyBadge urgency={item.urgency} />
+      </div>
+
+      <div className="mt-2">
+        <ItemTitle>{item.title}</ItemTitle>
+      </div>
+
+      {item.description && (
+        <p className="text-[15px] text-[#5A6B82] leading-6 mt-2 [font-family:var(--font-instrument-sans)]">
+          {item.description}
+        </p>
+      )}
+
+      {item.location && (
+        <p className="text-[13px] text-[#8A99AD] mt-2.5 [font-family:var(--font-instrument-sans)]">
+          {item.location}
+          {item.address ? ` · ${item.address}` : ''}
+        </p>
+      )}
+
+      <div className="flex flex-wrap gap-1.5 mt-3">
+        {item.districts?.name && (
+          <ScopePill label={item.districts.name} scope={item.districts.type} />
+        )}
+        {matched.map((key) => (
+          <Pill key={key} active>
+            {categoryLabel(key)}
+          </Pill>
+        ))}
+        {others.map((key) => (
+          <Pill key={key}>{categoryLabel(key)}</Pill>
+        ))}
+      </div>
+
+      {matched.length > 0 && (
+        <p className="text-[12px] text-[#5A6B82] mt-2.5 [font-family:var(--font-instrument-sans)]">
+          You said {matched.map((k) => categoryLabel(k).toLowerCase()).join(' and ')} matter
+          most to you.
+        </p>
+      )}
+    </Card>
+  );
+}
+
+function DecidedCard({ item }: { item: FeedItem }) {
+  return (
+    <Card>
+      <div className="flex items-start justify-between gap-3">
+        <MetaLine>
+          Voted {formatMeetingDate(item.meeting_date)}
+          {item.location ? ` · ${item.location}` : ''}
+        </MetaLine>
+        {item.outcome ? (
+          <span className="text-[13px] font-semibold text-[#1B2B41] text-right shrink-0 [font-family:var(--font-instrument-sans)]">
+            {item.outcome}
+          </span>
+        ) : (
+          <span className="text-[13px] text-[#8A99AD] text-right shrink-0 [font-family:var(--font-instrument-sans)]">
+            Outcome not posted yet
+          </span>
+        )}
+      </div>
+
+      <div className="mt-2">
+        <ItemTitle>{item.title}</ItemTitle>
+      </div>
+
+      {item.outcome_detail && (
+        <p className="text-[13px] text-[#5A6B82] leading-5 mt-2 [font-family:var(--font-instrument-sans)]">
+          {item.outcome_detail}
+        </p>
+      )}
+
+      {isSafeUrl(item.minutes_url) && (
+        <a
+          href={item.minutes_url as string}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-block text-[13px] font-semibold text-[#0E2A47] underline mt-2.5 [font-family:var(--font-instrument-sans)]"
+        >
+          Read the minutes
+        </a>
+      )}
+    </Card>
+  );
+}
+
+function LiveMeetingBanner({ items }: { items: FeedItem[] }) {
+  const first = items[0];
+  return (
+    <div className="bg-[#0E2A47] rounded-xl p-4">
+      <p className="text-[12px] font-semibold text-[#8A99AD] uppercase tracking-[0.06em] [font-family:var(--font-instrument-sans)]">
+        Today
+      </p>
+      <p className="text-[16px] font-semibold text-white leading-snug mt-1 [font-family:var(--font-instrument-sans)]">
+        {items.length} item{items.length === 1 ? '' : 's'} on today&apos;s agenda
+      </p>
+      <p className="text-[13px] text-[#C7D2E0] leading-5 mt-1 [font-family:var(--font-instrument-sans)]">
+        {first.meeting_time ? `${first.meeting_time} · ` : ''}
+        {first.location ?? 'Location to be announced'}
+      </p>
+    </div>
+  );
+}
+
+function LoadingState() {
+  return (
+    <div className="flex flex-col gap-3">
+      {[0, 1].map((i) => (
+        <Card key={i} className="animate-pulse">
+          <div className="h-3 w-28 bg-[#E4E9F0] rounded" />
+          <div className="h-4 w-52 bg-[#E4E9F0] rounded mt-3" />
+          <div className="h-3 w-full bg-[#F5F7FA] rounded mt-3" />
+          <div className="h-3 w-3/4 bg-[#F5F7FA] rounded mt-2" />
+        </Card>
+      ))}
+    </div>
+  );
+}
 
 export default function HomePage() {
-  const router = useRouter()
-  const [candidates, setCandidates] = useState<CandidateWithContext[]>([])
-  const [districts, setDistricts] = useState<string[]>([])
-  const [userId, setUserId] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [countdown, setCountdown] = useState<Countdown | null>(null)
+  const router = useRouter();
+  const [feed, setFeed] = useState<HomeFeed | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Retry bumps this, which re-runs the effect. The loader lives inside the
+  // effect rather than in a useCallback so no setState is reachable
+  // synchronously from the effect body (react-hooks/set-state-in-effect).
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
-    async function loadHome() {
+    let cancelled = false;
+
+    async function run() {
       try {
         const {
           data: { session },
-        } = await supabase.auth.getSession()
+        } = await supabase.auth.getSession();
 
         if (!session) {
-          router.push('/onboarding')
-          return
+          router.push('/onboarding');
+          return;
         }
 
-        const districtIds = await getUserDistrictIds(session.user.id)
+        const districtIds = await getUserDistrictIds(session.user.id);
 
         if (!districtIds.length) {
-          router.push('/onboarding/zip')
-          return
+          router.push('/onboarding/zip');
+          return;
         }
 
-        const allCandidates = await getCandidatesForDistricts(districtIds, session.user.id)
-        const uniqueDistricts = [
-          ...new Set(allCandidates.map((c) => c.district_name).filter(Boolean)),
-        ]
-        setCandidates(allCandidates)
-        setDistricts(uniqueDistricts)
-        setUserId(session.user.id)
+        const result = await getHomeFeed(session.user.id, districtIds);
+        if (!cancelled) setFeed(result);
       } catch (err: unknown) {
-        const message =
-          err instanceof Error ? err.message : 'Something went wrong loading your home screen.'
-        setError(message)
+        if (!cancelled) {
+          setError(
+            err instanceof Error ? err.message : 'Something went wrong loading your feed.',
+          );
+        }
       } finally {
-        setLoading(false)
+        if (!cancelled) setLoading(false);
       }
     }
 
-    loadHome()
-  }, [router])
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [router, reloadKey]);
 
-  useEffect(() => {
-    function tick() { setCountdown(computeCountdown()) }
-    tick()
-    const id = setInterval(tick, 1000)
-    return () => clearInterval(id)
-  }, [])
+  const retry = useCallback(() => {
+    setLoading(true);
+    setError(null);
+    setReloadKey((k) => k + 1);
+  }, []);
 
-  const previewCandidates = [...candidates].sort(topMatchesComparator).slice(0, 3)
+  const hasAnything = !!feed && (feed.upcoming.length > 0 || feed.decided.length > 0);
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <CoastalHero
-        warm
-        eyebrow="Port St. Lucie, FL"
-        title="Your local elections"
-        subtitle="Personalized match scores for every candidate on your ballot."
-        after={
-          /* Frosted glass election countdown card */
-          <div className="mt-5 bg-white/[0.07] backdrop-blur-sm border border-white/[0.16] rounded-[22px] px-5 py-4 shadow-[0_4px_24px_rgba(0,0,0,0.3)]">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-[#00C9A7] text-[10px] font-semibold uppercase tracking-widest [font-family:var(--font-syne)]">
-                Election Day · Nov 3, 2026
-              </p>
-              <p className="text-white/55 text-[10px] [font-family:var(--font-instrument-sans)]">
-                Port St. Lucie, FL
-              </p>
-            </div>
-            <div className="grid grid-cols-4 gap-2">
-              {(['days', 'hrs', 'min', 'sec'] as const).map((label, i) => {
-                const val = countdown
-                  ? [countdown.days, countdown.hours, countdown.min, countdown.sec][i]
-                  : null
-                return (
-                  <div key={label} className="bg-black/[0.22] rounded-[12px] py-2.5 text-center">
-                    <p className="text-white text-[22px] font-bold tabular-nums leading-none [font-family:var(--font-syne)]">
-                      {val !== null ? String(val).padStart(2, '0') : '--'}
-                    </p>
-                    <p className="text-white/70 text-[11px] font-medium mt-1 [font-family:var(--font-instrument-sans)]">
-                      {label}
-                    </p>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        }
+    <div className="min-h-screen flex flex-col bg-[#F5F7FA]">
+      <PageHeader
+        eyebrow="Port St. Lucie"
+        title="Your backyard"
+        sub="What your city and county are deciding, in plain English."
       />
 
-      {/* Light content area — first card overlaps hero with negative margin */}
-      <div className="flex-1 bg-[#F6F8FA] px-4 pb-28 flex flex-col gap-4">
-        {loading && (
-          <div className="flex flex-col gap-4 -mt-5">
-            {[1, 2].map((i) => (
-              <div key={i} className="bg-white rounded-[24px] shadow-md p-4 animate-pulse">
-                <div className="h-3 w-24 bg-[#E5E7EB] rounded mb-4" />
-                <div className="h-4 w-44 bg-[#E5E7EB] rounded mb-3" />
-                <div className="h-12 bg-[#F3F4F6] rounded-xl" />
-              </div>
-            ))}
-          </div>
-        )}
+      <div className="flex-1 px-4 pt-4 pb-28 flex flex-col gap-3">
+        {loading && <LoadingState />}
 
-        {error && (
-          <div className="bg-[#FEF2F2] border border-[#FECACA] rounded-[24px] p-4 -mt-5">
-            <p className="text-[#DC2626] text-sm [font-family:var(--font-instrument-sans)]">
+        {!loading && error && (
+          <Card className="border-[#E5484D]">
+            <p className="text-[14px] font-semibold text-[#1B2B41] [font-family:var(--font-instrument-sans)]">
+              We couldn&apos;t load your feed
+            </p>
+            <p className="text-[13px] text-[#5A6B82] leading-5 mt-1.5 [font-family:var(--font-instrument-sans)]">
               {error}
             </p>
             <button
-              onClick={() => router.push('/onboarding')}
-              className="mt-4 w-full bg-[#00C9A7] text-[#0D1117] font-bold py-3 rounded-xl text-sm active:scale-[0.98] transition-transform [font-family:var(--font-syne)]"
+              type="button"
+              onClick={retry}
+              className="w-full h-12 rounded-[10px] bg-[#0E2A47] text-white font-semibold text-[15px] mt-4 active:scale-[0.98] transition-transform [font-family:var(--font-instrument-sans)]"
             >
-              Go to onboarding
+              Try again
             </button>
-          </div>
+          </Card>
         )}
 
-        {!loading && !error && (
+        {!loading && !error && feed && (
           <>
-            {/* Top matches — overlaps hero edge */}
-            <section className="bg-white rounded-[24px] shadow-[0_4px_24px_rgba(0,0,0,0.09)] p-4 -mt-6 relative z-10">
-              <div className="flex items-center justify-between mb-1">
-                <h2 className="text-[#6B7280] text-[11px] font-semibold uppercase tracking-widest [font-family:var(--font-syne)]">
-                  Top matches
-                </h2>
-                <Link
-                  href="/ballot"
-                  className="text-[#00C9A7] text-xs font-semibold [font-family:var(--font-syne)]"
-                >
-                  View all
-                </Link>
-              </div>
-              <p className="text-[#94A3B8] text-xs mb-4 [font-family:var(--font-instrument-sans)]">
-                Your strongest available Civic DNA matches.
-              </p>
+            {feed.today.length > 0 && <LiveMeetingBanner items={feed.today} />}
 
-              {previewCandidates.length === 0 ? (
-                <div className="bg-[#F6F8FA] rounded-xl p-4">
-                  <p className="text-[#9CA3AF] text-sm [font-family:var(--font-instrument-sans)]">
-                    No races found for your districts yet.
-                  </p>
-                </div>
-              ) : (
-                <div className="flex flex-col gap-2">
-                  {previewCandidates.map((candidate, idx) => (
-                    <Link
-                      key={candidate.id}
-                      href={`/candidates/${candidate.id}`}
-                      className="bg-[#F8FAFC] border border-[#EEF2F7] rounded-2xl px-4 py-3.5 flex items-center gap-3 active:scale-[0.98] transition-transform"
-                    >
-                      <span className="text-[#CBD5E1] text-xs font-bold w-4 text-center flex-shrink-0 [font-family:var(--font-syne)]">
-                        {idx + 1}
-                      </span>
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0D2218] to-[#0D1117] border border-[#00C9A7]/20 flex items-center justify-center flex-shrink-0">
-                        <span className="text-sm font-bold text-[#00C9A7] [font-family:var(--font-syne)]">
-                          {candidate.name.charAt(0)}
-                        </span>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[#0D1117] text-[15px] font-semibold leading-tight truncate [font-family:var(--font-syne)]">
-                          {candidate.name}
-                        </p>
-                        <p className="text-[#94A3B8] text-xs mt-0.5 truncate [font-family:var(--font-instrument-sans)]">
-                          {candidate.office} &middot; {candidate.district_name}
-                        </p>
-                        {candidate.match_score === null ? (
-                          <p className="text-[#B8C4D0] text-[11px] mt-0.5 [font-family:var(--font-instrument-sans)]">
-                            Match score not available yet
-                          </p>
-                        ) : (
-                          <>
-                            <p className="text-[#00C9A7] text-[11px] font-semibold mt-0.5 [font-family:var(--font-instrument-sans)]">
-                              {candidate.match_score}% match
-                            </p>
-                            {candidate.dimension_count !== null && candidate.dimension_count > 0 && (
-                              <p
-                                className="text-[#B8C4D0] text-[10px] mt-0.5 [font-family:var(--font-instrument-sans)]"
-                                title="Match scores use only candidate positions supported by available reviewed evidence."
-                              >
-                                Based on {candidate.dimension_count} Civic DNA dimension
-                                {candidate.dimension_count === 1 ? '' : 's'}
-                              </p>
-                            )}
-                          </>
-                        )}
-                      </div>
-                      <MatchScoreRing score={candidate.match_score} size="sm" />
-                    </Link>
-                  ))}
-                </div>
-              )}
-
-              {candidates.length > 0 && (
-                <Link
-                  href="/ballot"
-                  className="mt-3 block w-full text-center bg-[#00C9A7] text-[#0D1117] font-bold py-3.5 rounded-2xl text-sm active:scale-[0.98] transition-transform [font-family:var(--font-syne)]"
-                >
-                  View Full Ballot{candidates.length > 3 ? ` — ${candidates.length} candidates` : ''}
-                </Link>
-              )}
-            </section>
-
-            {/* My current officials */}
-            {userId && <CurrentOfficialsSection userId={userId} />}
-
-            {/* Your ballot races */}
-            {districts.length > 0 && (
-              <section className="bg-white rounded-[24px] shadow-sm p-4">
-                <h2 className="text-[#6B7280] text-[11px] font-semibold uppercase tracking-widest mb-1 [font-family:var(--font-syne)]">
-                  Your ballot races
-                </h2>
-                <p className="text-[#94A3B8] text-xs mb-3 [font-family:var(--font-instrument-sans)]">
-                  Races you&apos;re eligible to vote in — not the same as your current officials.
+            {!hasAnything && (
+              <Card>
+                <p className="text-[16px] font-semibold text-[#1B2B41] [font-family:var(--font-instrument-sans)]">
+                  No agenda items yet
                 </p>
-                <div className="flex flex-wrap gap-2">
-                  {districts.map((name) => (
-                    <span
-                      key={name}
-                      className="bg-[#F0FDF9] border border-[#99F6E4] text-[#0D9488] text-xs px-3 py-1.5 rounded-full [font-family:var(--font-instrument-sans)]"
-                    >
-                      {name}
-                    </span>
-                  ))}
-                </div>
-              </section>
+                <p className="text-[15px] text-[#5A6B82] leading-6 mt-2 [font-family:var(--font-instrument-sans)]">
+                  Nothing is on the agenda for your districts right now. New items are added
+                  after each meeting cycle — check back soon.
+                </p>
+              </Card>
             )}
 
-            {/* CivicMarket status */}
-            <section className="bg-white rounded-[24px] shadow-sm p-4">
-              <h2 className="text-[#6B7280] text-[11px] font-semibold uppercase tracking-widest mb-3 [font-family:var(--font-syne)]">
-                CivicMarket status
-              </h2>
-              <div className="flex flex-col gap-2">
-                {CIVIC_FEED.map((item) => (
-                  <div
-                    key={item.id}
-                    className="bg-[#F8FAFC] border border-[#EEF2F7] rounded-2xl px-4 py-3"
-                  >
-                    <p className="text-[#0D1117] text-sm font-semibold leading-snug [font-family:var(--font-syne)]">
-                      {item.title}
-                    </p>
-                    <p className="text-[#94A3B8] text-xs mt-1 [font-family:var(--font-instrument-sans)]">
-                      {item.meta}
-                    </p>
-                  </div>
+            {feed.upcoming.length > 0 && (
+              <>
+                <div className="pt-1">
+                  <SectionLabel>{upcomingHeading(feed.upcoming)}</SectionLabel>
+                </div>
+                {feed.upcoming.map((item) => (
+                  <UpcomingCard key={item.id} item={item} topIssues={feed.topIssues} />
                 ))}
-              </div>
-            </section>
+              </>
+            )}
 
-            <div className="bg-[#FFFBEB] border border-[#FDE68A] rounded-[24px] p-4">
-              <p className="text-[#92400E] text-xs leading-5 [font-family:var(--font-instrument-sans)]">
-                Port St. Lucie pilot data is source-reviewed. Voting records and match details stay locked unless official records support them.
-              </p>
-            </div>
+            {feed.decided.length > 0 && (
+              <>
+                <div className="pt-3">
+                  <SectionLabel>What happened</SectionLabel>
+                </div>
+                {feed.decided.map((item) => (
+                  <DecidedCard key={item.id} item={item} />
+                ))}
+              </>
+            )}
           </>
         )}
       </div>
     </div>
-  )
+  );
 }
-
