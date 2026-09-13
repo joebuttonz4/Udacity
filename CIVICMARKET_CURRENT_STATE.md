@@ -49,9 +49,24 @@ rendering "Outcome not posted yet". Feed is filtered strictly to the user's
 `user_districts` rows — `district_id IS NULL` items are invisible by design;
 citywide items reach residents via the "Port St. Lucie (citywide)" district,
 which `/onboarding/zip` now assigns. Built in Civic Navy via new
-`src/components/navy/`; `src/app/page.tsx` only, no other screen migrated. Feed
-cards do not navigate yet (item detail is screen 3). No stars, support/oppose,
-comments, money, or alerts bell.
+`src/components/navy/`; `src/app/page.tsx` only, no other screen migrated. No
+stars, support/oppose, comments, money, or alerts bell. Feed cards link to
+`/items/[id]`. The decided card shows a non-interactive "Minutes available"
+line rather than a minutes link: the card is itself a `<Link>`, and a nested
+`<a>` is invalid HTML — the real minutes link lives on item detail.
+`/items/[id]` — built 2026-09-13 to match `mockup/civicmarket_mockup.jsx`
+(`ItemDetail`) and `THIS_IS_THE_APP.md` screen 3. Urgency + district pills →
+when-and-where card (label rows, no emoji; navy while upcoming, white once the
+meeting date passes; carries the same three outcome states as the feed) → "In
+plain English" rendering `civic_feed.detail` split on blank lines into real
+`<p>` elements → promoted source row → "Why you're seeing this" + issue pills.
+`getFeedItem` re-applies the user's district filter because `civic_feed`'s RLS
+policy is `USING (true)` — without it, `/items/<uuid>` reads around the
+hyperlocal rule. "No such row" and "outside your districts" share one neutral
+not-found state so probing ids cannot confirm an item exists. Back is a
+deterministic `Link` to `/`, not `router.back()`. Report links to the existing
+`/report`. Built in Civic Navy; `src/components/navy/` gained a `back` slot on
+`PageHeader` and `LabelValueRow`.
 `/admin/entry`, `/admin/records`.
 
 Working end to end:
@@ -62,6 +77,7 @@ Working end to end:
 - Current Officials on Profile, personal-action-first (removed from Home in the screen 2 rebuild — not on `THIS_IS_THE_APP.md` screen 2; Profile behavior untouched)
 - Admin voting-record entry and removal, RLS verified
 - Report Inaccuracy writes to inaccuracy_reports
+- Home feed → item detail navigation, district-scoped at both ends
 
 ## What is blocked and why
 
@@ -72,7 +88,8 @@ Working end to end:
 - **Mayor district row** — no `districts` row exists for PSL Mayor.
 - **Match coverage** — only Shannon Martin has coded positions. Every other candidate shows no position data.
 - **civic_feed dimensions** — all 3 real rows are `'{}'`. Until tagged with the locked 8 keys, the Home feed's "your issues" accent and the "you said X matters most to you" line never fire.
-- **civic_feed has no meeting-body column** — screen 3's "when & where" card wants "City Council · public comment allowed". Home works around it by showing the district name; screen 3 needs a decision on adding the column vs. deriving it.
+- **civic_feed money columns** — the mockup's item detail has a "Follow the money" card (`label`, `value`, `note`). No columns exist for it and none were added. Screen 3 ships without it. Needs a schema decision before it can be built.
+- **`/report` subject_type** — constrained to `candidate_info | voting_record | funding`, and its DDL is not in `supabase/migrations/` at all. Item detail links to the generic `/report`. An `agenda_item` subject type needs a DDL change at screen 10.
 - **`src/app/api/admin/extract-shannon-martin-evidence/route.ts`** — has uncommitted local modifications, left as-is. This is v1-key candidate-evidence code tied to screen 8 (candidate profile), which is last in the `THIS_IS_THE_APP.md` build order. Deliberately parked, not forgotten — do not tidy up, refactor, or commit changes to this file until screen 8 comes up.
 
 ## Design direction
