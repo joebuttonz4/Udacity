@@ -10,6 +10,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { getUserDistrictIds } from '@/lib/candidates';
 import { categoryLabel } from '@/lib/categories';
@@ -45,6 +46,16 @@ function ItemTitle({ children }: { children: React.ReactNode }) {
     <h3 className="text-[16px] font-semibold text-[#1B2B41] leading-snug [font-family:var(--font-instrument-sans)]">
       {children}
     </h3>
+  );
+}
+
+/** The whole card is the tap target. The Link wraps Card rather than living
+ *  inside it, so nothing interactive ends up nested. */
+function ItemLink({ id, children }: { id: string; children: React.ReactNode }) {
+  return (
+    <Link href={`/items/${id}`} className="block active:scale-[0.99] transition-transform">
+      {children}
+    </Link>
   );
 }
 
@@ -132,15 +143,12 @@ function DecidedCard({ item }: { item: FeedItem }) {
         </p>
       )}
 
+      {/* The minutes link moved to item detail when these cards became links:
+          an <a> nested inside the card's <Link> is invalid HTML. */}
       {isSafeUrl(item.minutes_url) && (
-        <a
-          href={item.minutes_url as string}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-block text-[13px] font-semibold text-[#0E2A47] underline mt-2.5 [font-family:var(--font-instrument-sans)]"
-        >
-          Read the minutes
-        </a>
+        <p className="text-[13px] font-semibold text-[#0E2A47] mt-2.5 [font-family:var(--font-instrument-sans)]">
+          Minutes available
+        </p>
       )}
     </Card>
   );
@@ -289,7 +297,9 @@ export default function HomePage() {
                   <SectionLabel>{upcomingHeading(feed.upcoming)}</SectionLabel>
                 </div>
                 {feed.upcoming.map((item) => (
-                  <UpcomingCard key={item.id} item={item} topIssues={feed.topIssues} />
+                  <ItemLink key={item.id} id={item.id}>
+                    <UpcomingCard item={item} topIssues={feed.topIssues} />
+                  </ItemLink>
                 ))}
               </>
             )}
@@ -300,7 +310,9 @@ export default function HomePage() {
                   <SectionLabel>What happened</SectionLabel>
                 </div>
                 {feed.decided.map((item) => (
-                  <DecidedCard key={item.id} item={item} />
+                  <ItemLink key={item.id} id={item.id}>
+                    <DecidedCard item={item} />
+                  </ItemLink>
                 ))}
               </>
             )}

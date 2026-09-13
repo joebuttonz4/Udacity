@@ -10,12 +10,18 @@ export type FeedDistrict = { name: string; type: string } | null;
 export type FeedItem = {
   id: string;
   title: string;
+  /** Short summary, 165-240 chars. Feed card only. */
   description: string | null;
+  /** Long-form plain English, item detail only. Blank lines are paragraph breaks. */
+  detail: string | null;
   source_url: string | null;
+  meeting_body: string | null;
   meeting_date: string | null;
   meeting_time: string | null;
   location: string | null;
   address: string | null;
+  /** Three-state: true allowed, false not allowed, NULL unknown — render nothing on NULL. */
+  public_comment: boolean | null;
   dimensions: string[] | null;
   urgency: string | null;
   district_id: string | null;
@@ -43,11 +49,14 @@ const FEED_COLUMNS = `
   id,
   title,
   description,
+  detail,
   source_url,
+  meeting_body,
   meeting_date,
   meeting_time,
   location,
   address,
+  public_comment,
   dimensions,
   urgency,
   district_id,
@@ -147,6 +156,35 @@ export async function getFeedItems(districtIds: string[]): Promise<FeedItem[]> {
   return (data ?? []) as unknown as FeedItem[];
 }
 
+/**
+ * One item by id, scoped to the same districts as the feed.
+ *
+ * The district filter is not redundant with RLS. civic_feed's policy is
+ * `USING (true)` — the database will serve any row by id to any signed-in
+ * user. The hyperlocal rule from screen 2 only holds if it is enforced here
+ * too, otherwise /items/<uuid> reads straight around it.
+ *
+ * Returns null both for "no such row" and "row outside your districts". The
+ * caller renders one neutral not-found state for both, so probing ids cannot
+ * confirm that an item exists.
+ */
+export async function getFeedItem(
+  id: string,
+  districtIds: string[],
+): Promise<FeedItem | null> {
+  if (!districtIds.length) return null;
+
+  const { data, error } = await supabase
+    .from('civic_feed')
+    .select(FEED_COLUMNS)
+    .eq('id', id)
+    .in('district_id', districtIds)
+    .maybeSingle();
+
+  if (error) throw error;
+  return (data as unknown as FeedItem) ?? null;
+}
+
 export async function getTopIssues(userId: string): Promise<string[]> {
   const { data, error } = await supabase
     .from('profiles')
@@ -192,4 +230,28 @@ export function upcomingHeading(items: FeedItem[], today = localToday()): string
 
 export function isSafeUrl(url: string | null | undefined): boolean {
   return !!url && (url.startsWith('https://') || url.startsWith('http://'));
+}
+
+/** Hostname for display, without the scheme or a leading www. */
+export function sourceHost(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, '');
+  } catch {
+    return url;
+  }
+}
+
+/** Blank-line-separated prose into paragraphs. Never render `detail` as HTML —
+ *  it is operator-entered text, and the app has no sanitizer. */
+export function paragraphs(text: string): string[] {
+  return text
+    .split(/\r?\n\s*\r?\n/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+}
+
+/** True once the meeting date has passed. Drives the when-and-where card's
+ *  live/history inversion and the outcome block. */
+export function isPast(item: FeedItem, today = localToday()): boolean {
+  return !!item.meeting_date && item.meeting_date < today;
 }
