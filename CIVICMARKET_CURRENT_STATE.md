@@ -1,6 +1,6 @@
 # CivicMarket Current State
 
-Last updated: September 13, 2026
+Last updated: September 14, 2026
 
 This file describes what is true now. It is not a changelog.
 Historical gate records live in `docs/CIVICMARKET_GATE_LOG.md` and are not read by default.
@@ -67,6 +67,19 @@ not-found state so probing ids cannot confirm an item exists. Back is a
 deterministic `Link` to `/`, not `router.back()`. Report links to the existing
 `/report`. Built in Civic Navy; `src/components/navy/` gained a `back` slot on
 `PageHeader` and `LabelValueRow`.
+Comments (screen 4) render above the report footer via
+`src/components/comments/ItemComments.tsx`, which loads independently so item
+detail never blocks on the thread. The invite code is the verification: anyone
+with `onboarding_completed_at` set may comment, enforced by the INSERT policy.
+Copy says "beta participants", never "verified residents". `author_name` is
+denormalized onto the comment row because `profiles` RLS forbids reading other
+users' rows. Moderation is post-publication: an admin sees an inline Hide
+control on each comment, hidden comments are invisible to everyone including
+their author, and `GRANT UPDATE (hidden_at, hidden_by, hidden_reason)` means an
+admin can hide a comment but never edit its body. No DELETE policy exists.
+Writes are not optimistic; a failed post keeps the draft. Rate limit is a
+`SECURITY DEFINER` trigger, 1 per 30s and 20 per day; body length is a CHECK
+constraint, 2–1000 chars.
 `/admin/entry`, `/admin/records`.
 
 Working end to end:
@@ -78,6 +91,7 @@ Working end to end:
 - Admin voting-record entry and removal, RLS verified
 - Report Inaccuracy writes to inaccuracy_reports
 - Home feed → item detail navigation, district-scoped at both ends
+- Comments on agenda items, with inline admin hide/unhide
 
 ## What is blocked and why
 
@@ -90,6 +104,8 @@ Working end to end:
 - **civic_feed dimensions** — all 3 real rows are `'{}'`. Until tagged with the locked 8 keys, the Home feed's "your issues" accent and the "you said X matters most to you" line never fire.
 - **civic_feed money columns** — the mockup's item detail has a "Follow the money" card (`label`, `value`, `note`). No columns exist for it and none were added. Screen 3 ships without it. Needs a schema decision before it can be built.
 - **`/report` subject_type** — constrained to `candidate_info | voting_record | funding`, and its DDL is not in `supabase/migrations/` at all. Item detail links to the generic `/report`. An `agenda_item` subject type needs a DDL change at screen 10.
+- **`profiles` column grants are not fully in the repo** — production had column-level UPDATE grants present in no migration file. Four columns the app writes were missing, causing silent 403s on `display_name`, `top_issues`, `onboarding_completed_at` and `address_validation_source`. Granted manually 2026-09-13 and recorded in `supabase/migrations/civicmarket_schema_addendum_profiles_column_grants.sql`. **The full grant list still exists only in the database** — a fresh environment built from `supabase/migrations/` will not match production until it is dumped and committed. That file carries the query.
+- **Password reset is broken** — the Supabase reset link signs the user in and drops them into the app, but no page exists to set a new password, so the reset never completes. A beta user who forgets their password is locked out. Not started. This is a hard blocker for invites: it has no workaround from the user's side.
 - **`src/app/api/admin/extract-shannon-martin-evidence/route.ts`** — has uncommitted local modifications, left as-is. This is v1-key candidate-evidence code tied to screen 8 (candidate profile), which is last in the `THIS_IS_THE_APP.md` build order. Deliberately parked, not forgotten — do not tidy up, refactor, or commit changes to this file until screen 8 comes up.
 
 ## Design direction
@@ -137,6 +153,8 @@ schedules without blocking each other.
 ## Known non-blocking issues
 
 - `npm run lint` fails on pre-existing `scripts/*.cjs` require-import errors. Unrelated to app code. Ignore unless working in `scripts/`.
+- **`onboarding_completed_at` backfill — done 2026-09-13.** The `profiles` grant gap meant the `/onboarding/issues` write failed silently, leaving the column NULL for accounts that onboarded before the fix. All 9 existing accounts were backfilled, and the grant fix means new users write it correctly going forward. Caveat: the column is now the gate for commenting, so if it is ever NULL again the symptom is a user who can read everything and post nothing.
+- Three onboarding writes swallow their errors (`console.error` then navigate): `/onboarding/zip`, `/onboarding/verify`, `/onboarding/issues`. This is what hid the grant gap for weeks. Worth making them surface failure when those screens are next touched.
 
 ## Deferred
 
