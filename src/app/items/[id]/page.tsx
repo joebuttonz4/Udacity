@@ -35,6 +35,7 @@ import {
   UrgencyBadge,
   LabelValueRow,
 } from '@/components/navy';
+import ItemComments from '@/components/comments/ItemComments';
 
 function BackLink() {
   return (
@@ -217,6 +218,7 @@ export default function ItemDetailPage() {
   const id = params?.id;
 
   const [item, setItem] = useState<FeedItem | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const [topIssues, setTopIssues] = useState<string[]>([]);
   const [notFound, setNotFound] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -256,6 +258,7 @@ export default function ItemDetailPage() {
         } else {
           setItem(found);
           setTopIssues(issues);
+          setUserId(session.user.id);
         }
       } catch (err: unknown) {
         if (!cancelled) {
@@ -395,6 +398,8 @@ export default function ItemDetailPage() {
                 ))}
               </div>
             )}
+
+            {userId && <ItemComments itemId={item.id} userId={userId} />}
 
             <p className="text-[13px] text-[#5A6B82] text-center leading-5 mt-2 [font-family:var(--font-instrument-sans)]">
               Something wrong with this item?{' '}
