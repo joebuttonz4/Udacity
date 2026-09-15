@@ -80,6 +80,24 @@ admin can hide a comment but never edit its body. No DELETE policy exists.
 Writes are not optimistic; a failed post keeps the draft. Rate limit is a
 `SECURITY DEFINER` trigger, 1 per 30s and 20 per day; body length is a CHECK
 constraint, 2–1000 chars.
+`/forgot-password` and `/reset-password` — built 2026-09-14. Closes the lockout
+gap: the app previously had no password-reset code at all, so the only reset
+link was one triggered from the Supabase dashboard, which with no `redirectTo`
+fell back to Site URL and dropped the user on Home with a recovery session and
+nowhere to set a password. `/forgot-password` requests the link;
+`/reset-password` receives it. The client runs the **implicit** flow
+(`@supabase/auth-js` defaults `flowType: 'implicit'` and `src/lib/supabase.ts`
+passes no options), so tokens arrive in the URL fragment and never reach the
+server — no middleware, no route handler, no server component can see this
+flow. `PASSWORD_RECOVERY` fires during client init and can beat a component's
+subscription, so `getSession()` is the primary check and `onAuthStateChange` is
+the fallback. A recovery session is **not** distinguished from a normal one —
+`redirectTo` pointing at `/reset-password` is the signal, and Supabase is the
+authority on token validity. `redirectTo` is computed from
+`window.location.origin`, so localhost and Vercel both work from one build. On
+success the flow calls `signOut({ scope: 'others' })`. A dead link never
+dead-ends: it offers a new link and a route back to sign in. `NavBar` hides on
+both routes.
 `/admin/entry`, `/admin/records`.
 
 Working end to end:
@@ -92,6 +110,7 @@ Working end to end:
 - Report Inaccuracy writes to inaccuracy_reports
 - Home feed → item detail navigation, district-scoped at both ends
 - Comments on agenda items, with inline admin hide/unhide
+- Password reset, end to end: request → email → set new password → signed in, old password dead, other sessions revoked
 
 ## What is blocked and why
 
@@ -105,7 +124,6 @@ Working end to end:
 - **civic_feed money columns** — the mockup's item detail has a "Follow the money" card (`label`, `value`, `note`). No columns exist for it and none were added. Screen 3 ships without it. Needs a schema decision before it can be built.
 - **`/report` subject_type** — constrained to `candidate_info | voting_record | funding`, and its DDL is not in `supabase/migrations/` at all. Item detail links to the generic `/report`. An `agenda_item` subject type needs a DDL change at screen 10.
 - **`profiles` column grants are not fully in the repo** — production had column-level UPDATE grants present in no migration file. Four columns the app writes were missing, causing silent 403s on `display_name`, `top_issues`, `onboarding_completed_at` and `address_validation_source`. Granted manually 2026-09-13 and recorded in `supabase/migrations/civicmarket_schema_addendum_profiles_column_grants.sql`. **The full grant list still exists only in the database** — a fresh environment built from `supabase/migrations/` will not match production until it is dumped and committed. That file carries the query.
-- **Password reset is broken** — the Supabase reset link signs the user in and drops them into the app, but no page exists to set a new password, so the reset never completes. A beta user who forgets their password is locked out. Not started. This is a hard blocker for invites: it has no workaround from the user's side.
 - **`src/app/api/admin/extract-shannon-martin-evidence/route.ts`** — has uncommitted local modifications, left as-is. This is v1-key candidate-evidence code tied to screen 8 (candidate profile), which is last in the `THIS_IS_THE_APP.md` build order. Deliberately parked, not forgotten — do not tidy up, refactor, or commit changes to this file until screen 8 comes up.
 
 ## Design direction
@@ -155,11 +173,16 @@ schedules without blocking each other.
 - `npm run lint` fails on pre-existing `scripts/*.cjs` require-import errors. Unrelated to app code. Ignore unless working in `scripts/`.
 - **`onboarding_completed_at` backfill — done 2026-09-13.** The `profiles` grant gap meant the `/onboarding/issues` write failed silently, leaving the column NULL for accounts that onboarded before the fix. All 9 existing accounts were backfilled, and the grant fix means new users write it correctly going forward. Caveat: the column is now the gate for commenting, so if it is ever NULL again the symptom is a user who can read everything and post nothing.
 - Three onboarding writes swallow their errors (`console.error` then navigate): `/onboarding/zip`, `/onboarding/verify`, `/onboarding/issues`. This is what hid the grant gap for weeks. Worth making them surface failure when those screens are next touched.
+- **Signup had no client-side password length check at all** until 2026-09-14 — not a weak one, none. The placeholder read "At least 6 characters" and nothing enforced it, leaving Supabase's own project minimum as the only guard. Both signup and reset now enforce 8 via `PASSWORD_MIN` in `src/lib/auth.ts`. **Action item (Mike, dashboard):** raise the Supabase project minimum password length to 8 to match. Until then the app is stricter than the server, so a password set outside the app — or by any future code path that skips `PASSWORD_MIN` — can still be 6 characters.
+- **Navy form primitives are duplicated three ways** — `Input`, `Btn`, `GhostBtn`, `Label`, `ErrorText` exist in `src/app/onboarding/_components/OnboardingUI.tsx`, in `src/components/navy/index.tsx`, and as inline button markup on the feed, item-detail and comments screens. The two component APIs are deliberately identical so the v3 consolidation pass is a delete rather than a rewrite. This is now the most overdue item for that pass.
 
 ## Deferred
 
 Twilio, Firecrawl, Gemini automation, Agents 1-3, full 5-tab admin, campaign portal, Expo app,
 federal races, voter roll matching, PWA service worker, public launch.
+
+PKCE auth flow — would make password reset more robust but changes auth for every flow in the
+app; own session, own testing.
 
 ## Reference
 
