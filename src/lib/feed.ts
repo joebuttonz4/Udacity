@@ -107,12 +107,21 @@ export function bucketFeed(items: FeedItem[], today = localToday()): FeedBuckets
         if (!b.meeting_date) return -1;
         return a.meeting_date < b.meeting_date ? -1 : 1;
       }
+      // Equal date and equal urgency returns 0, leaving the SQL order
+      // (generated_at ascending) intact via stable sort.
       return urgencyRank(a.urgency) - urgencyRank(b.urgency);
     });
 
+  // Equal dates must return 0. Returning -1 for both (a,b) and (b,a) claims
+  // each sorts before the other, which is an invalid comparator — the spec's
+  // guarantees, stability included, do not apply to one. Ties fall through to
+  // the SQL order (generated_at ascending), preserved by JS stable sort.
   const decided = live
     .filter((i) => !!i.meeting_date && i.meeting_date < today)
-    .sort((a, b) => (a.meeting_date! < b.meeting_date! ? 1 : -1));
+    .sort((a, b) => {
+      if (a.meeting_date === b.meeting_date) return 0;
+      return a.meeting_date! < b.meeting_date! ? 1 : -1;
+    });
 
   const todayItems = upcoming.filter((i) => i.meeting_date === today);
 
@@ -150,7 +159,12 @@ export async function getFeedItems(districtIds: string[]): Promise<FeedItem[]> {
     .from('civic_feed')
     .select(FEED_COLUMNS)
     .in('district_id', districtIds)
-    .order('meeting_date', { ascending: false });
+    .order('meeting_date', { ascending: false })
+    // Deterministic tiebreaker. Postgres does not guarantee row order for
+    // equal sort keys, so items sharing a meeting_date came back in whatever
+    // order the heap happened to hold them — which changes after any UPDATE.
+    // generated_at falls back to the order items were entered.
+    .order('generated_at', { ascending: true });
 
   if (error) throw error;
   return (data ?? []) as unknown as FeedItem[];

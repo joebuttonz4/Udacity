@@ -156,17 +156,25 @@ function DecidedCard({ item }: { item: FeedItem }) {
 
 function LiveMeetingBanner({ items }: { items: FeedItem[] }) {
   const first = items[0];
+  // Both lines are built as strings rather than assembled from JSX text nodes
+  // and expression containers. JSX drops whitespace adjacent to a newline, so
+  // a reformat that splits a line silently welds the words either side of it
+  // together. Joining here means the separators are visible in the code that
+  // owns them and cannot be lost to formatting.
+  const headline = `${items.length} item${items.length === 1 ? '' : 's'} on today's agenda`;
+  const whereLine = [first.meeting_time, first.location ?? 'Location to be announced']
+    .filter(Boolean)
+    .join(' · ');
   return (
     <div className="bg-[#0E2A47] rounded-xl p-4">
       <p className="text-[12px] font-semibold text-[#8A99AD] uppercase tracking-[0.06em] [font-family:var(--font-instrument-sans)]">
         Today
       </p>
       <p className="text-[16px] font-semibold text-white leading-snug mt-1 [font-family:var(--font-instrument-sans)]">
-        {items.length} item{items.length === 1 ? '' : 's'} on today&apos;s agenda
+        {headline}
       </p>
       <p className="text-[13px] text-[#C7D2E0] leading-5 mt-1 [font-family:var(--font-instrument-sans)]">
-        {first.meeting_time ? `${first.meeting_time} · ` : ''}
-        {first.location ?? 'Location to be announced'}
+        {whereLine}
       </p>
     </div>
   );
