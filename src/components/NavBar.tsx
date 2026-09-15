@@ -49,7 +49,15 @@ const TABS = [
 export default function NavBar() {
   const pathname = usePathname();
 
-  if (pathname.startsWith('/onboarding') || pathname.startsWith('/admin')) {
+  // Auth screens carry no app chrome: a locked-out user has nowhere to tab to,
+  // and the recovery session on /reset-password is not a signed-in state we
+  // want to invite browsing from.
+  if (
+    pathname.startsWith('/onboarding') ||
+    pathname.startsWith('/admin') ||
+    pathname.startsWith('/forgot-password') ||
+    pathname.startsWith('/reset-password')
+  ) {
     return null;
   }
 

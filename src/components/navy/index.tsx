@@ -121,6 +121,114 @@ export function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
+// ---------- form primitives ----------
+//
+// These mirror the copies in src/app/onboarding/_components/OnboardingUI.tsx.
+// That is now a three-way duplication (onboarding, here, and the inline button
+// markup on the feed and item screens). Consolidating belongs to the scheduled
+// v3 pass; retrofitting a committed screen is out of scope here. Keep the two
+// APIs identical so the merge is a delete rather than a rewrite.
+
+export function Label({ children }: { children: React.ReactNode }) {
+  return (
+    <label className="text-[12px] font-semibold text-[#8A99AD] uppercase tracking-[0.06em] [font-family:var(--font-instrument-sans)]">
+      {children}
+    </label>
+  );
+}
+
+export function Input({
+  value,
+  onChange,
+  placeholder,
+  type = 'text',
+  inputMode,
+  maxLength,
+  error,
+  autoComplete,
+  onEnter,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  type?: string;
+  inputMode?: 'text' | 'numeric' | 'email';
+  maxLength?: number;
+  error?: boolean;
+  autoComplete?: string;
+  onEnter?: () => void;
+}) {
+  return (
+    <input
+      type={type}
+      inputMode={inputMode}
+      maxLength={maxLength}
+      value={value}
+      autoComplete={autoComplete}
+      onChange={(e) => onChange(e.target.value)}
+      onKeyDown={onEnter ? (e) => { if (e.key === 'Enter') onEnter(); } : undefined}
+      placeholder={placeholder}
+      autoCapitalize="none"
+      autoCorrect="off"
+      className={`h-12 w-full rounded-[10px] border px-4 text-[15px] text-[#1B2B41] placeholder-[#8A99AD] bg-white focus:outline-none transition-colors [font-family:var(--font-instrument-sans)] ${
+        error ? 'border-[#E5484D]' : 'border-[#E4E9F0] focus:border-[#0E2A47]'
+      }`}
+    />
+  );
+}
+
+export function Btn({
+  children,
+  onClick,
+  type = 'button',
+  disabled,
+}: {
+  children: React.ReactNode;
+  onClick?: () => void;
+  type?: 'button' | 'submit';
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      type={type}
+      onClick={onClick}
+      disabled={disabled}
+      className="w-full h-12 rounded-[10px] bg-[#0E2A47] text-white font-semibold text-[15px] disabled:opacity-40 active:scale-[0.98] transition-transform [font-family:var(--font-instrument-sans)]"
+    >
+      {children}
+    </button>
+  );
+}
+
+export function GhostBtn({
+  children,
+  onClick,
+  disabled,
+}: {
+  children: React.ReactNode;
+  onClick?: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="w-full h-12 rounded-[10px] bg-white text-[#0E2A47] font-semibold text-[15px] border border-[#E4E9F0] disabled:opacity-40 active:scale-[0.98] transition-transform [font-family:var(--font-instrument-sans)]"
+    >
+      {children}
+    </button>
+  );
+}
+
+export function ErrorText({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="text-[#E5484D] text-xs mt-1.5 [font-family:var(--font-instrument-sans)]">
+      {children}
+    </p>
+  );
+}
+
 export function Pill({
   children,
   active = false,

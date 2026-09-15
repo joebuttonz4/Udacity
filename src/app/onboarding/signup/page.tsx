@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import { PASSWORD_MIN } from '@/lib/auth';
 import {
   OnboardingHeader,
   ScreenHeading,
@@ -36,6 +37,10 @@ export default function SignupPage() {
     }
     if (!email.includes('@')) {
       setError('Enter a valid email.');
+      return;
+    }
+    if (password.length < PASSWORD_MIN) {
+      setError(`Use at least ${PASSWORD_MIN} characters.`);
       return;
     }
 
@@ -151,7 +156,7 @@ export default function SignupPage() {
             <Input
               value={password}
               onChange={setPassword}
-              placeholder="At least 6 characters"
+              placeholder={`At least ${PASSWORD_MIN} characters`}
               type="password"
             />
           </div>
@@ -168,6 +173,12 @@ export default function SignupPage() {
           <GhostBtn onClick={handleLogin} disabled={loading}>
             I already have an account
           </GhostBtn>
+          {/* Grouped with the returning-user action, not with signup. */}
+          <p className="text-[13px] text-center [font-family:var(--font-instrument-sans)]">
+            <Link href="/forgot-password" className="text-[#0E2A47] underline font-semibold">
+              Forgot your password?
+            </Link>
+          </p>
           <p className="text-[12px] text-[#8A99AD] text-center leading-5 [font-family:var(--font-instrument-sans)]">
             By continuing you agree to the{' '}
             <Link href="/terms" className="text-[#0E2A47] underline">Terms</Link> and{' '}
