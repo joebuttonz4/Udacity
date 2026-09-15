@@ -53,43 +53,19 @@ GRANT UPDATE (
 ) ON profiles TO authenticated;
 
 -- ============================================================
--- SECTION 2: KNOWN GAP — THE FULL GRANT LIST IS STILL NOT IN THE REPO
+-- SECTION 2: SUPERSEDED — SEE THE AUTHORITATIVE FILE
 --
--- This file records the delta that was applied, not the complete
--- privilege state of `profiles`. The rest of that state exists only in
--- the database. Until it is dumped and committed, a fresh environment
--- built from supabase/migrations/ will NOT match production.
+-- This file records only the delta applied on 2026-09-13. It is kept
+-- for history; it is not the current picture and should not be read as
+-- one.
 --
--- To capture it:
+-- The full column-level privilege state was dumped from production on
+-- 2026-09-14 and committed to:
 --
---   SELECT grantee, privilege_type, column_name
---     FROM information_schema.column_privileges
---    WHERE table_name = 'profiles'
---      AND grantee IN ('anon', 'authenticated')
---    ORDER BY grantee, privilege_type, column_name;
+--   civicmarket_column_grants_authoritative.sql
 --
--- Columns that must NEVER appear in an UPDATE grant to `authenticated`:
---
---   is_admin                     privilege escalation — grants the
---                                comment-hide power in screen 4
---   banned_at, ban_reason,
---   warned_at                    moderation state; a banned user could
---                                unban themselves
---   verification_tier,
---   address_verified,
---   address_validated_at,
---   voter_roll_verified_at,
---   phone_verified_at,
---   phone_number_e164            attestations that a check was performed.
---                                Self-writable, they become claims the
---                                product does not actually perform
---   civic_points, civic_level    reputation. CIVIC_REPUTATION_SPEC.md
---                                sections 2 and 4 tie both to adjudicated
---                                events, never to self-report
---   district_id                  district assignment belongs to the ZIP
---                                flow and the guarded RPC
---   tos_agreed_at, tos_version   legal attestation
---   id, created_at               identity and audit
---
--- If the dump shows any of the above granted, revoke it.
+-- That file is authoritative for every column grant in the public
+-- schema, lists the columns that must never be granted and why, and
+-- carries the re-dump query. The gap this section used to warn about —
+-- privileges existing only in the database — is closed.
 -- ============================================================
