@@ -38,31 +38,56 @@ The platform is two-sided. Officials come only if residents are there. Residents
 | USPS address validation | Post-beta |
 | ZIP-to-council-district boundary data | Real boundary source located |
 | Google OAuth | Post-beta |
+| Topics `housing_costs` and `government_transparency` | A real PSL agenda item that fits, found during the summer-meeting check |
+| Location-based neighborhood alerts (e.g. single-lot easements) | Address verification moves beyond self-reported |
 
 
-## Feed-specific tagging vocabulary
+## Feed-specific tagging vocabulary — RESOLVED 2026-09-15
 
-**Trigger:** 10 real items in `civic_feed`, or the start of screen 5 (Alerts),
-whichever comes first.
+**Trigger fired.** It was set at 10 real items in `civic_feed` or the start of
+screen 5 (Alerts), whichever came first.
 
-**The problem.** The eight Civic DNA categories were designed to score
-candidates — each one maps to a power the office controls, so the score
-predicts how a person would govern. Feed items are about what is being
-decided, which is a different axis. Some agenda items have no good home.
+**The decision: feed topics are their own vocabulary, separate from the eight
+Civic DNA categories.**
 
-**Evidence so far** (Sep 14, 2026 City Council agenda, 30 items):
+**The problem it solved.** The eight Civic DNA categories were designed to
+score candidates — each one maps to a power the office controls, so the score
+predicts how a person would govern. Feed items are about what is being decided,
+which is a different axis. Some agenda items had no good home.
+
+**The evidence that produced the decision** (Sep 14, 2026 City Council agenda,
+30 items):
 - Parks and recreation — fits weakly
 - Water and wastewater operations — only as "infrastructure"
 - Code enforcement / neighborhood property standards — no fit
 - Litigation and legal matters — no fit
 
-**Why this is deferred, not dismissed.** Feed tags are the alert mechanism,
-not labels. They are matched against `profiles.top_issues`, which is set in
-the onboarding `/issues` step and consumed by Alerts. Changing the vocabulary
-changes onboarding and Alerts too, so it is a three-screen change, not a data
-change.
+Three of those four now have an honest home: `parks_recreation`,
+`water_sewer_drainage`, and `neighborhood_rules`. Litigation still has none,
+and deliberately gets zero topics — it appears in the feed and never alerts.
 
-**What to decide at the trigger:** whether feed tags become their own
-vocabulary separate from the Civic DNA categories, and if so, what the
-onboarding issue picker shows. Until then, tag with the closest of the eight
-and keep a list of what did not fit.
+**The nine topics** (key → label → Civic DNA key):
+
+| Key | Label | DNA key |
+|---|---|---|
+| `development_zoning` | Development & zoning | `growth_development` |
+| `roads_traffic` | Roads & traffic | `infrastructure_traffic` |
+| `water_sewer_drainage` | Water, sewer & drainage | `infrastructure_traffic` |
+| `police_emergency` | Police & emergency services | `public_safety` |
+| `taxes_fees_budget` | Taxes, fees & budget | `taxes_budget` |
+| `environment_open_space` | Environment & open space | `environment_land` |
+| `business_jobs` | Business & jobs | `economic_development` |
+| `parks_recreation` | Parks & recreation | — |
+| `neighborhood_rules` | Neighborhood rules | — |
+
+**Rules.** An item carries 0, 1, or 2 topics, never more. An item with 0 topics
+appears in the feed but never triggers an alert. The profile field splits in
+two: `profiles.alert_topics` holds feed topic keys picked in onboarding and
+drives Alerts; `profiles.top_issues` holds Civic DNA keys, is set only after
+the quiz, and is used only for match weighting. The topic → DNA mapping
+pre-fills the post-quiz weighting picker and nothing else — it is many-to-one
+and does not invert, so it is not a migration path.
+
+Source of truth: `src/lib/topics.ts`, enforced by CHECK constraints in
+`supabase/migrations/civicmarket_schema_addendum_feed_topics.sql` and kept in
+sync by `src/lib/__tests__/topics.test.ts`.

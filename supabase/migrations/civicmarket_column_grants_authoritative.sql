@@ -1,7 +1,9 @@
 -- ============================================================
 -- CIVICMARKET — AUTHORITATIVE COLUMN-LEVEL GRANTS
 --
--- Dumped from production 2026-09-14. This is the reconciliation file:
+-- Dumped from production 2026-09-14, plus alert_topics added 2026-09-15
+-- (see civicmarket_schema_addendum_feed_topics.sql statement 5). This is
+-- the reconciliation file:
 -- before it existed, column-level privileges lived only in the database
 -- and a fresh environment built from supabase/migrations/ did not match
 -- production. That is what caused the silent 403s traced during the
@@ -82,6 +84,7 @@ REVOKE UPDATE ON profiles FROM authenticated;
 
 GRANT UPDATE (
   address_validation_source,
+  alert_topics,
   display_name,
   district_id,
   dna_nudge_dismissed_at,

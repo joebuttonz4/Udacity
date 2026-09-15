@@ -1,6 +1,6 @@
 # CivicMarket Current State
 
-Last updated: September 14, 2026
+Last updated: September 15, 2026
 
 This file describes what is true now. It is not a changelog.
 Historical gate records live in `docs/CIVICMARKET_GATE_LOG.md` and are not read by default.
@@ -120,7 +120,10 @@ Working end to end:
 - **City Council District write** — `ENABLE_CITY_COUNCIL_DISTRICT_WRITE = false`.
 - **Mayor district row** — no `districts` row exists for PSL Mayor.
 - **Match coverage** — only Shannon Martin has coded positions. Every other candidate shows no position data.
-- **civic_feed dimensions** — all 3 real rows are `'{}'`. Until tagged with the locked 8 keys, the Home feed's "your issues" accent and the "you said X matters most to you" line never fire.
+- **Feed topics migration not yet run** — `supabase/migrations/civicmarket_schema_addendum_feed_topics.sql` is written but not executed. Until it runs, `civic_feed.topics` and `profiles.alert_topics` do not exist and the vocabulary switchover session cannot start. Statement 5, `GRANT UPDATE (alert_topics)`, is mandatory: `profiles` UPDATE is revoked table-wide and re-granted per column, so skipping it reproduces the 2026-09-14 silent-403 failure exactly.
+- **civic_feed items are untagged** — all 3 real rows have empty topics. Until tagged from the 9 keys, the Home feed's "your issues" accent and the "you said X matters most to you" line never fire.
+- **Content lead: half-cent infrastructure surtax extension** — Resolution 26-R17 asked the County to place a half-cent infrastructure surtax extension on the Nov 3, 2026 ballot. **Unverified whether the County actually did.** Per the standing rule, no ballot measure is added without an official source confirming title, type, election date, summary and source URL.
+- **Week 7 checkpoint rule — two-candidate runoff** — if the race becomes a two-candidate runoff, match rings go live for **both candidates or neither**. A ring on one candidate and "not enough positions yet" on the other reads as an endorsement, whatever the coverage math says.
 - **civic_feed money columns** — the mockup's item detail has a "Follow the money" card (`label`, `value`, `note`). No columns exist for it and none were added. Screen 3 ships without it. Needs a schema decision before it can be built.
 - **`/report` subject_type** — constrained to `candidate_info | voting_record | funding`, and its DDL is not in `supabase/migrations/` at all. Item detail links to the generic `/report`. An `agenda_item` subject type needs a DDL change at screen 10.
 - **`profiles.district_id` is user-writable** — it appears in the `profiles` UPDATE grant, so a user can assign themselves a district they don't live in. The Home feed filters on `user_districts`, not on this column, so it does not currently widen what anyone sees — but it is a self-asserted claim about where someone lives sitting in a column no verification step guards. Pre-existing, not introduced by the grant reconciliation. **Open question, deliberately not fixed:** decide what still reads `profiles.district_id` before revoking it.
@@ -167,6 +170,45 @@ housing, transparency`), which is untouched — that key-set reconciliation is
 scoring-engine work (steps 3–4 above, screens 7–8), not now. Feed tags do not
 feed Civic DNA match scores, so the two key sets can move on independent
 schedules without blocking each other.
+
+### Feed topics — vocabulary split from Civic DNA (2026-09-15)
+
+The `files/VISION.md` feed-tagging trigger fired. Feed topics are now their own
+nine-key vocabulary, separate from the eight Civic DNA categories. Source of
+truth is `src/lib/topics.ts`; the same nine keys are enforced by CHECK
+constraints in `supabase/migrations/civicmarket_schema_addendum_feed_topics.sql`,
+and `src/lib/__tests__/topics.test.ts` fails the build if the two disagree in
+either direction.
+
+Schema (migration written 2026-09-15, **not yet run** — see blocked list):
+- `civic_feed.topics text[] NOT NULL DEFAULT '{}'` — 0 to 2 topics, never more.
+  0 topics means the item appears in the feed and never triggers an alert.
+- `profiles.alert_topics text[]`, **nullable, no DEFAULT** — NULL means never
+  asked, `{}` means asked and chose none. Alerts shows a pick-topics empty
+  state for NULL and respects a deliberate empty choice for `{}`. Adding a
+  DEFAULT would erase that distinction.
+- `profiles.top_issues` keeps the Civic DNA keys and is set only after the
+  quiz. It gets no CHECK constraint yet, because the DNA v2 quiz rewrite may
+  change that key set.
+- `civic_feed.dimensions` is left in place, unused, pending the DNA v2 key-set
+  reconciliation. It is not repurposed: its name is bound to the DNA
+  vocabulary throughout the docs and in `candidates.ts` / `measures.ts`.
+
+No backfill. The 9 existing accounts keep `alert_topics = NULL`. The topic →
+DNA mapping is many-to-one and does not invert — `infrastructure_traffic` is
+reachable from both `roads_traffic` and `water_sewer_drainage` — so a
+backfill would have to guess, and it will not.
+
+**Next session is the named exception to one-screen-per-session: "vocabulary
+switchover."** It contains only four things: onboarding issues page writes
+`alert_topics`; the swallowed error in `issues/page.tsx` is fixed so failure
+surfaces instead of navigating; `feed.ts` reads `alert_topics` and
+`civic_feed.topics`; Home and item-detail pills switch to topic labels.
+Nothing else. Items 1 and 3 must ship together — the moment onboarding stops
+writing `top_issues`, `getTopIssues()` returns empty for every new user and the
+"Why you're seeing this" card and all issue pills silently stop rendering.
+`zip/page.tsx` and `verify/page.tsx` swallowed errors are a separate session
+before invites.
 
 ## Known non-blocking issues
 
